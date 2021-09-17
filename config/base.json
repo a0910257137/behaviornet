@@ -1,0 +1,90 @@
+{
+    "train_batch_size": 8,
+    "test_batch_size": 8,
+    "epochs": 45,
+    "learn_rate": 0.001,
+    "model_path": "/aidata/anders/objects/archived_models/base",
+    "summary": {
+        "scalar_freq": 50,
+        "hist_freq": 150,
+        "img_freq": 250,
+        "log_dir": "/aidata/anders/objects/archived_models/base/logs/"
+    },
+    "data_reader": {
+        "max_obj_num": 15,
+        "resize_size": [
+            224, // height
+            224 // width
+        ],
+        "img_down_ratio": 1, //[height, width]
+        "shuffle": true,
+        "tasks": [
+            {
+                "preprocess": "obj_det",
+                "read_img": true,
+                "branches": [
+                    "obj_center",
+                    "tl",
+                    "br"
+                ],
+                "category_path": "/aidata/anders/objects/hico/annos/cates.txt",
+                "train_folder": "/aidata/anders/objects/hico/kps/train_kps",
+                "test_folder": "/aidata/anders/objects/hico/kps/test_kps"
+            }
+        ],
+        "augments": {
+            "color_chains": [
+                "contrast",
+                "saturat",
+                "bright",
+                "hue"
+            ],
+            "tensorpack_aug_chain": [], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "do_flip": true
+        },
+        "coors_down_ratio": [
+            1,
+            1
+        ], //[height, width]
+        "img_root": "/aidata/anders/objects/hico/imgs"
+    },
+    "models": {
+        "model_name": "obj_det",
+        "frozen_backbone": false,
+        "multi_optimizer": false,
+        "backbone": {
+            "module_name": "mobilenet",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lr": 1e-3
+        },
+        "head": {
+            "module_name": "head",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lr": 1e-3,
+            "pred_layer": {
+                "heat_maps": [
+                    {
+                        "name": "obj_heat_map",
+                        "out_dims": 7
+                    }
+                ],
+                "size_maps": [
+                    {
+                        "name": "obj_size_maps",
+                        "out_dims": 2
+                    }
+                ]
+            }
+        },
+        "loss": { //weighted constant based on DETR paper
+            "type": "od",
+            "size_weight": 1,
+            "pull_weight": 1,
+            "push_weight": 1
+        }
+    }
+}
