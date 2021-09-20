@@ -1,6 +1,6 @@
 import tensorflow as tf
 from .module import MODULE_FACTORY
-from .backbone.mobilenet import MobileNet_V3
+from .backbone.mobilenet import MobileNetV3
 from .head import HEAD_FACTORY
 from .loss import LOSS_FACTORY
 from .network import Network
@@ -10,15 +10,12 @@ from pprint import pprint
 class ModelFactory:
     def __init__(self, config, cp_path, lr):
         self.config = config
-        self._model_keys = ['backbone', 'neck', 'head']
-        self.backbone = MobileNet_V3(include_top=None,
-                                     weights=None,
-                                     input_tensor=None,
-                                     input_shape=(self.config.resize_size[0],
-                                                  self.config.resize_size[1],
-                                                  3),
-                                     pooling='avg_pool',
-                                     kernel_initializer='he_uniform')
+        self._model_keys = ['backbone', 'head']
+        self.backbone = MobileNetV3(input_shape=(self.config.resize_size[0],
+                                                 self.config.resize_size[1],
+                                                 3),
+                                    kernel_initializer='he_uniform')
+
         self.head = HEAD_FACTORY.get(self.config.head.module_name)(self.config,
                                                                    name='head')
 

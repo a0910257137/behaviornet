@@ -62,5 +62,4 @@ if __name__ == '__main__':
     set_gpu(args.gpus)
     logger.info(f'Use config: {args.config} to train kws')
     config = load_configger(args.config)
-    pprint(config)
     train(config, args.restore)

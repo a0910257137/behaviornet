@@ -113,11 +113,11 @@ def get_coors(img_root,
         img_info = {}
         if not os.path.exists(img_path):
             print('%s not exist, bypass' % img_path)
-            return img_info
+            return None, img_info
         img = cv2.imread(img_path)
         if img is None:
             print('Can not read %s, bypass' % img_path)
-            return img_info
+            return None, img_info
         img_info['height'] = img.shape[0]
         img_info['width'] = img.shape[1]
         img_info['channel'] = img.shape[2]
