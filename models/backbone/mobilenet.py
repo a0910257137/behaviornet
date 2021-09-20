@@ -2,6 +2,7 @@ from models.module import mobilenet
 import tensorflow as tf
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock, BottleNeck
+from pprint import pprint
 
 
 class MobileNet(tf.keras.Model):
@@ -34,10 +35,14 @@ class MobileNet(tf.keras.Model):
                                        name='init_conv',
                                        kernel_initializer=kernel_initializer,
                                        activation='HS')
-            for filter, k_size, e, s, is_squeeze, n1 in zip(
-                    filters, k_sizes, es, ss, is_squeezes, n1s):
+            for i, (filter, k_size, e, s, is_squeeze, n1) in enumerate(
+                    zip(filters, k_sizes, es, ss, is_squeezes, n1s)):
+                if i == 0:
+                    input_chs = 16
+                else:
+                    input_chs = filters[i - 1]
                 self.bases += [
-                    BottleNeck(input_shape=1,
+                    BottleNeck(input_chs=input_chs,
                                filters=filter,
                                kernel=k_size,
                                e=e,
@@ -46,6 +51,20 @@ class MobileNet(tf.keras.Model):
                                nl=n1)
                 ]
             xxx
+            self.trans_conv = ConvBlock(filters=960,
+                                        kernel_size=1,
+                                        strides=1,
+                                        name='trans_conv',
+                                        kernel_initializer=kernel_initializer,
+                                        activation='HS')
+            self.last_glbap = tf.keras.layers.GlobalAveragePooling2D()
+            self.last_conv = ConvBlock(filters=1280,
+                                       kernel_size=1,
+                                       strides=1,
+                                       norm_method=None,
+                                       name='last_conv',
+                                       kernel_initializer=kernel_initializer,
+                                       activation='HS')
 
     def call(self, x):
         m = len(self.base)
@@ -54,7 +73,9 @@ class MobileNet(tf.keras.Model):
             x = base_op(x)
             print(x)
             xxx
-
+        x = self.trans_conv(x)
+        x = tf.reshape((x, [1, 1, 960]))
+        x = self.last_conv(x)
         return x
 
 

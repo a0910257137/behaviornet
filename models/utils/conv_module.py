@@ -104,48 +104,67 @@ class BottleNeck(tf.keras.layers.Layer):
             # Returns
                 Output tensor.
         """
-        # define mobilenet base
-        # tf.shape()
-        # r = s == 1 and input_shape[3] == filters
-        # later do residual bloack
         self.alpha = 1.0
         self.nl = nl
         tchannel = int(e)
         cchannel = int(self.alpha * filters)
+        self.r = s == 1 and input_chs == filters
+        self.bneck_conv = ConvBlock(filters=tchannel,
+                                    kernel_size=1,
+                                    strides=1,
+                                    name=None,
+                                    activation=self.nl,
+                                    norm_method=None)
 
-        ConvBlock(
-            filters=tchannel,
-            kernel_size=1,
-            strides=1,
-            name=None,
-            activation=self.nl,
-            norm_method=None,
-        )
+        self.dw = DW(kernel=1, n1=self.nl)
+        if is_squeeze:
+            self.se_blk = SE(input_chs)
+        self.bneck_tran_conv = ConvBlock(filters=cchannel,
+                                         kernel_size=1,
+                                         strides=1,
+                                         name='bneck_trans_conv',
+                                         norm_method='bn',
+                                         activation=None)
 
+    def call(self, x, **kwargs):
+        inputs = x
+        x = self.bneck_conv(x)
+        x = self.dw(x)
+        x = self.bn(x)
+        x = self.relu_6(x)
+        x = self.se_blk(x)
+        x = self.bneck_tran_conv(x)
+        if self.r:
+            x = tf.keras.layers.Add([x, inputs])
+        return x
+
+
+class DW(tf.keras.layers.Layer):
+    def __init__(self, kernel, n1, **kwargs):
+        super().__init__(**kwargs)
         self.dw = tf.keras.layers.DepthwiseConv2D(kernel,
                                                   strides=(1, 1),
                                                   depth_multiplier=1,
                                                   name='dw_conv',
                                                   padding='same')
         self.bn = tf.keras.layers.BatchNormalization(name='dw_bn')
-        # if nl == 'HS':
-        #     self.hs = tf.keras.layers.ReLU(threshold=3, max_value=6.0)
-        self.relu_6 = tf.keras.layers.ReLU(max_value=6.0)
-        # implement SE
-        if is_squeeze:
-            self.se_blk = SE(input_chs)
+        # different n1
+        if n1 == 'relu_6':
+            self.relu_6 = tf.keras.layers.ReLU(max_value=6.0)
+        elif n1 == 'HS':
+            self.relu_6 = tf.keras.layers.ReLU(max_value=6.0)
 
-    def call(self, inputs, **kwargs):
-
-        return
+    def call(self, x):
+        return x
 
 
 class SE(tf.keras.layers.Layer):
     def __init__(self, input_chs, **kwargs):
         super().__init__(**kwargs)
         self.glbap = tf.keras.layers.GlobalAvgPool2D()
-        self.relu = tf.keras.layers.Dense(units=1, activation='relu')
-        self.hs = tf.keras.layers.Dense(units=1, activation='hard_sigmoid')
+        self.relu = tf.keras.layers.Dense(units=input_chs, activation='relu')
+        self.hs = tf.keras.layers.Dense(units=input_chs,
+                                        activation='hard_sigmoid')
         self.mlty = tf.keras.layers.Multiply()
 
     def call(self, x):

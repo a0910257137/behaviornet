@@ -12,7 +12,6 @@ class MobileNet(tf.keras.Model):
 
     @tf.function
     def call(self, x):
-
         feats = self.backbone(x)
         preds = self.head(feats)
         return preds
