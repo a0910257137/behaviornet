@@ -50,7 +50,6 @@ class MobileNet(tf.keras.Model):
                                is_squeeze=is_squeeze,
                                nl=n1)
                 ]
-            xxx
             self.trans_conv = ConvBlock(filters=960,
                                         kernel_size=1,
                                         strides=1,
@@ -67,12 +66,10 @@ class MobileNet(tf.keras.Model):
                                        activation='HS')
 
     def call(self, x):
-        m = len(self.base)
         x = self.init_conv(x)
         for base_op in self.bases:
+            #later we check the ops
             x = base_op(x)
-            print(x)
-            xxx
         x = self.trans_conv(x)
         x = tf.reshape((x, [1, 1, 960]))
         x = self.last_conv(x)

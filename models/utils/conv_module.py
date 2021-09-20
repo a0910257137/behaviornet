@@ -130,8 +130,6 @@ class BottleNeck(tf.keras.layers.Layer):
         inputs = x
         x = self.bneck_conv(x)
         x = self.dw(x)
-        x = self.bn(x)
-        x = self.relu_6(x)
         x = self.se_blk(x)
         x = self.bneck_tran_conv(x)
         if self.r:
@@ -149,12 +147,23 @@ class DW(tf.keras.layers.Layer):
                                                   padding='same')
         self.bn = tf.keras.layers.BatchNormalization(name='dw_bn')
         # different n1
-        if n1 == 'relu_6':
-            self.relu_6 = tf.keras.layers.ReLU(max_value=6.0)
-        elif n1 == 'HS':
-            self.relu_6 = tf.keras.layers.ReLU(max_value=6.0)
+        self.n1 = n1
+        self.relu = tf.keras.layers.ReLU(max_value=6.0)
 
     def call(self, x):
+        x = self.dw(x)
+        x = self.bn(x)
+        if self.n1 == 'relu':
+            """
+            Relu 6
+            """
+            x = self.relu(x)
+
+        elif self.n1 == 'HS':
+            """
+            Hard swish
+            """
+            x = x * self.relu(x + 3.0) / 6.0
         return x
 
 
@@ -168,9 +177,9 @@ class SE(tf.keras.layers.Layer):
         self.mlty = tf.keras.layers.Multiply()
 
     def call(self, x):
-        input_data = x
+        inputs = x
         x = self.glbap(x)
         x = self.relu(x)
         x = self.hs(x)
-        x = self.mlty([input_data, x])
+        x = self.mlty([inputs, x])
         return x
