@@ -1,28 +1,30 @@
-import tensorflow as tf
 from .module import MODULE_FACTORY
-from .backbone.mobilenet import MobileNetV3
+from .neck import NECK_FACTORY
 from .head import HEAD_FACTORY
 from .loss import LOSS_FACTORY
+import tensorflow as tf
 from .network import Network
+from .backbone.mobilenet import MobileNetV3
 from pprint import pprint
 
 
 class ModelFactory:
     def __init__(self, config, cp_path, lr):
         self.config = config
-        self._model_keys = ['backbone', 'head']
+        self._model_keys = ['backbone', 'neck', 'head']
         self.backbone = MobileNetV3(input_shape=(self.config.resize_size[0],
                                                  self.config.resize_size[1],
                                                  3),
                                     kernel_initializer='he_uniform')
-
+        self.neck = NECK_FACTORY.get(self.config.neck.module_name)(self.config,
+                                                                   name='neck')
         self.head = HEAD_FACTORY.get(self.config.head.module_name)(self.config,
                                                                    name='head')
 
         self.loss = LOSS_FACTORY.get(self.config.loss.type)(
             self.config).build_loss
         self.modules = MODULE_FACTORY.get(self.config.model_name)(
-            self.config, self.backbone, self.head)
+            self.config, self.backbone, self.neck, self.head)
 
     def build_model(self):
         network = Network(self.config,

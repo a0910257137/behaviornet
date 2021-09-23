@@ -3,12 +3,12 @@
     "test_batch_size": 8,
     "epochs": 45,
     "learn_rate": 0.001,
-    "model_path": "/Volumes/Transcend/hico/models/base",
+    "model_path": "/aidata/anders/objects/hico/models/base",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/Volumes/Transcend/hico/models/base/logs/"
+        "log_dir": "/aidata/anders/objects/hico/models/base/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -27,9 +27,9 @@
                     "tl",
                     "br"
                 ],
-                "category_path": "/Volumes/Transcend/behaviornet/config/cate.txt",
-                "train_folder": "/Volumes/Transcend/hico/kps/train_kps",
-                "test_folder": "/Volumes/Transcend/hico/kps/test_kps"
+                "category_path": "./config/cate.txt",
+                "train_folder": "/aidata/anders/objects/hico/kps/train_kps",
+                "test_folder": "/aidata/anders/objects/hico/kps/test_kps"
             }
         ],
         "augments": {
@@ -46,7 +46,7 @@
             1,
             1
         ], //[height, width]
-        "img_root": "/Volumes/Transcend/hico/imgs"
+        "img_root": "/aidata/anders/objects/hico/imgs"
     },
     "models": {
         "model_name": "obj_det",
@@ -57,6 +57,14 @@
             "optimizer": "adam",
             "num_vars": null,
             "variables": null,
+            "lr": 1e-3
+        },
+        "neck": {
+            "module_name": "pan",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lateral_ch":[128, 128, 128],
             "lr": 1e-3
         },
         "head": {

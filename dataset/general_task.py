@@ -57,7 +57,9 @@ class GeneralTasks:
                                                b_cates, self.max_obj_num,
                                                image_input_sizes)
                 targets['b_bboxes'] = b_bboxes
-                targets['b_cates'] = b_cates
+                one_hot = self._one_hots(b_cates, 1)
+                targets['b_cates'] = tf.where(one_hot == 0., np.inf,
+                                              one_hot) - 1.
         return tf.cast(new_imgs, dtype=tf.float32), targets
 
     def _resize_coors(self, annos, original_sizes, resize_size,

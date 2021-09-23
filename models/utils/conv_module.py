@@ -13,7 +13,6 @@ class ConvBlock(tf.keras.layers.Layer):
                  norm_method='bn',
                  **kwargs):
         super().__init__(**kwargs)
-
         self.activation = activation
         self.norm_method = norm_method
         self.kernel_size = (kernel_size, kernel_size)
@@ -59,7 +58,7 @@ class ConvBlock(tf.keras.layers.Layer):
 
 
 class TransitionUp(tf.keras.layers.Layer):
-    def __init__(self, filters, up_method, scale, name, **kwargs):
+    def __init__(self, filters, up_method, scale, concat, name, **kwargs):
         super().__init__(**kwargs)
         if up_method == 'bilinear':
             self.up_sample = tf.keras.layers.UpSampling2D(
@@ -74,16 +73,17 @@ class TransitionUp(tf.keras.layers.Layer):
                 strides=(scale, scale),
                 use_bias=False,
                 name='deconv_%s' % name)
+        self.concat = concat
 
-    def call(self, inputs, skip=None, concat=True, **kwargs):
+    def call(self, inputs, skip=None, **kwargs):
         out = self.up_sample(inputs)
-        if concat:
+        if self.concat:
             out = tf.concat([out, skip], axis=-1)
         return out
 
 
 class BottleNeck(tf.keras.layers.Layer):
-    def __init__(self, input_chs, filters, kernel, e, s, is_squeeze, nl,
+    def __init__(self, input_chs, filters, kernel_size, e, s, is_squeeze, nl,
                  **kwargs):
         super().__init__(**kwargs)
         """
@@ -106,6 +106,7 @@ class BottleNeck(tf.keras.layers.Layer):
         """
         self.alpha = 1.0
         self.nl = nl
+        self.is_squeeze = is_squeeze
         tchannel = int(e)
         cchannel = int(self.alpha * filters)
         self.r = s == 1 and input_chs == filters
@@ -114,40 +115,41 @@ class BottleNeck(tf.keras.layers.Layer):
                                     strides=1,
                                     name=None,
                                     activation=self.nl,
-                                    norm_method=None)
+                                    norm_method='bn')
+        self.dw = DW(kernel_size=kernel_size, stride=s, n1=self.nl)
+        if self.is_squeeze:
+            self.se_blk = SE(tchannel)
 
-        self.dw = DW(kernel=1, n1=self.nl)
-        if is_squeeze:
-            self.se_blk = SE(input_chs)
         self.bneck_tran_conv = ConvBlock(filters=cchannel,
                                          kernel_size=1,
                                          strides=1,
                                          name='bneck_trans_conv',
                                          norm_method='bn',
                                          activation=None)
+        self.add = tf.keras.layers.Add()
 
-    def call(self, x, **kwargs):
+    def call(self, x):
         inputs = x
         x = self.bneck_conv(x)
         x = self.dw(x)
-        x = self.se_blk(x)
+        if self.is_squeeze:
+            x = self.se_blk(x)
         x = self.bneck_tran_conv(x)
         if self.r:
-            x = tf.keras.layers.Add([x, inputs])
+            x = self.add([x, inputs])
         return x
 
 
 class DW(tf.keras.layers.Layer):
-    def __init__(self, kernel, n1, **kwargs):
+    def __init__(self, kernel_size, stride, n1, **kwargs):
         super().__init__(**kwargs)
-        self.dw = tf.keras.layers.DepthwiseConv2D(kernel,
-                                                  strides=(1, 1),
+        self.n1 = n1
+        self.dw = tf.keras.layers.DepthwiseConv2D(kernel_size,
+                                                  strides=(stride, stride),
                                                   depth_multiplier=1,
                                                   name='dw_conv',
                                                   padding='same')
         self.bn = tf.keras.layers.BatchNormalization(name='dw_bn')
-        # different n1
-        self.n1 = n1
         self.relu = tf.keras.layers.ReLU(max_value=6.0)
 
     def call(self, x):
@@ -170,6 +172,7 @@ class DW(tf.keras.layers.Layer):
 class SE(tf.keras.layers.Layer):
     def __init__(self, input_chs, **kwargs):
         super().__init__(**kwargs)
+        self.input_chs = input_chs
         self.glbap = tf.keras.layers.GlobalAvgPool2D()
         self.relu = tf.keras.layers.Dense(units=input_chs, activation='relu')
         self.hs = tf.keras.layers.Dense(units=input_chs,
@@ -181,5 +184,6 @@ class SE(tf.keras.layers.Layer):
         x = self.glbap(x)
         x = self.relu(x)
         x = self.hs(x)
+        x = tf.reshape(x, [-1, 1, 1, self.input_chs])
         x = self.mlty([inputs, x])
         return x

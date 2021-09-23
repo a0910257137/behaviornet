@@ -3,7 +3,20 @@ import numpy as np
 from tensorflow.python import tf2
 
 
-def rel_cross_entropy(batch_size, max_obj_num, entropy_func, rel_cates, logits, b_idxs, tars):
+def obj_class(tars, pred_cates, batch_size, max_obj_num):
+    # b_idxs = tf.reshape(b_idxs, [batch_size, max_obj_num, 2])
+    is_finite = tf.math.is_finite(tars)
+    valid_pos = tf.where(tf.math.reduce_any(is_finite, axis=-1), 1., 0.)
+    # tf.nn.softmax_cross_entropy_with_logits(labels, logits=, axis=-1)
+    print(valid_pos)
+    print(pred_cates)
+    xxx
+
+    return
+
+
+def rel_cross_entropy(batch_size, max_obj_num, entropy_func, rel_cates, logits,
+                      b_idxs, tars):
     b_idxs = tf.reshape(b_idxs, [batch_size, max_obj_num, 2])
     is_finite = tf.math.is_finite(b_idxs)
     valid_pos = tf.where(tf.math.reduce_any(is_finite, axis=-1), 1., 0.)
@@ -31,8 +44,7 @@ def rel_cross_entropy(batch_size, max_obj_num, entropy_func, rel_cates, logits, 
     r = tf.zeros_like(y, dtype=tf.int32)
     y = tf.concat([y, r], axis=-1)
     counts = tf.reshape(tf.cast(counts, tf.float32), [-1])
-    num_cls_smaples = tf.tensor_scatter_nd_update(
-        num_cls_smaples, y, counts)
+    num_cls_smaples = tf.tensor_scatter_nd_update(num_cls_smaples, y, counts)
     effective_num = 1.0 - tf.math.pow(beta, num_cls_smaples)
     weights = (1.0 - beta) / effective_num
     weights = tf.where(weights == np.inf, 0., weights)
@@ -83,8 +95,8 @@ def penalty_reduced_focal_loss(targets, logits, alpha=2, beta=4):
                         tf.zeros_like(targets))
     penalty_reduced = tf.math.pow(1 - targets, beta)
     pos_loss = tf.math.pow(1 - logits, alpha) * tf.math.log(logits) * pos_idxs
-    neg_loss = (penalty_reduced * tf.math.pow(logits, alpha) * tf.math.log(1 - logits) *
-                (1 - pos_idxs))
+    neg_loss = (penalty_reduced * tf.math.pow(logits, alpha) *
+                tf.math.log(1 - logits) * (1 - pos_idxs))
 
     num_pos = tf.reduce_mean(tf.math.reduce_sum(pos_idxs, axis=[1, 2, 3]))
     pos_loss = tf.reduce_mean(tf.math.reduce_sum(pos_loss, axis=[1, 2, 3]))
@@ -95,7 +107,6 @@ def penalty_reduced_focal_loss(targets, logits, alpha=2, beta=4):
         lambda: loss - (pos_loss + neg_loss) / num_pos,
     )
     return loss
-
 
 
 def l1_loss(b_idx, b_sms, tar_vals, batch_size, max_obj_num):
