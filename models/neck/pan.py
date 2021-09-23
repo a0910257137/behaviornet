@@ -56,7 +56,6 @@ class PAN(tf.keras.Model):
                                                 name='bilinear_downsampling')
         # build down-sampling part
         for i in range(0, self.used_backbone_levels - 1):
-
             size = lateral_x[i + 1].get_shape().as_list()[1:3]
             lateral_x[i + 1] += tf.image.resize(lateral_x[i],
                                                 size,
@@ -65,4 +64,4 @@ class PAN(tf.keras.Model):
                                                 antialias=False,
                                                 name='bilinear_downsampling')
         # latter we use concate as upsampling
-        return x
+        return lateral_x

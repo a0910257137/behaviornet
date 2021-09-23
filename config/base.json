@@ -59,12 +59,23 @@
             "variables": null,
             "lr": 1e-3
         },
+        "neck": {
+            "module_name": "pan",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lateral_ch":[128, 128, 128],
+            "lr": 1e-3
+        },
         "head": {
-            "module_name": "head",
+            "module_name": "nanodet_head",
             "optimizer": "adam",
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,
+            "stacked_convs":2,
+            "reg_max":7,
+            "strides":[8, 16, 32], 
             "pred_layer": {
                 "num_class": 1
             }

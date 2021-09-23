@@ -20,7 +20,6 @@ class ModelFactory:
                                                                    name='neck')
         self.head = HEAD_FACTORY.get(self.config.head.module_name)(self.config,
                                                                    name='head')
-
         self.loss = LOSS_FACTORY.get(self.config.loss.type)(
             self.config).build_loss
         self.modules = MODULE_FACTORY.get(self.config.model_name)(
