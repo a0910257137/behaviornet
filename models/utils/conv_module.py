@@ -7,10 +7,12 @@ class ConvBlock(tf.keras.layers.Layer):
                  kernel_size,
                  use_bias=True,
                  strides=1,
-                 name=None,
+                 bias_initializer='zeros',
                  kernel_initializer=tf.keras.initializers.HeUniform(),
                  activation='relu',
                  norm_method='bn',
+                 conv_mode='conv2d',
+                 name=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.activation = activation
@@ -18,14 +20,27 @@ class ConvBlock(tf.keras.layers.Layer):
         self.kernel_size = (kernel_size, kernel_size)
         self.strides = (strides, strides)
 
-        self.conv = tf.keras.layers.Conv2D(
-            filters,
-            kernel_size=self.kernel_size,
-            strides=self.strides,
-            use_bias=use_bias,
-            kernel_initializer=kernel_initializer,
-            padding='same',
-            name='conv')
+        if conv_mode == 'conv2d':
+            self.conv = tf.keras.layers.Conv2D(
+                filters,
+                kernel_size=self.kernel_size,
+                strides=self.strides,
+                use_bias=use_bias,
+                kernel_initializer=kernel_initializer,
+                bias_initializer=bias_initializer,
+                padding='same',
+                name='conv')
+        elif conv_mode == 'sp_conv2d':
+            self.conv = tf.keras.layers.SeparableConv2D(
+                filters,
+                kernel_size=self.kernel_size,
+                strides=self.strides,
+                use_bias=use_bias,
+                kernel_initializer=kernel_initializer,
+                bias_initializer=bias_initializer,
+                padding='same',
+                name='sp_conv')
+
         if norm_method == 'bn':
             self.norm = tf.keras.layers.BatchNormalization(name='bn')
 
@@ -42,7 +57,7 @@ class ConvBlock(tf.keras.layers.Layer):
             self.softmax = tf.keras.layers.Activation(activation='softmax',
                                                       name='act_softmax')
 
-    def call(self, input, **kwargs):
+    def call(self, input):
         output = self.conv(input)
         if self.norm_method == 'bn':
             output = self.norm(output)

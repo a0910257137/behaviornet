@@ -1,14 +1,14 @@
 {
-    "train_batch_size": 8,
-    "test_batch_size": 8,
+    "train_batch_size": 1,
+    "test_batch_size": 1,
     "epochs": 45,
     "learn_rate": 0.001,
-    "model_path": "/Volumes/Transcend/hico/models/base",
+    "model_path": "/Users/poanchen/Desktop/projects/base",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/Volumes/Transcend/hico/models/base/logs/"
+        "log_dir": "/Users/poanchen/Desktop/projects/base/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -27,9 +27,9 @@
                     "tl",
                     "br"
                 ],
-                "category_path": "/Volumes/Transcend/behaviornet/config/cate.txt",
-                "train_folder": "/Volumes/Transcend/hico/kps/train_kps",
-                "test_folder": "/Volumes/Transcend/hico/kps/test_kps"
+                "category_path": "./config/cate.txt",
+                "train_folder": "/Users/poanchen/Downloads/hico/kps/train_kps",
+                "test_folder": "/Users/poanchen/Downloads/hico/kps/test_kps"
             }
         ],
         "augments": {
@@ -46,7 +46,7 @@
             1,
             1
         ], //[height, width]
-        "img_root": "/Volumes/Transcend/hico/imgs"
+        "img_root": "/Users/poanchen/Downloads/hico/imgs"
     },
     "models": {
         "model_name": "obj_det",
@@ -75,16 +75,33 @@
             "lr": 1e-3,
             "stacked_convs":2,
             "reg_max":7,
+            "share_cls_reg":true, 
             "strides":[8, 16, 32], 
             "pred_layer": {
-                "num_class": 1
+                "num_class": 80
             }
         },
         "loss": { //weighted constant based on DETR paper
-            "type": "od",
-            "size_weight": 1,
-            "pull_weight": 1,
-            "push_weight": 1
+            "type": "gfc",
+            "strides": [8, 16, 32],
+            "octave_base_scale": 5,
+            "loss_qfl":
+            {
+                "name": "QualityFocalLoss",
+                "use_sigmoid": true,
+                "beta": 2.0,
+                "loss_weight": 1.0
+            },
+            "loss_dfl":
+            {
+                "name": "DistributionFocalLoss",
+                "loss_weight": 0.25
+            },
+            "loss_bbox":
+            {
+                "name": "GIoULoss",
+                "loss_weight":  2.0
+            }
         }
     }
 }

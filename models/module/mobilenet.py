@@ -16,8 +16,5 @@ class MobileNet(tf.keras.Model):
     def call(self, x):
         down_x, skip_connections = self.backbone(x)
         fpn_x = self.neck([down_x, skip_connections])
-        print(fpn_x)
-        xxxx
-        # multi_apply
         preds = self.head(fpn_x)
         return preds

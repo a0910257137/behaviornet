@@ -11,17 +11,17 @@ class Network(tf.keras.Model):
 
     def compile(self, optimizer, loss, run_eagerly=None):
         super(Network, self).compile(optimizer=optimizer,
-                                     run_eagerly=run_eagerly,
+                                     run_eagerly=True,
                                      metrics=['accuracy'])
         self._loss = loss
         self.optimizer = optimizer
 
     def train_step(self, data):
-        training = True
+        training = False
         imgs, labels = data
         with tf.GradientTape() as tape:
-            fmaps = self.model(imgs, training=training)
-            loss = self._loss(fmaps, labels, self.config.train_batch_size,
+            preds = self.model(imgs, training=training)
+            loss = self._loss(preds, labels, self.config.train_batch_size,
                               training)
         if self.config.multi_optimizer:
             self._gradient(self.model, self.optimizer, loss['total'], tape)
@@ -34,8 +34,8 @@ class Network(tf.keras.Model):
     def test_step(self, data):
         training = False
         imgs, labels = data
-        fmaps = self.model(imgs, training=training)
-        loss = self._loss(fmaps, labels, self.config.test_batch_size, training)
+        preds = self.model(imgs, training=training)
+        loss = self._loss(preds, labels, self.config.test_batch_size, training)
         return loss
 
     def get_trainable_variables(self, model):
