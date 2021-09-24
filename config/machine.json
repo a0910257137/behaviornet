@@ -68,20 +68,40 @@
             "lr": 1e-3
         },
         "head": {
-            "module_name": "head",
+            "module_name": "nanodet_head",
             "optimizer": "adam",
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,
+            "stacked_convs":2,
+            "reg_max":7,
+            "share_cls_reg":true, 
+            "strides":[8, 16, 32], 
             "pred_layer": {
-                "num_class": 1
+                "num_class": 80
             }
         },
         "loss": { //weighted constant based on DETR paper
-            "type": "od",
-            "size_weight": 1,
-            "pull_weight": 1,
-            "push_weight": 1
+            "type": "gfc",
+            "strides": [8, 16, 32],
+            "octave_base_scale": 5,
+            "loss_qfl":
+            {
+                "name": "QualityFocalLoss",
+                "use_sigmoid": true,
+                "beta": 2.0,
+                "loss_weight": 1.0
+            },
+            "loss_dfl":
+            {
+                "name": "DistributionFocalLoss",
+                "loss_weight": 0.25
+            },
+            "loss_bbox":
+            {
+                "name": "GIoULoss",
+                "loss_weight":  2.0
+            }
         }
     }
 }

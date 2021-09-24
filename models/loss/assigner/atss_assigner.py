@@ -42,7 +42,8 @@ class ATSSAssigner(BaseAssigner):
                num_level_bboxes,
                gt_bboxes,
                gt_bboxes_ignore=None,
-               gt_labels=None):
+               gt_labels=None,
+               num_bbox=0):
         """Assign gt to bboxes.
 
         The assignment is done in following steps
@@ -71,65 +72,84 @@ class ATSSAssigner(BaseAssigner):
             :obj:`AssignResult`: The assign result.
         """
         INF = 100000000
-        bboxes = bboxes[:, :4]
-        num_gt, num_bboxes = gt_bboxes.size(0), bboxes.size(0)
+        # bboxes = bboxes[:, :4]
+        num_gt = num_bbox[0]
+        num_bboxes = tf.shape(bboxes)[0]
+
+        gt_valids = tf.math.reduce_all(tf.math.is_finite(gt_bboxes), axis=-1)
+        gt_bboxes = tf.reshape(gt_bboxes[gt_valids], [-1, 4])
+
+        # gt_bboxes = tf.reshape(gt_bboxes, [num_gt, 4])
 
         # compute iou between all bbox and gt
         overlaps = bbox_overlaps(bboxes, gt_bboxes)
 
         # assign 0 by default
-        assigned_gt_inds = overlaps.new_full((num_bboxes, ),
-                                             0,
-                                             dtype=torch.long)
+        assigned_gt_inds = tf.zeros_like(overlaps[:, 0], dtype=tf.float32)
 
-        if num_gt == 0 or num_bboxes == 0:
-            # No ground truth or boxes, return empty assignment
-            max_overlaps = overlaps.new_zeros((num_bboxes, ))
-            if num_gt == 0:
-                # No truth, assign everything to background
-                assigned_gt_inds[:] = 0
-            if gt_labels is None:
-                assigned_labels = None
-            else:
-                assigned_labels = overlaps.new_full((num_bboxes, ),
-                                                    -1,
-                                                    dtype=torch.long)
-            return AssignResult(num_gt,
-                                assigned_gt_inds,
-                                max_overlaps,
-                                labels=assigned_labels)
+        #TODO: latter might be trouble-shot
+        # if num_gt == 0 or num_bboxes == 0:
+        #     # No ground truth or boxes, return empty assignment
+        #     if num_gt == 0:
+        #         # No truth, assign everything to background
+        #         assigned_gt_inds[:] = 0
+        #     if gt_labels is None:
+        #         assigned_labels = None
+        #     else:
+        #         assigned_labels = tf.constant(-1., shape=(num_bboxes))
+        #     return AssignResult(num_gt,
+        #                         assigned_gt_inds,
+        #                         assigned_gt_inds,
+        #                         labels=assigned_labels)
 
         # compute center distance between all bbox and gt
-        gt_cx = (gt_bboxes[:, 0] + gt_bboxes[:, 2]) / 2.0
-        gt_cy = (gt_bboxes[:, 1] + gt_bboxes[:, 3]) / 2.0
-        gt_points = torch.stack((gt_cx, gt_cy), dim=1)
+        gt_cy = (gt_bboxes[:, 0] + gt_bboxes[:, 2]) / 2.0
+        gt_cx = (gt_bboxes[:, 1] + gt_bboxes[:, 3]) / 2.0
+        gt_cy = tf.reshape(gt_cy, [-1, 1])
+        gt_cx = tf.reshape(gt_cx, [-1, 1])
+        gt_points = tf.concat([gt_cy, gt_cx], axis=-1)
 
-        bboxes_cx = (bboxes[:, 0] + bboxes[:, 2]) / 2.0
-        bboxes_cy = (bboxes[:, 1] + bboxes[:, 3]) / 2.0
-        bboxes_points = torch.stack((bboxes_cx, bboxes_cy), dim=1)
+        bboxes_cy = (bboxes[:, 0] + bboxes[:, 2]) / 2.0
+        bboxes_cx = (bboxes[:, 1] + bboxes[:, 3]) / 2.0
+        bboxes_cy = tf.reshape(bboxes_cy, [-1, 1])
+        bboxes_cx = tf.reshape(bboxes_cx, [-1, 1])
+        bboxes_points = tf.concat((bboxes_cy, bboxes_cx), axis=-1)
 
-        distances = ((bboxes_points[:, None, :] -
-                      gt_points[None, :, :]).pow(2).sum(-1).sqrt())
+        sqaure_distances = tf.math.square(
+            (bboxes_points[:, None, :] - gt_points[None, :, :]))
 
+        distances = tf.math.sqrt(tf.math.reduce_sum(sqaure_distances, axis=-1))
+        # distances = ((bboxes_points[:, None, :] -
+        #               gt_points[None, :, :]).pow(2).sum(-1).sqrt())
         # Selecting candidates based on the center distance
         candidate_idxs = []
         start_idx = 0
+
+        # lv_shapes = num_level_bboxes.get_shape().as_list()
         for level, bboxes_per_level in enumerate(num_level_bboxes):
+
             # on each pyramid level, for each gt,
             # select k bbox whose center are closest to the gt center
             end_idx = start_idx + bboxes_per_level
             distances_per_level = distances[start_idx:end_idx, :]
             selectable_k = min(self.topk, bboxes_per_level)
-            _, topk_idxs_per_level = distances_per_level.topk(selectable_k,
-                                                              dim=0,
-                                                              largest=False)
+            distances_per_level = -tf.transpose(distances_per_level)
+            values, topk_idxs_per_level = tf.math.top_k(distances_per_level,
+                                                        k=selectable_k,
+                                                        sorted=True)
             candidate_idxs.append(topk_idxs_per_level + start_idx)
             start_idx = end_idx
-        candidate_idxs = torch.cat(candidate_idxs, dim=0)
+
+        candidate_idxs = tf.concat(candidate_idxs, axis=-1)
+        candidate_idxs = tf.transpose(candidate_idxs)
+        print(candidate_idxs)
+        print(overlaps)
 
         # get corresponding iou for the these candidates, and compute the
         # mean and std, set mean + std as the iou threshold
-        candidate_overlaps = overlaps[candidate_idxs, torch.arange(num_gt)]
+        candidate_overlaps = overlaps[candidate_idxs,
+                                      tf.range(num_gt, dtype=tf.int32)]
+
         overlaps_mean_per_gt = candidate_overlaps.mean(0)
         overlaps_std_per_gt = candidate_overlaps.std(0)
         overlaps_thr_per_gt = overlaps_mean_per_gt + overlaps_std_per_gt

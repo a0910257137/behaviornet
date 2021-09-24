@@ -32,7 +32,8 @@ class GFCBase:
             ],
             axis=-1,
         )
-        return grid_cells, tf.shape(grid_cells)[0]
+
+        return grid_cells, grid_cells.get_shape().as_list()[0]
 
     def get_single_level_center_point(self,
                                       featmap_size,

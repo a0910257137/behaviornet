@@ -53,13 +53,14 @@ class GeneralTasks:
                 image_input_sizes = tf.tile(self.img_resize_size[None, :],
                                             [self.batch_size, 1])
                 image_input_sizes = tf.cast(image_input_sizes, tf.float32)
-                b_bboxes, b_cates = gen_bboxes(self.batch_size, b_coors,
-                                               b_cates, self.max_obj_num,
-                                               image_input_sizes)
+                b_bboxes, b_cates, num_bbox = gen_bboxes(
+                    self.batch_size, b_coors, b_cates, self.max_obj_num,
+                    image_input_sizes)
                 targets['b_bboxes'] = b_bboxes
                 one_hot = self._one_hots(b_cates, 1)
                 targets['b_cates'] = tf.where(one_hot == 0., np.inf,
                                               one_hot) - 1.
+                targets['num_bbox'] = num_bbox
         return tf.cast(new_imgs, dtype=tf.float32), targets
 
     def _resize_coors(self, annos, original_sizes, resize_size,

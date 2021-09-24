@@ -17,14 +17,14 @@ class GFCLoss(GFCBase):
         self.assigner = ATSSAssigner(topk=9)
 
     def build_loss(self, preds, targets, batch_size, training):
-        gt_bboxes, gt_labels = self.get_targets(targets)
+        gt_bboxes, gt_labels, num_bboxes = self.get_targets(targets)
         gt_bboxes_ignore = None
         featmap_sizes = [
             preds[k]['cls_scores'].get_shape().as_list()[1:3] for k in preds
         ]
         cls_reg_targets = self.target_assign(batch_size, featmap_sizes,
                                              gt_bboxes, gt_bboxes_ignore,
-                                             gt_labels)
+                                             gt_labels, num_bboxes)
         if cls_reg_targets is None:
             return None
         return
@@ -33,10 +33,10 @@ class GFCLoss(GFCBase):
         return
 
     def get_targets(self, targets):
-        return targets['b_bboxes'], targets['b_cates']
+        return targets['b_bboxes'], targets['b_cates'], targets['num_bbox']
 
     def target_assign(self, batch_size, featmap_sizes, gt_bboxes_list,
-                      gt_bboxes_ignore_list, gt_labels_list):
+                      gt_bboxes_ignore_list, gt_labels_list, num_bboxes):
         """
         Assign target for a batch of images.
         :param batch_size: num of images in one batch
@@ -64,8 +64,10 @@ class GFCLoss(GFCBase):
         mlvl_grid_cells_list = tf.concat(multi_level_grid_cells, axis=0)
         mlvl_grid_cells_list = tf.tile(mlvl_grid_cells_list[None, ...],
                                        [batch_size, 1, 1])
-        num_level_cells_list = tf.tile(
-            tf.cast(num_level_cells, tf.float32)[None, :], [batch_size, 1])
+
+        # num_level_cells_list = tf.tile(
+        #     tf.cast(num_level_cells, tf.float32)[None, :], [batch_size, 1])
+        num_level_cells_list = [num_level_cells for _ in range(batch_size)]
         # compute targets for each image
         if gt_bboxes_ignore_list is None:
             gt_bboxes_ignore_list = tf.constant(np.inf, shape=(batch_size, ))
@@ -74,9 +76,25 @@ class GFCLoss(GFCBase):
         # --------------------------init state --------------------------
 
         # TODO: implementation core assign problems
-        self.run_assign_single_img(mlvl_grid_cells_list, num_level_cells_list,
-                                   gt_bboxes_list, gt_bboxes_ignore_list,
-                                   gt_labels_list)
+        for i in range(batch_size):
+            mlvl_grid_cells, num_level_cells = mlvl_grid_cells_list[
+                i], num_level_cells_list[i]
+            gt_bboxes, gt_bboxes_ignore, gt_labels = gt_bboxes_list[
+                i], gt_bboxes_ignore_list[i], gt_labels_list[i]
+            num_bbox = num_bboxes[i]
+            self.run_assign_single_img(mlvl_grid_cells, num_level_cells,
+                                       gt_bboxes, gt_bboxes_ignore, gt_labels,
+                                       num_bbox)
+            xxxxs
+        # for mlvl_grid_cells, num_level_cells, gt_bboxes, gt_bboxes_ignore, gt_labels, num_bbox in zip(
+        #         mlvl_grid_cells_list, num_level_cells_list, gt_bboxes_list,
+        #         gt_bboxes_ignore_list, gt_labels_list, num_bboxes):
+        # print(mlvl_grid_cells)
+        # print(num_level_cells)
+        # print(gt_bboxes)
+        # print(gt_bboxes_ignore)
+        # print(num_bbox)
+
         # no valid cells
         # if any([labels is None for labels in all_labels]):
         #     return None
@@ -96,7 +114,7 @@ class GFCLoss(GFCBase):
         #         num_total_neg)
 
     def run_assign_single_img(self, grid_cells, num_level_cells, gt_bboxes,
-                              gt_bboxes_ignore, gt_labels):
+                              gt_bboxes_ignore, gt_labels, num_bbox):
         """
             Using ATSS Assigner to assign target on one image.
             :param grid_cells: Grid cell boxes of all pixels on feature map
@@ -108,7 +126,7 @@ class GFCLoss(GFCBase):
         """
         assign_result = self.assigner.assign(grid_cells, num_level_cells,
                                              gt_bboxes, gt_bboxes_ignore,
-                                             gt_labels)
+                                             gt_labels, num_bbox)
 
         pos_inds, neg_inds, pos_gt_bboxes, pos_assigned_gt_inds = self.sample(
             assign_result, gt_bboxes)
