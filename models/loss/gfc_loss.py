@@ -65,8 +65,6 @@ class GFCLoss(GFCBase):
         mlvl_grid_cells_list = tf.tile(mlvl_grid_cells_list[None, ...],
                                        [batch_size, 1, 1])
 
-        # num_level_cells_list = tf.tile(
-        #     tf.cast(num_level_cells, tf.float32)[None, :], [batch_size, 1])
         num_level_cells_list = [num_level_cells for _ in range(batch_size)]
         # compute targets for each image
         if gt_bboxes_ignore_list is None:
@@ -86,32 +84,6 @@ class GFCLoss(GFCBase):
                                        gt_bboxes, gt_bboxes_ignore, gt_labels,
                                        num_bbox)
             xxxxs
-        # for mlvl_grid_cells, num_level_cells, gt_bboxes, gt_bboxes_ignore, gt_labels, num_bbox in zip(
-        #         mlvl_grid_cells_list, num_level_cells_list, gt_bboxes_list,
-        #         gt_bboxes_ignore_list, gt_labels_list, num_bboxes):
-        # print(mlvl_grid_cells)
-        # print(num_level_cells)
-        # print(gt_bboxes)
-        # print(gt_bboxes_ignore)
-        # print(num_bbox)
-
-        # no valid cells
-        # if any([labels is None for labels in all_labels]):
-        #     return None
-        # # sampled cells of all images
-        # num_total_pos = sum([max(inds.numel(), 1) for inds in pos_inds_list])
-        # num_total_neg = sum([max(inds.numel(), 1) for inds in neg_inds_list])
-        # # merge list of targets tensors into one batch then split to multi levels
-        # # back to FPN level probelms
-        # mlvl_grid_cells = images_to_levels(all_grid_cells, num_level_cells)
-        # mlvl_labels = images_to_levels(all_labels, num_level_cells)
-        # mlvl_label_weights = images_to_levels(all_label_weights,
-        #                                       num_level_cells)
-        # mlvl_bbox_targets = images_to_levels(all_bbox_targets, num_level_cells)
-        # mlvl_bbox_weights = images_to_levels(all_bbox_weights, num_level_cells)
-        # return (mlvl_grid_cells, mlvl_labels, mlvl_label_weights,
-        #         mlvl_bbox_targets, mlvl_bbox_weights, num_total_pos,
-        #         num_total_neg)
 
     def run_assign_single_img(self, grid_cells, num_level_cells, gt_bboxes,
                               gt_bboxes_ignore, gt_labels, num_bbox):
@@ -127,7 +99,28 @@ class GFCLoss(GFCBase):
         assign_result = self.assigner.assign(grid_cells, num_level_cells,
                                              gt_bboxes, gt_bboxes_ignore,
                                              gt_labels, num_bbox)
-
+        print(assign_result)
+        xxxx
         pos_inds, neg_inds, pos_gt_bboxes, pos_assigned_gt_inds = self.sample(
             assign_result, gt_bboxes)
-        return
+        return pos_inds, neg_inds, pos_gt_bboxes, pos_assigned_gt_inds
+
+    def sample(self, assign_result, gt_bboxes):
+
+        print(gt_bboxes)
+        xxxx
+        pos_inds = (torch.nonzero(assign_result.gt_inds > 0,
+                                  as_tuple=False).squeeze(-1).unique())
+        neg_inds = (torch.nonzero(assign_result.gt_inds == 0,
+                                  as_tuple=False).squeeze(-1).unique())
+        pos_assigned_gt_inds = assign_result.gt_inds[pos_inds] - 1
+
+        if gt_bboxes.numel() == 0:
+            # hack for index error case
+            assert pos_assigned_gt_inds.numel() == 0
+            pos_gt_bboxes = torch.empty_like(gt_bboxes).view(-1, 4)
+        else:
+            if len(gt_bboxes.shape) < 2:
+                gt_bboxes = gt_bboxes.view(-1, 4)
+            pos_gt_bboxes = gt_bboxes[pos_assigned_gt_inds, :]
+        return pos_inds, neg_inds, pos_gt_bboxes, pos_assigned_gt_inds

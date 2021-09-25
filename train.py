@@ -14,8 +14,14 @@ from pprint import pprint
 from utils.tools import *
 from utils.io import *
 
+# from tensorflow.python.framework.ops import disable_eager_execution
 
-def train(config, is_restore):
+# disable_eager_execution()
+# from tensorflow.python.compiler.mlcompute import mlcompute
+# mlcompute.set_mlc_device(device_name='cpu')
+
+
+def train(config, is_restore, excluded_layers):
     mirrored_strategy = tf.distribute.MirroredStrategy()
     general_dataset = GeneralDataset(config.data_reader)
     # Read in Training Data
@@ -62,4 +68,4 @@ if __name__ == '__main__':
     set_gpu(args.gpus)
     logger.info(f'Use config: {args.config} to train kws')
     config = load_configger(args.config)
-    train(config, args.restore)
+    train(config, args.restore, args.excluded_layers)

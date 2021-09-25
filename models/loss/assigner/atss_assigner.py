@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import tensorflow as tf
+from tensorflow.python.ops.gen_array_ops import gather, shape
 
 from ...loss.iou_loss import bbox_overlaps
 from .assign_result import AssignResult
@@ -71,7 +72,7 @@ class ATSSAssigner(BaseAssigner):
         Returns:
             :obj:`AssignResult`: The assign result.
         """
-        INF = 100000000
+        INF = 1e8
         # bboxes = bboxes[:, :4]
         num_gt = num_bbox[0]
         num_bboxes = tf.shape(bboxes)[0]
@@ -127,7 +128,6 @@ class ATSSAssigner(BaseAssigner):
 
         # lv_shapes = num_level_bboxes.get_shape().as_list()
         for level, bboxes_per_level in enumerate(num_level_bboxes):
-
             # on each pyramid level, for each gt,
             # select k bbox whose center are closest to the gt center
             end_idx = start_idx + bboxes_per_level
@@ -139,63 +139,110 @@ class ATSSAssigner(BaseAssigner):
                                                         sorted=True)
             candidate_idxs.append(topk_idxs_per_level + start_idx)
             start_idx = end_idx
-
         candidate_idxs = tf.concat(candidate_idxs, axis=-1)
+        # shape  is [9*3, N]
         candidate_idxs = tf.transpose(candidate_idxs)
-        print(candidate_idxs)
-        print(overlaps)
-
+        for_candidate_idxs = candidate_idxs
+        n_idx = tf.range(num_gt, dtype=tf.int32)
+        # pass to next step
+        for_n_idx = n_idx
+        n_idx = tf.tile(n_idx[tf.newaxis, :], [tf.shape(candidate_idxs)[0], 1])
+        n_idx = tf.expand_dims(n_idx, axis=-1)
+        candidate_idxs = tf.expand_dims(candidate_idxs, axis=-1)
+        candidate_idxs = tf.concat([candidate_idxs, n_idx], axis=-1)
+        # gen idx for 0~ n gt bboxes
         # get corresponding iou for the these candidates, and compute the
         # mean and std, set mean + std as the iou threshold
-        candidate_overlaps = overlaps[candidate_idxs,
-                                      tf.range(num_gt, dtype=tf.int32)]
+        candidate_overlaps = tf.gather_nd(overlaps, candidate_idxs)
 
-        overlaps_mean_per_gt = candidate_overlaps.mean(0)
-        overlaps_std_per_gt = candidate_overlaps.std(0)
+        overlaps_mean_per_gt = tf.math.reduce_mean(candidate_overlaps, axis=0)
+        overlaps_std_per_gt = tf.math.reduce_std(candidate_overlaps, axis=0)
         overlaps_thr_per_gt = overlaps_mean_per_gt + overlaps_std_per_gt
 
-        is_pos = candidate_overlaps >= overlaps_thr_per_gt[None, :]
+        is_pos = candidate_overlaps >= overlaps_thr_per_gt[tf.newaxis, :]
 
         # limit the positive sample's center in gt
-        for gt_idx in range(num_gt):
-            candidate_idxs[:, gt_idx] += gt_idx * num_bboxes
-        ep_bboxes_cx = (bboxes_cx.view(1, -1).expand(
-            num_gt, num_bboxes).contiguous().view(-1))
-        ep_bboxes_cy = (bboxes_cy.view(1, -1).expand(
-            num_gt, num_bboxes).contiguous().view(-1))
-        candidate_idxs = candidate_idxs.view(-1)
+        #TODO:
+        # Latter check
+        for_candidate_idxs += for_n_idx * num_bboxes
+        #----------------reshape  and make eps bboxes for two coordinations----------------
+        ep_bboxes_cy = tf.reshape(bboxes_cy, [1, -1])
+        ep_bboxes_cy = tf.tile(ep_bboxes_cy, [num_gt, num_bboxes])
+        ep_bboxes_cy = tf.reshape(ep_bboxes_cy, [-1])
 
+        ep_bboxes_cx = tf.reshape(bboxes_cx, [1, -1])
+        ep_bboxes_cx = tf.tile(ep_bboxes_cx, [num_gt, num_bboxes])
+        ep_bboxes_cx = tf.reshape(ep_bboxes_cx, [-1])
+        #----------------reshape  and make eps bboxes for two coordinations----------------
+        candidate_idxs = tf.reshape(for_candidate_idxs, [-1])
         # calculate the left, top, right, bottom distance between positive
         # bbox center and gt side
-        l_ = ep_bboxes_cx[candidate_idxs].view(-1, num_gt) - gt_bboxes[:, 0]
-        t_ = ep_bboxes_cy[candidate_idxs].view(-1, num_gt) - gt_bboxes[:, 1]
-        r_ = gt_bboxes[:, 2] - ep_bboxes_cx[candidate_idxs].view(-1, num_gt)
-        b_ = gt_bboxes[:, 3] - ep_bboxes_cy[candidate_idxs].view(-1, num_gt)
-        is_in_gts = torch.stack([l_, t_, r_, b_], dim=1).min(dim=1)[0] > 0.01
+
+        l_ = tf.reshape(tf.gather(ep_bboxes_cx, candidate_idxs),
+                        [-1, num_gt]) - gt_bboxes[:, 1]  # x1
+        t_ = tf.reshape(tf.gather(ep_bboxes_cy, candidate_idxs),
+                        [-1, num_gt]) - gt_bboxes[:, 0]  # y1
+        r_ = gt_bboxes[:, 3] - tf.reshape(
+            tf.gather(ep_bboxes_cx, candidate_idxs), (-1, num_gt))  #x2
+        b_ = gt_bboxes[:, 2] - tf.reshape(
+            tf.gather(ep_bboxes_cy, candidate_idxs), (-1, num_gt))  #y2
+        is_in_gts = tf.concat(
+            [t_[:, None, :], l_[:, None, :], b_[:, None, :], r_[:, None, :]],
+            axis=-2)
+        is_in_gts = tf.math.reduce_min(is_in_gts, axis=-2) > .01
         is_pos = is_pos & is_in_gts
 
         # if an anchor box is assigned to multiple gts,
         # the one with the highest IoU will be selected.
-        overlaps_inf = torch.full_like(overlaps,
-                                       -INF).t().contiguous().view(-1)
-        index = candidate_idxs.view(-1)[is_pos.view(-1)]
-        overlaps_inf[index] = overlaps.t().contiguous().view(-1)[index]
-        overlaps_inf = overlaps_inf.view(num_gt, -1).t()
+        overlaps_inf = tf.transpose(tf.ones_like(overlaps) * (-INF))
+        overlaps_inf = tf.reshape(overlaps_inf, [-1])
+        index = candidate_idxs[tf.reshape(is_pos, [-1])]
+        ov_vals = tf.gather(tf.reshape(tf.transpose(overlaps), [-1]), index)
+        overlaps_inf = tf.tensor_scatter_nd_update(overlaps_inf,
+                                                   index[:,
+                                                         tf.newaxis], ov_vals)
+        overlaps_inf = tf.transpose(tf.reshape(overlaps_inf, [num_gt, -1]))
+        # overlaps_inf = overlaps_inf.view(num_gt, -1).t()
 
-        max_overlaps, argmax_overlaps = overlaps_inf.max(dim=1)
-        assigned_gt_inds[max_overlaps != -INF] = (
-            argmax_overlaps[max_overlaps != -INF] + 1)
+        max_overlaps = tf.math.reduce_max(overlaps_inf, axis=-1)
+        argmax_overlaps = tf.math.argmax(overlaps_inf, axis=-1)
+        #TODO: latter check
+        valid_mask = (max_overlaps != -INF)
+        need_assigned = (argmax_overlaps[valid_mask] + 1)
+        valid_inds = tf.where(valid_mask == True)
+        need_assigned = tf.cast(need_assigned, tf.float32)
+        assigned_gt_inds = tf.tensor_scatter_nd_update(assigned_gt_inds,
+                                                       valid_inds,
+                                                       need_assigned)
 
+        assigned_labels = tf.py_function(self._assigned_lbs,
+                                         [gt_labels, assigned_gt_inds],
+                                         [tf.float32])
+        # if gt_labels is not None:
+        #     assigned_labels = -tf.ones_like(assigned_gt_inds)
+        #     pos_inds = tf.where(assigned_gt_inds > 0)
+        #     num_elements = tf.shape(tf.reshape(pos_inds, [-1]))[0]
+        #     if num_elements > 0:
+        #         assigned_labels[pos_inds] = gt_labels[
+        #             assigned_gt_inds[pos_inds] - 1]
+        # else:
+        #     assigned_labels = None
+        return (num_gt, assigned_gt_inds, )
+
+        # return AssignResult(num_gt,
+        #                     assigned_gt_inds,
+        #                     max_overlaps,
+        #                     labels=assigned_labels)
+
+    def _assigned_lbs(self, gt_labels, assigned_gt_inds):
         if gt_labels is not None:
-            assigned_labels = assigned_gt_inds.new_full((num_bboxes, ), -1)
-            pos_inds = torch.nonzero(assigned_gt_inds > 0,
-                                     as_tuple=False).squeeze()
-            if pos_inds.numel() > 0:
+            assigned_labels = -tf.ones_like(assigned_gt_inds)
+            pos_inds = tf.where(assigned_gt_inds > 0)
+            num_elements = tf.shape(tf.reshape(pos_inds, [-1]))[0]
+            if num_elements > 0:
                 assigned_labels[pos_inds] = gt_labels[
                     assigned_gt_inds[pos_inds] - 1]
         else:
             assigned_labels = None
-        return AssignResult(num_gt,
-                            assigned_gt_inds,
-                            max_overlaps,
-                            labels=assigned_labels)
+
+        return assigned_labels

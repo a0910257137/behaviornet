@@ -105,7 +105,7 @@ class AssignResult(util_mixins.NiceRepr):
         if self.labels is None:
             parts.append(f"labels={self.labels!r}")
         else:
-            parts.append(f"labels.shape={tuple(self.labels.shape)!r}")
+            parts.append(f"labels.shape={tuple(tf.shape(self.labels))!r}")
         return ", ".join(parts)
 
     @classmethod
