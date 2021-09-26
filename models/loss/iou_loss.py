@@ -71,12 +71,13 @@ def bbox_overlaps(bboxes1, bboxes2, mode="iou", is_aligned=False, eps=1e-6):
 
     assert mode in ["iou", "iof", "giou"], f"Unsupported mode {mode}"
     # Either the boxes are empty or the length of boxes's last dimenstion is 4
-
     shape1 = bboxes1.get_shape().as_list()
     shape2 = bboxes2.get_shape().as_list()
-    assert shape1[0] != 0 or shape2[0] != 0
-    assert shape1[-1] == 4 or shape2[-1] == 4
-
+    assert shape1[-1] == 4 or shape1[0] == 0
+    assert shape2[-1] == 4 or shape2[0] == 0
+    # Batch dim must be the same
+    # Batch dim: (B1, B2, ... Bn)
+    assert shape1[:-2] == shape2[:-2]
     batch_shape = shape1[:-2]
 
     # rows = tf.shape(bboxes1)[0]
@@ -92,14 +93,17 @@ def bbox_overlaps(bboxes1, bboxes2, mode="iou", is_aligned=False, eps=1e-6):
                                                    bboxes1[..., 1])
     area2 = (bboxes2[..., 2] - bboxes2[..., 0]) * (bboxes2[..., 3] -
                                                    bboxes2[..., 1])
-
+    #TODO:aligned must change y, x coords
     if is_aligned:
-        lt = tf.math.reduce_max(bboxes1[..., :2],
-                                bboxes2[..., :2])  # [B, rows, 2]
-        rb = tf.math.reduce_min(bboxes1[..., 2:], bboxes2[...,
-                                                          2:])  # [B, rows, 2]
+        lt = tf.math.maximum(bboxes1[..., :2],
+                             bboxes2[..., :2])  # [B, rows, 2]
 
-        wh = (rb - lt).clamp(min=0)  # [B, rows, 2]
+        rb = tf.math.minimum(bboxes1[..., 2:], bboxes2[...,
+                                                       2:])  # [B, rows, 2]
+        wh = tf.clip_by_value((rb - lt),
+                              clip_value_min=0.,
+                              clip_value_max=1000)
+        # wh = (rb - lt).clamp(min=0)  # [B, rows, 2]
         overlap = wh[..., 0] * wh[..., 1]
 
         if mode in ["iou", "giou"]:
@@ -107,10 +111,8 @@ def bbox_overlaps(bboxes1, bboxes2, mode="iou", is_aligned=False, eps=1e-6):
         else:
             union = area1
         if mode == "giou":
-            enclosed_lt = tf.math.reduce_min(bboxes1[..., :2],
-                                             bboxes2[..., :2])
-            enclosed_rb = tf.math.reduce_max(bboxes1[..., 2:], bboxes2[...,
-                                                                       2:])
+            enclosed_lt = tf.math.minimum(bboxes1[..., :2], bboxes2[..., :2])
+            enclosed_rb = tf.math.maximum(bboxes1[..., 2:], bboxes2[..., 2:])
     else:
         lt = tf.math.maximum(bboxes1[..., :, None, :2],
                              bboxes2[..., None, :, :2])  # [B, rows, cols, 2]
@@ -130,11 +132,10 @@ def bbox_overlaps(bboxes1, bboxes2, mode="iou", is_aligned=False, eps=1e-6):
                                           bboxes2[..., None, :, :2])
             enclosed_rb = tf.math.maximum(bboxes1[..., :, None, 2:],
                                           bboxes2[..., None, :, 2:])
-    # eps = tf.constant(value=tf.keras.backend.epsilon(), shape=tf.shape(union))
-    # eps = union.new_tensor([eps])
     union = tf.math.maximum(union, tf.keras.backend.epsilon())
     ious = overlap / union
     if mode in ["iou", "iof"]:
+        ious = tf.cast(ious, tf.float32)
         return ious
     # calculate gious
     enclose_wh = tf.clip_by_value((enclosed_rb - enclosed_lt),

@@ -4,9 +4,6 @@ from pprint import pprint
 
 
 class GFCBase:
-    def __init__(self, config, **kwargs):
-        self.config = config
-
     def get_grid_cells(self, featmap_size, grid_scale, stride):
         """
             Generate grid cells of a feature map for target assignment.
@@ -25,10 +22,10 @@ class GFCBase:
         x = tf.expand_dims(tf.cast(x, tf.float32), axis=-1)
         grid_cells = tf.concat(
             [
-                x - 0.5 * cell_size,
                 y - 0.5 * cell_size,
-                x + 0.5 * cell_size,
+                x - 0.5 * cell_size,
                 y + 0.5 * cell_size,
+                x + 0.5 * cell_size,
             ],
             axis=-1,
         )
@@ -46,10 +43,13 @@ class GFCBase:
         :param flatten: flatten the x and y tensors
         :return: y and x of the center points
         """
+        # 40 , 32
         h, w = featmap_size
         y_range = (np.arange(h) + 0.5) * stride
         x_range = (np.arange(w) + 0.5) * stride
-        y, x = np.meshgrid(y_range, x_range)
+        y, x = tf.meshgrid(y_range, x_range)
+        y = tf.transpose(y)
+        x = tf.transpose(x)
         if flatten:
             y = np.reshape(y, [-1])
             x = np.reshape(x, [-1])

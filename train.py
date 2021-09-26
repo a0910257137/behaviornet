@@ -13,6 +13,7 @@ from utils.tools import get_callbacks, load_configger
 from pprint import pprint
 from utils.tools import *
 from utils.io import *
+from pprint import pprint
 
 # from tensorflow.python.framework.ops import disable_eager_execution
 
@@ -35,6 +36,7 @@ def train(config, is_restore, excluded_layers):
                 model, excluded_layers)
     callbacks = get_callbacks(config, model, optimizer, train_datasets,
                               test_datasets)
+
     model.fit(train_datasets,
               validation_data=test_datasets,
               epochs=config.epochs,
