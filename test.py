@@ -109,28 +109,22 @@ class GFCLoss(GFCBase):
             loss_qfl, loss_bbox, loss_dfl, avg_factor = self.loss_single(
                 grid_cells, cls_score, bbox_pred, labels, label_weights,
                 bbox_targets, stride, num_total_samples)
+            avg_factor = tf.cast(avg_factor, tf.float32)
             losses_qfl += [loss_qfl]
             losses_bbox += [loss_bbox]
             losses_dfl += [loss_dfl]
             avg_factors += [avg_factor]
-
         avg_factors = tf.math.reduce_sum(avg_factors)
         avg_factor = tf.math.reduce_mean(avg_factors)
-
-        #TODO:finall batch-wise losses
         # forward to generalized focal loss as distribution problems
+        # avg_factor = float(avg_factor)
         if avg_factor <= 0:
-            loss_qfl = torch.tensor(0, dtype=torch.float32,
-                                    requires_grad=True).to(device)
-            loss_bbox = torch.tensor(0,
-                                     dtype=torch.float32,
-                                     requires_grad=True).to(device)
-            loss_dfl = torch.tensor(0, dtype=torch.float32,
-                                    requires_grad=True).to(device)
+            loss_qfl, loss_bbox, loss_dfl = 0., 0., 0.
         else:
+            # losses_bbox = tf.cast(losses_bbox, tf.float32) / avg_factor
+            # losses_dfl = tf.cast(losses_dfl, tf.float32) / avg_factor
             losses_bbox = list(map(lambda x: x / avg_factor, losses_bbox))
             losses_dfl = list(map(lambda x: x / avg_factor, losses_dfl))
-
             loss_qfl = sum(losses_qfl)
             loss_bbox = sum(losses_bbox)
             loss_dfl = sum(losses_dfl)
@@ -342,7 +336,7 @@ class GFCLoss(GFCBase):
         valid_mask = (labels >= 0) & (labels < bg_class_ind)
         pos_inds = tf.squeeze(tf.where(valid_mask == True), axis=-1)
         score = tf.zeros_like(label_weights)
-        print(pos_inds)
+        # print(pos_inds)
         if len(pos_inds) > 0:
             pos_bbox_targets = tf.gather_nd(bbox_targets, pos_inds[:, None])
             # (n, 4 * (reg_max + 1))
