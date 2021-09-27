@@ -38,18 +38,30 @@ class ModelFactory:
 
     def _optimizer(self):
         optimizers = {}
-        for model_key in self._model_keys:
-            optimizer_key = self.config[model_key].optimizer
-            lr = self.config[model_key].lr
+        if self.config.multi_optimizer:
+            for model_key in self._model_keys:
+                optimizer_key = self.config[model_key].optimizer
+                lr = self.config[model_key].lr
+                if optimizer_key == 'adam':
+                    optimizer = tf.keras.optimizers.Adam(lr=lr)
+                elif optimizer_key == 'sgd':
+                    optimizer = tf.keras.optimizers.SGD(lr=lr,
+                                                        momentum=0.9,
+                                                        nesterov=True)
+                elif optimizer_key == 'nesterov_mom':
+                    optimizer = tf.train.MomentumOptimizer(lr,
+                                                           0.9,
+                                                           use_nesterov=True)
+                optimizers[model_key] = optimizer
+            return optimizers
+        else:
+            optimizer_key = self.config.optimizer
+            lr = self.config.lr
             if optimizer_key == 'adam':
-                optimizer = tf.keras.optimizers.Adam(lr=lr)
+                return tf.keras.optimizers.Adam(lr=lr)
             elif optimizer_key == 'sgd':
-                optimizer = tf.keras.optimizers.SGD(lr=lr,
-                                                    momentum=0.9,
-                                                    nesterov=True)
+                return tf.keras.optimizers.SGD(lr=lr,
+                                               momentum=0.9,
+                                               nesterov=True)
             elif optimizer_key == 'nesterov_mom':
-                optimizer = tf.train.MomentumOptimizer(lr,
-                                                       0.9,
-                                                       use_nesterov=True)
-            optimizers[model_key] = optimizer
-        return optimizers
+                return tf.train.MomentumOptimizer(lr, 0.9, use_nesterov=True)

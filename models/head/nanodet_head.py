@@ -86,7 +86,6 @@ class NanoDetHead(tf.keras.Model):
 
     @tf.function
     def call(self, feats):
-        # build cls and reg
         layer_ouputs = {}
         for i, (feat, cls_convs, reg_convs, gfl_cls, gfl_reg) in enumerate(
                 zip(feats, self.cls_convs, self.reg_convs, self.gfl_cls,
@@ -94,14 +93,6 @@ class NanoDetHead(tf.keras.Model):
             layer_ouputs['layer_output_{}'.format(i)] = self.run_single(
                 feat, cls_convs, reg_convs, gfl_cls, gfl_reg)
         return layer_ouputs
-        # cls_score, bbox_pred = tf.map_fn(
-        #     lambda x: self.run_single(x[0], x[1], x[2], x[3], x[4]),
-        #     feats,
-        #     self.cls_convs,
-        #     self.reg_convs,
-        #     self.gfl_cls,
-        #     self.gfl_reg,
-        #     fn_output_signature=(tf.float32, tf.float32))
 
     def run_single(self, x, cls_convs, reg_convs, gfl_cls, gfl_reg):
         cls_feat = x
@@ -117,5 +108,6 @@ class NanoDetHead(tf.keras.Model):
         else:
             cls_score = gfl_cls(cls_feat)
             bbox_pred = gfl_reg(reg_feat)
-
+        print(bbox_pred)
+        xxx
         return {'cls_scores': cls_score, 'bbox_pred': bbox_pred}

@@ -75,13 +75,13 @@ class ATSSAssigner(BaseAssigner):
             :obj:`AssignResult`: The assign result.
         """
         INF = 1e8
-        num_gt = num_bbox
+        num_gt = num_bbox[0]
         num_bboxes = tf.shape(bboxes)[0]
         gt_valids = tf.math.reduce_all(tf.math.is_finite(gt_bboxes), axis=-1)
         gt_bboxes = tf.reshape(gt_bboxes[gt_valids], [-1, 4])
-
         gt_bboxes = tf.reshape(gt_bboxes, [num_gt, 4])
         # compute iou between all bbox and gt
+
         overlaps = bbox_overlaps(bboxes, gt_bboxes)
 
         # assign 0 by default
@@ -92,8 +92,8 @@ class ATSSAssigner(BaseAssigner):
             if num_gt == 0:
                 # No truth, assign everything to background
                 assigned_gt_inds[:] = 0
-            if gt_labels is None:
-                assigned_labels = None
+            if gt_labels is -1.:
+                assigned_labels = -1.
             else:
                 assigned_labels = tf.constant(-1., shape=(num_bboxes))
             return (num_gt, assigned_gt_inds, max_overlaps, assigned_labels)
@@ -207,11 +207,12 @@ class ATSSAssigner(BaseAssigner):
         assigned_gt_inds = tf.tensor_scatter_nd_update(assigned_gt_inds,
                                                        valid_inds,
                                                        need_assigned)
-        if gt_labels is not None:
+
+        if tf.math.reduce_all(gt_labels != -1.) or gt_labels != -1.:
             assigned_labels = -tf.ones_like(assigned_gt_inds)
             pos_inds = tf.where(assigned_gt_inds > 0)
-            num_elements = tf.shape(tf.reshape(pos_inds, [-1]))[0]
 
+            num_elements = tf.shape(tf.reshape(pos_inds, [-1]))[0]
             if num_elements > 0:
                 gath_vals_as_idx = tf.gather(assigned_gt_inds, pos_inds) - 1.
                 gath_vals_as_idx = tf.cast(gath_vals_as_idx, tf.int32)
@@ -219,24 +220,13 @@ class ATSSAssigner(BaseAssigner):
                 picked_gt_lb = tf.squeeze(tf.cast(picked_gt_lb, tf.float32),
                                           axis=-1)
                 assigned_labels = tf.tensor_scatter_nd_update(
-                    assigned_labels, pos_inds, picked_gt_lb)
+                    assigned_labels[:, None], pos_inds, picked_gt_lb)
+
                 assigned_labels = tf.cast(assigned_labels, tf.int32)
+                assigned_labels = tf.squeeze(assigned_labels, axis=-1)
         else:
             assigned_labels = None
-        assigned_gt_inds2 = np.load('../nanodet/assigned_gt_inds.npy')
-        max_overlaps2 = np.load('../nanodet/max_overlaps.npy')
-        assigned_labels2 = np.load('../nanodet/assigned_labels.npy')
-        ans = tf.math.equal(assigned_gt_inds, assigned_gt_inds2)
-        print(ans)
-        print(tf.where(ans == False))
-        ans = tf.math.equal(max_overlaps, max_overlaps2)
-        print(ans)
-        print(tf.where(ans == False))
-        ans = tf.math.equal(assigned_labels, assigned_labels2)
-        print(tf.where(ans == False))
-        print('-' * 100)
         return AssignResult(num_gt,
                             assigned_gt_inds,
                             max_overlaps,
                             labels=assigned_labels)
-        # return (num_gt, assigned_gt_inds, max_overlaps, assigned_labels)

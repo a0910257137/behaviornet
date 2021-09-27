@@ -3,18 +3,6 @@ import numpy as np
 from tensorflow.python import tf2
 
 
-def obj_class(tars, pred_cates, batch_size, max_obj_num):
-    # b_idxs = tf.reshape(b_idxs, [batch_size, max_obj_num, 2])
-    is_finite = tf.math.is_finite(tars)
-    valid_pos = tf.where(tf.math.reduce_any(is_finite, axis=-1), 1., 0.)
-    # tf.nn.softmax_cross_entropy_with_logits(labels, logits=, axis=-1)
-    print(valid_pos)
-    print(pred_cates)
-    xxx
-
-    return
-
-
 def rel_cross_entropy(batch_size, max_obj_num, entropy_func, rel_cates, logits,
                       b_idxs, tars):
     b_idxs = tf.reshape(b_idxs, [batch_size, max_obj_num, 2])

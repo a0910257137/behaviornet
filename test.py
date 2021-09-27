@@ -14,9 +14,6 @@ class GFCLoss(GFCBase):
         self.grid_cell_scale = 5
         self.num_classes = 80
         self.reg_max = 7
-        # self.bce_func = tf.keras.losses.BinaryCrossentropy(
-        #     reduction=tf.keras.losses.Reduction.NONE, from_logits=False)
-
         self.bce_lgts_func = tf.keras.losses.BinaryCrossentropy(
             reduction=tf.keras.losses.Reduction.NONE, from_logits=True)
         self.assigner = ATSSAssigner(topk=9)
@@ -71,8 +68,6 @@ class GFCLoss(GFCBase):
             bbox_preds_1, bbox_preds_2, featmap_sizes_0, featmap_sizes_1,
             featmap_sizes_2, num_bboxes, gt_bboxes, gt_labels, gt_bboxes_ignore
         ], [tf.float32])
-        # loss = self._cal_loss(cls_scores, bbox_preds, gt_bboxes, gt_labels,
-        #                       featmap_sizes, gt_bboxes_ignore)
         return loss
 
     def _cal_loss(self, batch_size, cls_scores_0, cls_scores_1, cls_scores_2,
@@ -161,8 +156,6 @@ class GFCLoss(GFCBase):
         mlvl_grid_cells_list = tf.tile(mlvl_grid_cells_list[None, ...],
                                        [batch_size, 1, 1])
         num_level_cells_list = [num_level_cells for _ in range(batch_size)]
-        # compute targets for each image
-
         if gt_bboxes_ignore_list == -1:
             gt_bboxes_ignore_list = [None for _ in range(batch_size)]
         if gt_labels_list is None:
@@ -184,13 +177,11 @@ class GFCLoss(GFCBase):
 
             comp = tf.constant(np.inf, shape=(30 - tf.shape(gt_bboxes)[0], 4))
             gt_bboxes = tf.concat([gt_bboxes, comp], axis=0)
-            #------------------------------hack for my solutions------------------------------
             #  num_bboxes = 1-D tensor
             num_bbox = num_bboxes[i]
             grid_cells, labels, label_weights, bbox_targets, bbox_weights, pos_inds, neg_inds = self.run_single_assign(
                 mlvl_grid_cells, num_level_cells, gt_bboxes, gt_bboxes_ignore,
                 gt_labels, num_bbox)
-            #TODO:checkout
             all_grid_cells += [grid_cells]
             all_labels += [labels]
             all_label_weights += [label_weights]
