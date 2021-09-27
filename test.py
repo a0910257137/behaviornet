@@ -4,6 +4,7 @@ import glob, os
 from models.loss.assigner.atss_assigner import ATSSAssigner
 from models.loss.gfc_base import GFCBase
 from models.loss.iou_loss import *
+from pprint import pprint
 
 
 class GFCLoss(GFCBase):
@@ -13,8 +14,11 @@ class GFCLoss(GFCBase):
         self.grid_cell_scale = 5
         self.num_classes = 80
         self.reg_max = 7
-        self.bce_func = tf.keras.losses.BinaryCrossentropy(
-            reduction=tf.keras.losses.Reduction.NONE, from_logits=False)
+        # self.bce_func = tf.keras.losses.BinaryCrossentropy(
+        #     reduction=tf.keras.losses.Reduction.NONE, from_logits=False)
+
+        self.bce_lgts_func = tf.keras.losses.BinaryCrossentropy(
+            reduction=tf.keras.losses.Reduction.NONE, from_logits=True)
         self.assigner = ATSSAssigner(topk=9)
         self.use_sigmoid = True
         if self.use_sigmoid:
@@ -378,8 +382,6 @@ class GFCLoss(GFCBase):
                 weight=weight_targets,
                 avg_factor=1.0,
             )
-            #TODO:
-            # dfl loss
             weight = tf.reshape(tf.tile(weight_targets[:, None], [1, 4]), [-1])
             loss_dfl = self._loss_dfl(
                 pred_corners,
@@ -391,15 +393,15 @@ class GFCLoss(GFCBase):
             loss_bbox = tf.math.reduce_sum(bbox_pred) * 0.
             loss_dfl = tf.math.reduce_sum(bbox_pred) * 0.
             weight_targets = tf.constant(0)
-        xxxxx
         # qfl loss
-        loss_qfl = self.loss_qfl(
+        loss_qfl = self._loss_qfl(
             cls_score,
             (labels, score),
             weight=label_weights,
             avg_factor=num_total_samples,
         )
-        return loss_qfl, loss_bbox, loss_dfl, weight_targets.sum()
+        return loss_qfl, loss_bbox, loss_dfl, tf.math.reduce_sum(
+            weight_targets)
 
     def grid_cells_to_center(self, grid_cells):
         """
@@ -411,7 +413,6 @@ class GFCLoss(GFCBase):
         cells_cx = (grid_cells[:, 3] + grid_cells[:, 1]) / 2
         return tf.concat([cells_cy[:, None], cells_cx[:, None]], axis=-1)
 
-    #
     def integral_distribution(self, x):
         """Forward feature from the regression head to get integral result of
         bounding box location.
@@ -570,32 +571,17 @@ class GFCLoss(GFCBase):
             dis_right = dis_left + 1
             weight_left = tf.cast(dis_right, tf.float32) - label
             weight_right = label - tf.cast(dis_left, tf.float32)
-
-            #TODO: tommorow check
-            log_probabilities = -tf.math.log(tf.nn.softmax(
-                pred, axis=-1)) * tf.cast(dis_left[:, None], tf.float32)
-            cross_entropy_l = tf.math.reduce_mean(log_probabilities, axis=-1)
-            # print(cross_entropy_l)
-
-            cross_entropy = -tf.math.log(tf.nn.softmax(
-                pred, axis=-1)) * tf.cast(dis_right[:, None], tf.float32)
-            cross_entropy_r = tf.math.reduce_mean(cross_entropy, axis=-1)
-
-            cross_entropy = (cross_entropy_l * weight_left +
-                             cross_entropy_r * weight_right)
-            print(cross_entropy)
-            dl = tf.nn.softmax_cross_entropy_with_logits(dis_left, pred)
-            dr = tf.nn.softmax_cross_entropy_with_logits(dis_right, pred)
-            loss = (dl + dr) / 96
-            print(loss)
-            xxx
+            one_hot_code = tf.one_hot(dis_left, depth=pred.shape[-1])
+            bce_lp_loss = tf.nn.softmax_cross_entropy_with_logits(
+                labels=one_hot_code, logits=pred) * weight_left
+            bce_rp_loss = tf.nn.softmax_cross_entropy_with_logits(
+                labels=one_hot_code, logits=pred) * weight_right
+            loss = bce_lp_loss + bce_rp_loss
             return loss
 
         self.reduction = 'mean'
         self.loss_weight = 0.25
-
         assert reduction_override in (None, "none", "mean", "sum")
-
         reduction = reduction_override if reduction_override else self.reduction
         distribution_fc_losss = distribution_focal_loss(pred, target)
         distribution_fc_losss = self.weight_reduce_loss(distribution_fc_losss,
@@ -605,12 +591,12 @@ class GFCLoss(GFCBase):
         loss_cls = self.loss_weight * distribution_fc_losss
         return loss_cls
 
-    def loss_qfl(self,
-                 pred,
-                 target,
-                 weight=None,
-                 avg_factor=None,
-                 reduction_override=None):
+    def _loss_qfl(self,
+                  pred,
+                  target,
+                  weight=None,
+                  avg_factor=None,
+                  reduction_override=None):
         """Forward function.
 
         Args:
@@ -628,16 +614,21 @@ class GFCLoss(GFCBase):
                 Defaults to None.
         """
         def quality_focal_loss(pred, target, beta=2.0):
-            """Apply element-wise weight and reduce loss.
+            """Quality Focal Loss (QFL) is from `Generalized Focal Loss: Learning
+            Qualified and Distributed Bounding Boxes for Dense Object Detection
+            <https://arxiv.org/abs/2006.04388>`_.
 
             Args:
-                loss (Tensor): Element-wise loss.
-                weight (Tensor): Element-wise weights.
-                reduction (str): Same as built-in losses of PyTorch.
-                avg_factor (float): Avarage factor when computing the mean of losses.
+                pred (torch.Tensor): Predicted joint representation of classification
+                    and quality (IoU) estimation with shape (N, C), C is the number of
+                    classes.
+                target (tuple([torch.Tensor])): Target category label with shape (N,)
+                    and target quality label with shape (N,).
+                beta (float): The beta parameter for calculating the modulating factor.
+                    Defaults to 2.0.
 
             Returns:
-                Tensor: Processed loss values.
+                torch.Tensor: Loss tensor with shape (N,).
             """
             assert (
                 len(target) == 2
@@ -651,30 +642,36 @@ class GFCLoss(GFCBase):
 
             zerolabel = tf.expand_dims(zerolabel, axis=-1)
             pred = tf.expand_dims(pred, axis=-1)
-            loss = self.bce_func(zerolabel, pred) * tf.math.pow(
+            loss = self.bce_lgts_func(zerolabel, pred) * tf.math.pow(
                 scale_factor, self.beta)
-
             # FG cat_id: [0, num_classes -1], BG cat_id: num_classes
             bg_class_ind = tf.shape(pred)[1]
             valid_mask = (label >= 0) & (label < bg_class_ind)
             pos = tf.squeeze(tf.where(valid_mask == True), axis=-1)
             pos_label = tf.gather(label, pos)
-
-            #TODO latter check:
             # positives are supervised by bbox quality (IoU) score
-            # scale_factor = score[pos] - pred_sigmoid[pos, pos_label]
-            # loss[pos, pos_label] = F.binary_cross_entropy_with_logits(
-            #     pred[pos, pos_label], score[pos],
-            #     reduction="none") * scale_factor.abs().pow(beta)
-            # loss = loss.sum(dim=1, keepdim=False)
+            pos = tf.cast(pos[:, None], tf.int32)
+            pos_label = tf.cast(pos_label[:, None], tf.int32)
+            indices = tf.concat([pos, pos_label], axis=1)
+            scale_factor = tf.squeeze(tf.gather(
+                score, pos), axis=-1) - tf.gather_nd(pred_sigmoid, indices)
+
+            lbs = tf.squeeze(tf.gather(score, pos), axis=-1)
+            lgts = tf.gather_nd(tf.squeeze(pred, axis=-1), indices)
+            out_loss = self.bce_lgts_func(lbs[:, None], lgts[:, None])
+            weight = tf.math.pow(tf.math.abs(scale_factor), self.beta)
+            out_loss = out_loss * weight
+            loss = tf.tensor_scatter_nd_update(loss, indices, out_loss)
+            loss = tf.math.reduce_sum(loss, axis=-1, keepdims=False)
             return loss
 
         self.use_sigmoid = True
         self.beta = 2.0
-        self.reduction = 'mean'
         self.loss_weight = 1.0
+        self.reduction = 'mean'
         assert reduction_override in (None, "none", "mean", "sum")
         reduction = reduction_override if reduction_override else self.reduction
+
         if self.use_sigmoid:
             loss_cls = quality_focal_loss(pred, target, beta=self.beta)
 
