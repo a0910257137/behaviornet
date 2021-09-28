@@ -1,62 +1,90 @@
-from typing import cast
-import tensorflow as tf
 import numpy as np
-from .gfc_base import GFCBase
-from .iou_loss import *
-from .assigner.atss_assigner import ATSSAssigner
+import tensorflow as tf
+import glob, os
+from models.loss.assigner.atss_assigner import ATSSAssigner
+from models.loss.gfc_base import GFCBase
+from models.loss.iou_loss import *
 from pprint import pprint
 
 
 class GFCLoss(GFCBase):
-    def __init__(self, config, **kwargs):
+    def __init__(self):
         super(GFCLoss, self).__init__()
-        self.config = config
-        self.loss_cfg = self.config.loss
-        self.head_cfg = self.config.head
-        self.strides = self.loss_cfg.strides
-        self.grid_cell_scale = self.loss_cfg.octave_base_scale
-        self.num_classes = self.head_cfg.pred_layer.num_class
-        self.reg_max = self.head_cfg.reg_max
-        self.use_sigmoid = self.loss_cfg.loss_qfl.use_sigmoid
-
+        self.strides = [8, 16, 32]
+        self.grid_cell_scale = 5
+        self.num_classes = 80
+        self.reg_max = 7
         self.bce_lgts_func = tf.keras.losses.BinaryCrossentropy(
             reduction=tf.keras.losses.Reduction.NONE, from_logits=True)
-
+        self.assigner = ATSSAssigner(topk=9)
+        self.use_sigmoid = True
         if self.use_sigmoid:
             self.cls_out_channels = self.num_classes
         else:
             self.cls_out_channels = self.num_classes + 1
-        self.assigner = ATSSAssigner(topk=9)
 
     def build_loss(self, preds, targets, batch_size, training):
-        gt_bboxes, gt_labels, num_bboxes = self.get_targets(targets)
-        cls_scores, bbox_preds = [], []
-        for key in preds:
-            cls_scores += [preds[key]['cls_scores']]
-            bbox_preds += [preds[key]['bbox_pred']]
-        gt_bboxes_ignore = -1.
-        featmap_sizes = []
-        for k in preds:
-            featmap_sizes += [
-                tf.cast(tf.shape(preds[k]['cls_scores'])[1:3], tf.float32)
-            ]
-        batch_size = tf.cast(batch_size, tf.float32)
-        loss_qfl, loss_bbox, loss_dfl = tf.py_function(
-            self._cal_loss,
-            inp=[
-                batch_size, cls_scores[0], cls_scores[1], cls_scores[2],
-                bbox_preds[0], bbox_preds[1], bbox_preds[2], featmap_sizes[0],
-                featmap_sizes[1], featmap_sizes[2], num_bboxes, gt_bboxes,
-                gt_labels, gt_bboxes_ignore
-            ],
-            Tout=(tf.float32, tf.float32, tf.float32))
+        cls_scores = [
+            np.load("../nanodet/cls_scores_0.npy", allow_pickle=True),
+            np.load("../nanodet/cls_scores_1.npy", allow_pickle=True),
+            np.load("../nanodet/cls_scores_2.npy", allow_pickle=True)
+        ]
+        bbox_preds = [
+            np.load("../nanodet/bbox_preds_0.npy", allow_pickle=True),
+            np.load("../nanodet/bbox_preds_1.npy", allow_pickle=True),
+            np.load("../nanodet/bbox_preds_2.npy", allow_pickle=True)
+        ]
+        featmap_sizes = [
+            np.load("../nanodet/featmap_size_0.npy", allow_pickle=True),
+            np.load("../nanodet/featmap_size_1.npy", allow_pickle=True),
+            np.load("../nanodet/featmap_size_2.npy", allow_pickle=True)
+        ]
+        gt_bboxes = np.load('../nanodet/gt_bboxes.npy', allow_pickle=True)
+        gt_labels = np.load('../nanodet/gt_labels.npy', allow_pickle=True)
 
-        total_loss = loss_qfl + loss_bbox + loss_dfl
-        loss_states = dict(loss_qfl=loss_qfl,
-                           loss_bbox=loss_bbox,
-                           loss_dfl=loss_dfl,
-                           total=total_loss)
-        return loss_states
+        cls_scores_0 = tf.convert_to_tensor(cls_scores[0])
+        cls_scores_0 = tf.transpose(cls_scores_0, [0, 2, 3, 1])
+
+        cls_scores_1 = tf.convert_to_tensor(cls_scores[1])
+        cls_scores_1 = tf.transpose(cls_scores_1, [0, 2, 3, 1])
+        cls_scores_2 = tf.convert_to_tensor(cls_scores[2])
+        cls_scores_2 = tf.transpose(cls_scores_2, [0, 2, 3, 1])
+
+        bbox_preds_0 = tf.convert_to_tensor(bbox_preds[0])
+        bbox_preds_0 = tf.transpose(bbox_preds_0, [0, 2, 3, 1])
+        bbox_preds_1 = tf.convert_to_tensor(bbox_preds[1])
+        bbox_preds_1 = tf.transpose(bbox_preds_1, [0, 2, 3, 1])
+        bbox_preds_2 = tf.convert_to_tensor(bbox_preds[2])
+        bbox_preds_2 = tf.transpose(bbox_preds_2, [0, 2, 3, 1])
+        featmap_sizes_0 = tf.convert_to_tensor(featmap_sizes[0])
+        featmap_sizes_1 = tf.convert_to_tensor(featmap_sizes[1])
+        featmap_sizes_2 = tf.convert_to_tensor(featmap_sizes[2])
+        tmp_gt_bboxes = []
+        tmp_gt_labels = []
+        tmp_num_bboxes = []
+        for gt_bbox, gt_label in zip(gt_bboxes, gt_labels):
+            tmp_num_bboxes += [[tf.shape(gt_bbox)[0]]]
+            comp = np.empty(shape=(100 - gt_bbox.shape[0], 4))
+            comp.fill(np.inf)
+            gt_bbox = np.concatenate([gt_bbox, comp], axis=0)
+            gt_label = np.concatenate([gt_label, comp[:, 0]], axis=0)
+            tmp_gt_bboxes += [gt_bbox]
+            tmp_gt_labels += [gt_label]
+
+        gt_bboxes = tf.convert_to_tensor(tmp_gt_bboxes, dtype=tf.float32)
+        gt_labels = tf.convert_to_tensor(tmp_gt_labels)
+        num_bboxes = tf.convert_to_tensor(tmp_num_bboxes)
+
+        gt_bboxes_ignore = -1.
+
+        batch_size = tf.cast(batch_size, tf.float32)
+
+        loss = tf.py_function(self._cal_loss, [
+            batch_size, cls_scores_0, cls_scores_1, cls_scores_2, bbox_preds_0,
+            bbox_preds_1, bbox_preds_2, featmap_sizes_0, featmap_sizes_1,
+            featmap_sizes_2, num_bboxes, gt_bboxes, gt_labels, gt_bboxes_ignore
+        ], [tf.float32])
+        return loss
 
     def _cal_loss(self, batch_size, cls_scores_0, cls_scores_1, cls_scores_2,
                   bbox_preds_0, bbox_preds_1, bbox_preds_2, featmap_sizes_0,
@@ -109,9 +137,6 @@ class GFCLoss(GFCBase):
             loss_bbox = sum(losses_bbox)
             loss_dfl = sum(losses_dfl)
         return loss_qfl, loss_bbox, loss_dfl
-
-    def get_targets(self, targets):
-        return targets['b_bboxes'], targets['b_cates'], targets['num_bbox']
 
     def target_assign(self, batch_size, featmap_sizes, gt_bboxes_list,
                       gt_bboxes_ignore_list, gt_labels_list, num_bboxes):
@@ -182,7 +207,6 @@ class GFCLoss(GFCBase):
 
         mlvl_label_weights = self.images_to_levels(all_label_weights,
                                                    num_level_cells)
-
         mlvl_bbox_targets = self.images_to_levels(all_bbox_targets,
                                                   num_level_cells)
 
@@ -214,7 +238,9 @@ class GFCLoss(GFCBase):
             assign_result, gt_bboxes)
 
         num_cells = grid_cells.get_shape().as_list()[0]
+
         bbox_targets = tf.zeros_like(grid_cells)
+
         bbox_weights = tf.zeros_like(grid_cells)
         labels = tf.constant(self.num_classes, shape=(num_cells, 1))
         label_weights = tf.constant(0., shape=(num_cells, ))
@@ -250,7 +276,6 @@ class GFCLoss(GFCBase):
             label_weights = tf.tensor_scatter_nd_update(
                 label_weights, neg_inds[:, None],
                 tf.constant(1., shape=(tf.shape(neg_inds)[0], )))
-
         return (grid_cells, labels, label_weights, bbox_targets, bbox_weights,
                 pos_inds, neg_inds)
 
@@ -264,7 +289,6 @@ class GFCLoss(GFCBase):
         bbox_targets = tf.reshape(bbox_targets, [-1, 4])
         labels = tf.reshape(labels, [-1])
         label_weights = tf.reshape(label_weights, [-1])
-
         # FG cat_id: [0, num_classes -1], BG cat_id: num_classes
         bg_class_ind = self.num_classes
         valid_mask = (labels >= 0) & (labels < bg_class_ind)
@@ -478,8 +502,7 @@ class GFCLoss(GFCBase):
             pred = tf.expand_dims(pred, axis=-1)
             loss = self.bce_lgts_func(zerolabel, pred) * tf.math.pow(
                 scale_factor, self.beta)
-            print(tf.math.reduce_sum(loss))
-            xxx
+
             # FG cat_id: [0, num_classes -1], BG cat_id: num_classes
             bg_class_ind = tf.shape(pred)[1]
             valid_mask = (label >= 0) & (label < bg_class_ind)
@@ -560,3 +583,7 @@ class GFCLoss(GFCBase):
                 raise ValueError(
                     'avg_factor can not be used with reduction="sum"')
         return loss
+
+
+gfc = GFCLoss()
+loss = gfc.build_loss(preds=None, targets=None, batch_size=32, training=False)

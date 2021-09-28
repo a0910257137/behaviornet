@@ -75,10 +75,12 @@ class ATSSAssigner(BaseAssigner):
             :obj:`AssignResult`: The assign result.
         """
         INF = 1e8
+
         num_gt = num_bbox[0]
+
         num_bboxes = tf.shape(bboxes)[0]
-        gt_valids = tf.math.reduce_all(tf.math.is_finite(gt_bboxes), axis=-1)
-        gt_bboxes = tf.reshape(gt_bboxes[gt_valids], [-1, 4])
+        # gt_valids = tf.math.reduce_all(tf.math.is_finite(gt_bboxes), axis=-1)
+        # gt_bboxes = tf.reshape(gt_bboxes[gt_valids], [-1, 4])
         gt_bboxes = tf.reshape(gt_bboxes, [num_gt, 4])
         # compute iou between all bbox and gt
 
