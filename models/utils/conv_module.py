@@ -1,4 +1,5 @@
 import tensorflow as tf
+from pprint import pprint
 
 
 class ConvBlock(tf.keras.layers.Layer):
@@ -50,6 +51,8 @@ class ConvBlock(tf.keras.layers.Layer):
         elif activation == 'hs':
             self.hs = tf.keras.layers.Activation(activation='swish',
                                                  name='act_hs')
+        elif activation == 'leaky_relu':
+            self.l_relu = tf.keras.layers.LeakyReLU()
         elif activation == 'sigmoid':
             self.sigmoid = tf.keras.layers.Activation(activation='sigmoid',
                                                       name='act_sigmoid')
@@ -63,6 +66,8 @@ class ConvBlock(tf.keras.layers.Layer):
             output = self.norm(output)
         if self.activation == 'relu':
             output = self.relu(output)
+        elif self.activation == 'leaky_relu':
+            output = self.l_relu(output)
         elif self.activation == 'sigmoid':
             output = self.sigmoid(output)
         elif self.activation == 'softmax':
@@ -100,7 +105,7 @@ class TransitionUp(tf.keras.layers.Layer):
 class BottleNeck(tf.keras.layers.Layer):
     def __init__(self, input_chs, filters, kernel_size, e, s, is_squeeze, nl,
                  **kwargs):
-        super().__init__(**kwargs)
+        super(BottleNeck, self).__init__(**kwargs)
         """
             Bottleneck
             This function defines a basic bottleneck structure.
@@ -141,7 +146,8 @@ class BottleNeck(tf.keras.layers.Layer):
                                          name='bneck_trans_conv',
                                          norm_method='bn',
                                          activation=None)
-        self.add = tf.keras.layers.Add()
+        if self.r:
+            self.add = tf.keras.layers.Add()
 
     def call(self, x):
         inputs = x
@@ -157,13 +163,15 @@ class BottleNeck(tf.keras.layers.Layer):
 
 class DW(tf.keras.layers.Layer):
     def __init__(self, kernel_size, stride, n1, **kwargs):
-        super().__init__(**kwargs)
+        super(DW, self).__init__(**kwargs)
         self.n1 = n1
+
         self.dw = tf.keras.layers.DepthwiseConv2D(kernel_size,
                                                   strides=(stride, stride),
                                                   depth_multiplier=1,
                                                   name='dw_conv',
                                                   padding='same')
+
         self.bn = tf.keras.layers.BatchNormalization(name='dw_bn')
         self.relu = tf.keras.layers.ReLU(max_value=6.0)
 
@@ -186,7 +194,8 @@ class DW(tf.keras.layers.Layer):
 
 class SE(tf.keras.layers.Layer):
     def __init__(self, input_chs, **kwargs):
-        super().__init__(**kwargs)
+
+        super(SE, self).__init__(**kwargs)
         self.input_chs = input_chs
         self.glbap = tf.keras.layers.GlobalAvgPool2D()
         self.relu = tf.keras.layers.Dense(units=input_chs, activation='relu')

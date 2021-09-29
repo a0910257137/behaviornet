@@ -15,25 +15,18 @@ from utils.tools import *
 from utils.io import *
 from pprint import pprint
 
-# from tensorflow.python.framework.ops import disable_eager_execution
-
-# disable_eager_execution()
-# from tensorflow.python.compiler.mlcompute import mlcompute
-# mlcompute.set_mlc_device(device_name='cpu')
-
-
 def train(config, is_restore, excluded_layers):
-    mirrored_strategy = tf.distribute.MirroredStrategy()
+    # mirrored_strategy = tf.distribute.MirroredStrategy()
     general_dataset = GeneralDataset(config.data_reader)
     # Read in Training Data
-    datasets = general_dataset.get_datasets(mirrored_strategy)
+    datasets = general_dataset.get_datasets()
     train_datasets, test_datasets = datasets['train'], datasets['test']
-    with mirrored_strategy.scope():
-        model, optimizer = ModelFactory(config.models, config.model_path,
-                                        config.learn_rate).build_model()
-        if is_restore:
-            model = Restore(config.model_path).build_restoration(
-                model, excluded_layers)
+    # with mirrored_strategy.scope():
+    model, optimizer = ModelFactory(config.models, config.model_path,
+                                    config.learn_rate).build_model()
+    if is_restore:
+        model = Restore(config.model_path).build_restoration(
+            model, excluded_layers)
     callbacks = get_callbacks(config, model, optimizer, train_datasets,
                               test_datasets)
 

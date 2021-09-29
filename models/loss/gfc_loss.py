@@ -478,8 +478,6 @@ class GFCLoss(GFCBase):
             pred = tf.expand_dims(pred, axis=-1)
             loss = self.bce_lgts_func(zerolabel, pred) * tf.math.pow(
                 scale_factor, self.beta)
-            print(tf.math.reduce_sum(loss))
-            xxx
             # FG cat_id: [0, num_classes -1], BG cat_id: num_classes
             bg_class_ind = tf.shape(pred)[1]
             valid_mask = (label >= 0) & (label < bg_class_ind)

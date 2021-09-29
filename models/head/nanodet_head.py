@@ -66,22 +66,24 @@ class NanoDetHead(tf.keras.Model):
                 kernel_size=1,
                 strides=1,
                 kernel_initializer=tf.keras.initializers.RandomNormal(
-                    mean=0,
-                    stddev=0.01,
-                ),
+                    mean=0., stddev=0.01),
+                use_bias=True,
+                norm_method=None,
+                activation=None,
                 bias_initializer=tf.keras.initializers.Constant(value=-4.595),
-                activation='hs') for _ in self.strides
+            ) for _ in self.strides
         ]
         # TODO: if
         self.gfl_reg = [
-            ConvBlock(filters=4 * (self.reg_max + 1),
-                      kernel_size=1,
-                      strides=1,
-                      kernel_initializer=tf.keras.initializers.RandomNormal(
-                          mean=0,
-                          stddev=0.01,
-                      ),
-                      activation='hs') for _ in self.strides
+            ConvBlock(
+                filters=4 * (self.reg_max + 1),
+                kernel_size=1,
+                strides=1,
+                norm_method=None,
+                activation=None,
+                kernel_initializer=tf.keras.initializers.RandomNormal(
+                    mean=0, stddev=0.01),
+            ) for _ in self.strides
         ]
 
     @tf.function
@@ -101,6 +103,7 @@ class NanoDetHead(tf.keras.Model):
             cls_feat = cls_conv(cls_feat)
         for reg_conv in reg_convs:
             reg_feat = reg_conv(reg_feat)
+
         if self.share_cls_reg:
             feat = gfl_cls(cls_feat)
             cls_score, bbox_pred = tf.split(
@@ -108,6 +111,5 @@ class NanoDetHead(tf.keras.Model):
         else:
             cls_score = gfl_cls(cls_feat)
             bbox_pred = gfl_reg(reg_feat)
-        print(bbox_pred)
-        xxx
+
         return {'cls_scores': cls_score, 'bbox_pred': bbox_pred}

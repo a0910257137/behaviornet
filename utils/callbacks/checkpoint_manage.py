@@ -21,7 +21,6 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
     model.fit(..., callbacks=[callbacks])
     ```
     """
-
     def __init__(self,
                  checkpoint,
                  manager,
@@ -38,6 +37,11 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
         self._last_save = None
         self.directory = directory
         self.model = model
+
+    # def on_batch_begin(self, epoch, logs=None):
+    #     tf.saved_model.save(self.model.model,
+    #                         '/aidata/anders/objects/hico/models/base')
+    #     xxcxcx
 
     def on_epoch_end(self, epoch, logs=None):
         epochs_finished = epoch + 1
@@ -59,9 +63,6 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
             # filepath = os.path.join(self.directory,
             #                         filename.format(epoch=self._epoch_count))
             # self.model.save_weights(filepath=filepath, save_format='tf')
-            tf.saved_model.save(
-                self.model.model,
-                self.directory
-            )
+            tf.saved_model.save(self.model.model, self.directory)
             # self._manager.save(self._epoch_count)
             self._last_save = self._epoch_count

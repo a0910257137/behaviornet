@@ -24,7 +24,7 @@ class GeneralDataset:
         self.config = Box(self.config)
         self.gener_task = GeneralTasks(self.config)
 
-    def _dataset(self, mirrored_strategy, is_train):
+    def _dataset(self, is_train):
         datasets = []
         for task in self.config.tasks:
             if is_train:
@@ -37,12 +37,14 @@ class GeneralDataset:
         datasets = tf.data.Dataset.zip(tuple(datasets))
         if self.config.shuffle:
             datasets = datasets.shuffle(buffer_size=10000)
-        options = tf.data.Options()
-        options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
-        datasets = datasets.with_options(options)
+        # options = tf.data.Options()
+        # options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+        # datasets = datasets.with_options(options)
         if not is_train:
-            batch_size = mirrored_strategy.num_replicas_in_sync * self.test_batch_size
-        batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
+            # batch_size = mirrored_strategy.num_replicas_in_sync * self.test_batch_size
+            batch_size = self.test_batch_size
+        batch_size = self.train_batch_size
+        # batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
         datasets = datasets.batch(batch_size, drop_remainder=True)
         # for ds in datasets:
         #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
@@ -52,8 +54,5 @@ class GeneralDataset:
         datasets = datasets.prefetch(tf.data.experimental.AUTOTUNE)
         return datasets
 
-    def get_datasets(self, mirrored_strategy):
-        return {
-            "train": self._dataset(mirrored_strategy, True),
-            "test": self._dataset(mirrored_strategy, False)
-        }
+    def get_datasets(self):
+        return {"train": self._dataset(True), "test": self._dataset(False)}

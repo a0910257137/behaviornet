@@ -1,7 +1,7 @@
 {
-    "train_batch_size": 32,
-    "test_batch_size": 32,
-    "epochs": 45,
+    "train_batch_size": 24,
+    "test_batch_size": 24,
+    "epochs": 50,
     "learn_rate": 0.001,
     "model_path": "/aidata/anders/objects/hico/models/base",
     "summary": {

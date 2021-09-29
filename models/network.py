@@ -11,16 +11,17 @@ class Network(tf.keras.Model):
 
     def compile(self, optimizer, loss, run_eagerly=None):
         super(Network, self).compile(optimizer=optimizer,
-                                     run_eagerly=True,
+                                     run_eagerly=run_eagerly,
                                      metrics=['accuracy'])
         self._loss = loss
         self.optimizer = optimizer
 
     def train_step(self, data):
-        training = False
+        training = True
         imgs, labels = data
         with tf.GradientTape() as tape:
             preds = self.model(imgs, training=training)
+
             loss = self._loss(preds, labels, self.config.train_batch_size,
                               training)
         if self.config.multi_optimizer:
