@@ -1,3 +1,3 @@
-[submodule "behaviornet"]
-	path = behaviornet
-	url = https://github.com/a0910257137/behaviornet.git
+[submodule "/behavior_predictor"]
+	path = behavior_predictor
+	url = https://github.com/a0910257137/behavior_predictor.git
