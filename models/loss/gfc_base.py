@@ -128,14 +128,18 @@ class GFCBase:
         y2 = points[:, 0] + distance[:, 2]
         x2 = points[:, 1] + distance[:, 3]
         if max_shape is not None:
-            y1 = tf.clip_by_value(clip_value_min=0.,
+            y1 = tf.clip_by_value(y1,
+                                  clip_value_min=0.,
                                   clip_value_max=max_shape[0])
-            x1 = tf.clip_by_value(clip_value_min=0.,
+            x1 = tf.clip_by_value(y1,
+                                  clip_value_min=0.,
                                   clip_value_max=max_shape[1])
-            y2 = tf.clip_by_value(clip_value_min=0.,
+            y2 = tf.clip_by_value(y1,
+                                  clip_value_min=0.,
                                   clip_value_max=max_shape[0])
 
-            x2 = tf.clip_by_value(clip_value_min=0.,
+            x2 = tf.clip_by_value(y1,
+                                  clip_value_min=0.,
                                   clip_value_max=max_shape[1])
         return tf.concat([y1[:, None], x1[:, None], y2[:, None], x2[:, None]],
                          axis=-1)
