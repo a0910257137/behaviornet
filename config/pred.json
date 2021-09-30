@@ -8,15 +8,11 @@
         "reg_max":7, 
         "scale_factor":1,
         "iou_thres": 0.5,
-        "n_objs": 15,
+        "box_score": 0.01,
         "mode":"box2d",
         "img_input_size": [
             224,
             224
-        ],
-        "resize_size": [
-            192,
-            320
         ],
         "cat_path": "./config/cates.txt"
     }

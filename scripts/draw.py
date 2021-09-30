@@ -72,6 +72,7 @@ def draw_box2d(imgs, obj_kps, target_dict, clr=(0, 255, 0)):
 
     result = []
     b_bboxes = np.asarray(obj_kps)
+
     for img, bboxes in zip(imgs, b_bboxes):
         for bbox in bboxes:
             category_index = int(bbox[..., -1])
