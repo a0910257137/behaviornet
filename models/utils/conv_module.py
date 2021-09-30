@@ -41,6 +41,16 @@ class ConvBlock(tf.keras.layers.Layer):
                 bias_initializer=bias_initializer,
                 padding='same',
                 name='sp_conv')
+        elif conv_mode == 'dw_conv2d':
+            self.conv = tf.keras.layers.DepthwiseConv2D(
+                kernel_size,
+                kernel_size=self.kernel_size,
+                strides=self.strides,
+                use_bias=use_bias,
+                kernel_initializer=kernel_initializer,
+                bias_initializer=bias_initializer,
+                padding='same',
+                name='dw_conv')
 
         if norm_method == 'bn':
             self.norm = tf.keras.layers.BatchNormalization(name='bn')

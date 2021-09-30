@@ -15,6 +15,7 @@ from utils.tools import *
 from utils.io import *
 from pprint import pprint
 
+
 def train(config, is_restore, excluded_layers):
     # mirrored_strategy = tf.distribute.MirroredStrategy()
     general_dataset = GeneralDataset(config.data_reader)
@@ -61,6 +62,6 @@ if __name__ == '__main__':
     config = read_commentjson(args.config)
     # config = Box(config)
     set_gpu(args.gpus)
-    logger.info(f'Use config: {args.config} to train kws')
+    logger.info(f'Use config: {args.config} to train behavior')
     config = load_configger(args.config)
     train(config, args.restore, args.excluded_layers)
