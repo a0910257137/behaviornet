@@ -3,16 +3,15 @@
         "visible_gpu": "0",
         "pb_path": "/Users/poanchen/Desktop/projects/base",
         "top_k_n": 100,
-        "nms_iou_thres": 0.5,
         "strides":[8, 16, 32],
         "reg_max":7, 
         "scale_factor":1,
         "iou_thres": 0.5,
-        "box_score": 0.01,
+        "box_score": 0.005,
         "mode":"box2d",
         "img_input_size": [
-            224,
-            224
+            320,
+            320
         ],
         "cat_path": "./config/cates.txt"
     }

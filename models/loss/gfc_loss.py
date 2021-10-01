@@ -154,6 +154,10 @@ class GFCLoss(GFCBase):
                 i], gt_bboxes_ignore_list[i], gt_labels_list[i]
 
             #  num_bboxes = 1-D tensor
+            gt_valids = tf.math.reduce_all(tf.math.is_finite(gt_bboxes),
+                                           axis=-1)
+            gt_bboxes = tf.reshape(gt_bboxes[gt_valids], [-1, 4])
+            gt_labels = tf.reshape(gt_labels[gt_valids], [-1, 1])
             num_bbox = num_bboxes[i]
             grid_cells, labels, label_weights, bbox_targets, bbox_weights, pos_inds, neg_inds = self.run_single_assign(
                 mlvl_grid_cells, num_level_cells, gt_bboxes, gt_bboxes_ignore,
@@ -204,9 +208,6 @@ class GFCLoss(GFCBase):
             :return: Assign results of a single image
         """
 
-        gt_valids = tf.math.reduce_all(tf.math.is_finite(gt_bboxes), axis=-1)
-        gt_bboxes = tf.reshape(gt_bboxes[gt_valids], [-1, 4])
-        gt_labels = tf.reshape(gt_labels[gt_valids], [-1, 1])
         assign_result = self.assigner.assign(grid_cells, num_level_cells,
                                              gt_bboxes, gt_bboxes_ignore,
                                              gt_labels, num_bbox)

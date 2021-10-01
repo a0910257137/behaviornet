@@ -126,8 +126,7 @@ def gen_bboxes(batch_size, b_coors, b_cates, max_obj_num, image_input_sizes):
     # b_bboxes = tf.einsum('b n c d, b d -> b n c d', b_bboxes,
     #                      1 / image_input_sizes)
     b_bboxes = tf.reshape(b_bboxes, [batch_size, -1, 4])
-
-    b_bboxes = tf.where(tf.math.is_nan(b_bboxes), 0., b_bboxes)
-    b_bboxes = tf.where(tf.math.is_inf(b_bboxes), 0., b_bboxes)
-    b_bboxes = tf.where(b_bboxes == 0., np.inf, b_bboxes)
+    b_bboxes = tf.where(tf.math.is_nan(b_bboxes), -1., b_bboxes)
+    b_bboxes = tf.where(tf.math.is_inf(b_bboxes), -1., b_bboxes)
+    b_bboxes = tf.where(b_bboxes == -1., np.inf, b_bboxes)
     return b_bboxes, b_cates, num_bbox

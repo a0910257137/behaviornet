@@ -446,6 +446,7 @@ class GFCLoss(GFCBase):
                                                         weight,
                                                         reduction=reduction,
                                                         avg_factor=avg_factor)
+
         loss_cls = self.loss_weight * distribution_fc_losss
         return loss_cls
 

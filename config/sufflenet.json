@@ -1,20 +1,20 @@
 {
-    "train_batch_size": 1,
-    "test_batch_size": 1,
-    "epochs": 45,
-    "learn_rate": 0.001,
-    "model_path": "/Users/poanchen/Desktop/projects/base",
+    "train_batch_size": 24,
+    "test_batch_size": 24,
+    "epochs": 70,
+    "learn_rate": 0.14,
+    "model_path": "/aidata/anders/objects/coco/archive_model/base",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/Users/poanchen/Desktop/projects/base/logs/"
+        "log_dir": "/aidata/anders/objects/coco/archive_model/base/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
         "resize_size": [
-            224, // height
-            224 // width
+            320, // height
+            320 // width
         ],
         "img_down_ratio": 1, //[height, width]
         "shuffle": true,
@@ -27,9 +27,9 @@
                     "tl",
                     "br"
                 ],
-                "category_path": "./config/cates.txt",
-                "train_folder": "/Users/poanchen/Downloads/hico/kps/train_kps",
-                "test_folder": "/Users/poanchen/Downloads/hico/kps/test_kps"
+                "category_path": "./config/coco_cates.txt",
+                "train_folder": "/aidata/anders/objects/coco/kps/train_kps",
+                "test_folder": "/aidata/anders/objects/coco/kps/test_kps"
             }
         ],
         "augments": {
@@ -46,22 +46,23 @@
             1,
             1
         ], //[height, width]
-        "img_root": "/Users/poanchen/Downloads/hico/imgs"
+        "img_root": "/aidata/anders/objects/coco/imgs/" 
     },
     "models": {
         "model_name": "obj_det",
         "frozen_backbone": false,
         "multi_optimizer": false,
+        "optimizer": "sgd",
         "backbone": {
             "module_name": "sufflenet",
-            "optimizer": "adam",
+            "optimizer": "sgd",
             "num_vars": null,
             "variables": null,
             "lr": 1e-3
         },
         "neck": {
             "module_name": "pan",
-            "optimizer": "adam",
+            "optimizer": "sgd",
             "num_vars": null,
             "variables": null,
             "lateral_ch":[128, 128, 128],
@@ -69,7 +70,7 @@
         },
         "head": {
             "module_name": "nanodet_head",
-            "optimizer": "adam",
+            "optimizer": "sgd",
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,

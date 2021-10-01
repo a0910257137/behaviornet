@@ -57,9 +57,10 @@ class GeneralTasks:
                     self.batch_size, b_coors, b_cates, self.max_obj_num,
                     image_input_sizes)
                 targets['b_bboxes'] = b_bboxes
-                one_hot = self._one_hots(b_cates, 1)
-                targets['b_cates'] = tf.where(one_hot == 0., np.inf,
-                                              one_hot) - 1.
+                # one_hot = self._one_hots(b_cates, 1)
+                # targets['b_cates'] = tf.where(one_hot == 0., np.inf,
+                #                               one_hot) - 1.
+                targets['b_cates'] = b_cates
                 targets['num_bbox'] = num_bbox
         return tf.cast(new_imgs, dtype=tf.float32), targets
 
