@@ -5,7 +5,7 @@ from .loss import LOSS_FACTORY
 import tensorflow as tf
 from .network import Network
 # from .backbone.mobilenet import MobileNetV3
-# from .backbone.shufflenetv2 import SuffleNet
+from .backbone.shufflenetv2 import SuffleNet
 from .backbone.efficientv2 import EfficientNet
 
 from pprint import pprint
@@ -19,13 +19,14 @@ class ModelFactory:
         #                                          self.config.resize_size[1],
         #                                          3),
         #                             kernel_initializer='he_uniform')
-        # self.backbone = SuffleNet(input_shape=(self.config.resize_size[0],
-        #                                        self.config.resize_size[1], 3),
-        #                           kernel_initializer='he_uniform')
-        self.backbone = EfficientNet(input_shape=(self.config.resize_size[0],
-                                                  self.config.resize_size[1],
-                                                  3),
-                                     kernel_initializer='he_uniform')
+        
+        self.backbone = SuffleNet(input_shape=(self.config.resize_size[0],
+                                               self.config.resize_size[1], 3),
+                                  kernel_initializer='he_uniform')
+        # self.backbone = EfficientNet(input_shape=(self.config.resize_size[0],
+        #                                           self.config.resize_size[1],
+        #                                           3),
+        #                              kernel_initializer='he_uniform')
 
         self.neck = NECK_FACTORY.get(self.config.neck.module_name)(self.config,
                                                                    name='neck')

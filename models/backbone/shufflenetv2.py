@@ -31,35 +31,41 @@ class ShuffleV2Block(tf.keras.layers.Layer):
         self.oup_shape = oup
         self.branch_features = oup // 2
 
-        self.initial_layer = tf.keras.initializers.HeUniform()
+        # self.initial_layer = tf.keras.initializers.HeUniform()
         if self.stride > 1:
             self.branch1 = tf.keras.Sequential(name='branch1')
+
             self.branch1.add(
                 tf.keras.layers.DepthwiseConv2D(
                     kernel_size=3,
                     strides=(self.stride, self.stride),
                     padding=self.padding,
-                    depthwise_initializer=self.initial_layer,
+                    depthwise_initializer=tf.keras.initializers.RandomNormal(
+                        mean=0, stddev=1.0 / 1.),
                     use_bias=False))
             self.branch1.add(tf.keras.layers.BatchNormalization())
             self.branch1.add(
-                tf.keras.layers.Conv2D(filters=self.branch_features,
-                                       kernel_size=1,
-                                       strides=(1, 1),
-                                       padding=self.padding,
-                                       kernel_initializer=self.initial_layer,
-                                       use_bias=False))
+                tf.keras.layers.Conv2D(
+                    filters=self.branch_features,
+                    kernel_size=1,
+                    strides=(1, 1),
+                    padding=self.padding,
+                    kernel_initializer=tf.keras.initializers.RandomNormal(
+                        mean=0, stddev=1.0 / self.branch_features),
+                    use_bias=False))
             self.branch1.add(tf.keras.layers.BatchNormalization())
             self.branch1.add(tf.keras.layers.LeakyReLU())
 
         self.branch2 = tf.keras.Sequential(name='branch2')
         self.branch2.add(
-            tf.keras.layers.Conv2D(filters=self.branch_features,
-                                   kernel_size=1,
-                                   strides=(1, 1),
-                                   padding=self.padding,
-                                   kernel_initializer=self.initial_layer,
-                                   use_bias=False))
+            tf.keras.layers.Conv2D(
+                filters=self.branch_features,
+                kernel_size=1,
+                strides=(1, 1),
+                padding=self.padding,
+                kernel_initializer=tf.keras.initializers.RandomNormal(
+                    mean=0, stddev=1.0 / self.branch_features),
+                use_bias=False))
         self.branch2.add(tf.keras.layers.BatchNormalization())
         self.branch2.add(tf.keras.layers.LeakyReLU())
         self.branch2.add(
@@ -67,15 +73,19 @@ class ShuffleV2Block(tf.keras.layers.Layer):
                 kernel_size=3,
                 strides=(self.stride, self.stride),
                 padding=self.padding,
-                depthwise_initializer=self.initial_layer,
+                depthwise_initializer=tf.keras.initializers.RandomNormal(
+                    mean=0, stddev=1.0 / 1.0),
                 use_bias=False))
         self.branch2.add(tf.keras.layers.BatchNormalization())
         self.branch2.add(
-            tf.keras.layers.Conv2D(filters=self.branch_features,
-                                   kernel_size=1,
-                                   strides=(1, 1),
-                                   padding=self.padding,
-                                   use_bias=False))
+            tf.keras.layers.Conv2D(
+                filters=self.branch_features,
+                kernel_size=1,
+                strides=(1, 1),
+                padding=self.padding,
+                kernel_initializer=tf.keras.initializers.RandomNormal(
+                    mean=0, stddev=1.0 / self.branch_features),
+                use_bias=False))
         self.branch2.add(tf.keras.layers.BatchNormalization())
         self.branch2.add(tf.keras.layers.LeakyReLU())
 
@@ -126,14 +136,17 @@ class ShuffleNetV2(tf.keras.Model):
         else:
             raise NotImplementedError
         # building first layer
+
         output_channels = self._stage_out_channels[0]
-        self.init_conv = ConvBlock(filters=output_channels,
-                                   kernel_size=3,
-                                   strides=2,
-                                   use_bias=False,
-                                   kernel_initializer=kernel_initializer,
-                                   name='init_conv',
-                                   activation='leaky_relu')
+        self.init_conv = ConvBlock(
+            filters=output_channels,
+            kernel_size=3,
+            strides=2,
+            use_bias=False,
+            kernel_initializer=tf.keras.initializers.RandomNormal(mean=0,
+                                                                  stddev=0.01),
+            name='init_conv',
+            activation='leaky_relu')
         input_channels = output_channels
         self.maxpool = get_downsampling('max_pool')
         # stage_names = ["stage{}".format(i) for i in [2, 3, 4]]
@@ -182,8 +195,6 @@ class ShuffleNetV2(tf.keras.Model):
         for i, layer_ops in enumerate(self.base):
 
             for layer_op in layer_ops:
-                # pprint(layer_op._layers[0].__dict__)
-                # pprint(layer_op._layers[1].__dict__)
                 x = layer_op(x)
             if i + 2 in self.out_stages:
                 skip_connections[x.name] = x
