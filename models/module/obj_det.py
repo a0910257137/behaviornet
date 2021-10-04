@@ -4,9 +4,9 @@ from ..utils.ops import *
 from pprint import pprint
 
 
-class MobileNet(tf.keras.Model):
+class ObjDet(tf.keras.Model):
     def __init__(self, config, backbone, neck, head, **kwargs):
-        super(MobileNet, self).__init__(**kwargs)
+        super(ObjDet, self).__init__(**kwargs)
         self.config = config
         self.backbone = backbone
         self.neck = neck

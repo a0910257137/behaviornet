@@ -6,7 +6,6 @@ class UncertaintyLoss(tf.keras.layers.Layer):
     The adaptive loss
     Multi-Task Learning Using Uncertainty to Weigh Losses for Scene Geometry and Semantics
     '''
-
     def __init__(self, loss_keys, **kwargs):
         self.is_placeholder = True
         self.loss_keys = loss_keys
@@ -30,7 +29,7 @@ class UncertaintyLoss(tf.keras.layers.Layer):
         for key, log_var in zip(self.loss_keys, self.log_vars):
             var = log_var[0]
             precision = tf.math.exp(-var)
-            loss = tf.math.reduce_sum(.5*precision * losses[key] + .5*var)
+            loss = tf.math.reduce_sum(.5 * precision * losses[key] + .5 * var)
             total_loss += loss
         return total_loss
 
@@ -41,7 +40,6 @@ class CoVWeightingLoss(tf.keras.layers.Layer):
     MULTI-LOSS WEIGHTING WITH COEFFICIENT OF VARIATIONS
     https://arxiv.org/abs/2009.01717
     '''
-
     def __init__(self, loss_keys, mean_decay_param=None):
         self.is_placeholder = True
         # use mean decay for more robust from paper section 2.1
@@ -55,23 +53,32 @@ class CoVWeightingLoss(tf.keras.layers.Layer):
 
     def build(self, input_shape=None):
         # Initialize all running statistics at 0.
-        self.alphas = self.add_weight(name='alpha',
-                                      shape=(self.num_losses, ),
-                                      initializer=tf.keras.initializers.Constant(0.), trainable=False)
+        self.alphas = self.add_weight(
+            name='alpha',
+            shape=(self.num_losses, ),
+            initializer=tf.keras.initializers.Constant(0.),
+            trainable=False)
 
-        self.running_mean_L = self.add_weight(name='running_mean_L',
-                                              shape=(self.num_losses, ),
-                                              initializer=tf.keras.initializers.Constant(0.), trainable=False)
+        self.running_mean_L = self.add_weight(
+            name='running_mean_L',
+            shape=(self.num_losses, ),
+            initializer=tf.keras.initializers.Constant(0.),
+            trainable=False)
 
-        self.running_mean_l = self.add_weight(name='running_mean_l',
-                                              shape=(self.num_losses, ),
-                                              initializer=tf.keras.initializers.Constant(0.), trainable=False)
+        self.running_mean_l = self.add_weight(
+            name='running_mean_l',
+            shape=(self.num_losses, ),
+            initializer=tf.keras.initializers.Constant(0.),
+            trainable=False)
 
-        self.running_S_l = self.add_weight(name='running_S_l',
-                                           shape=(self.num_losses, ),
-                                           initializer=tf.keras.initializers.Constant(0.), trainable=False)
-        self.alphas = torch.zeros((self.num_losses,), requires_grad=False).type(
-            torch.FloatTensor).to(self.device)
+        self.running_S_l = self.add_weight(
+            name='running_S_l',
+            shape=(self.num_losses, ),
+            initializer=tf.keras.initializers.Constant(0.),
+            trainable=False)
+        self.alphas = torch.zeros(
+            (self.num_losses, ),
+            requires_grad=False).type(torch.FloatTensor).to(self.device)
 
         super(CoVWeightingLoss, self).build(input_shape)
 
@@ -95,7 +102,7 @@ class CoVWeightingLoss(tf.keras.layers.Layer):
 
         # If we are in the first iteration set alphas to all 1/32
         if self.current_iter <= 1:
-            self.alphas = tf.ones(self.num_losses,) / self.num_losses
+            self.alphas = tf.ones(self.num_losses, ) / self.num_losses
         # Else, apply the loss weighting method.
         else:
             ls = self.running_std_l / self.running_mean_l
@@ -128,7 +135,9 @@ class CoVWeightingLoss(tf.keras.layers.Layer):
             self.running_mean_L + (1 - mean_param) * x_L
 
         # Get the weighted losses and perform a standard back-pass.
-        weighted_losses = [self.alphas[i] * unweighted_losses[i]
-                           for i in range(len(unweighted_losses))]
+        weighted_losses = [
+            self.alphas[i] * unweighted_losses[i]
+            for i in range(len(unweighted_losses))
+        ]
         loss = sum(weighted_losses)
         return total_loss

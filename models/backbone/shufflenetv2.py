@@ -1,11 +1,8 @@
 from sys import prefix
-
 from tensorflow.python.ops.gen_array_ops import shape
-from models.module import mobilenet
 import tensorflow as tf
 from .kernel_initializers import KernelInitializers
-from ..utils.conv_module import ConvBlock, BottleNeck
-# from keras_flops import get_flops
+from ..utils.conv_module import ConvBlock
 from pprint import pprint
 
 

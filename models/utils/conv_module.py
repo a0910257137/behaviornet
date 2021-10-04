@@ -54,36 +54,30 @@ class ConvBlock(tf.keras.layers.Layer):
 
         if norm_method == 'bn':
             self.norm = tf.keras.layers.BatchNormalization(name='bn')
-
         if activation == 'relu':
-            self.relu = tf.keras.layers.Activation(activation='relu',
-                                                   name='act_relu')
+            self.act = tf.keras.layers.Activation(activation='relu',
+                                                  name='act_relu')
         elif activation == 'hs':
-            self.hs = tf.keras.layers.Activation(activation='swish',
-                                                 name='act_hs')
+            self.act = tf.keras.layers.Activation(activation='swish',
+                                                  name='act_hs')
         elif activation == 'leaky_relu':
-            self.l_relu = tf.keras.layers.LeakyReLU()
+            self.act = tf.keras.layers.LeakyReLU()
+        elif activation == 'silu':
+            self.act = tf.nn.silu
+            # self.act = tf.keras.activations.selu()
         elif activation == 'sigmoid':
-            self.sigmoid = tf.keras.layers.Activation(activation='sigmoid',
-                                                      name='act_sigmoid')
+            self.act = tf.keras.layers.Activation(activation='sigmoid',
+                                                  name='act_sigmoid')
         elif activation == 'softmax':
-            self.softmax = tf.keras.layers.Activation(activation='softmax',
-                                                      name='act_softmax')
+            self.act = tf.keras.layers.Activation(activation='softmax',
+                                                  name='act_softmax')
 
     def call(self, input):
         output = self.conv(input)
         if self.norm_method == 'bn':
             output = self.norm(output)
-        if self.activation == 'relu':
-            output = self.relu(output)
-        elif self.activation == 'leaky_relu':
-            output = self.l_relu(output)
-        elif self.activation == 'sigmoid':
-            output = self.sigmoid(output)
-        elif self.activation == 'softmax':
-            output = self.softmax(output)
-        elif self.activation == 'hs':
-            output = self.hs(output)
+        if self.activation is not None:
+            output = self.act(output)
         return output
 
 

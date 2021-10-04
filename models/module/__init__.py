@@ -1,3 +1,3 @@
-from .mobilenet import MobileNet
+from .obj_det import ObjDet
 
-MODULE_FACTORY = dict(obj_det=MobileNet)
+MODULE_FACTORY = dict(obj_det=ObjDet)

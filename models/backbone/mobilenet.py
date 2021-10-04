@@ -1,8 +1,6 @@
-from models.module import mobilenet
 import tensorflow as tf
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock, BottleNeck
-# from keras_flops import get_flops
 from pprint import pprint
 
 
