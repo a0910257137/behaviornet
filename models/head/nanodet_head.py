@@ -74,17 +74,17 @@ class NanoDetHead(tf.keras.Model):
             ) for _ in self.strides
         ]
         # TODO: if
-        self.gfl_reg = [
-            ConvBlock(
-                filters=4 * (self.reg_max + 1),
-                kernel_size=1,
-                strides=1,
-                norm_method=None,
-                activation=None,
-                kernel_initializer=tf.keras.initializers.RandomNormal(
-                    mean=0, stddev=0.01),
-            ) for _ in self.strides
-        ]
+        # self.gfl_reg = [
+        #     ConvBlock(
+        #         filters=4 * (self.reg_max + 1),
+        #         kernel_size=1,
+        #         strides=1,
+        #         norm_method=None,
+        #         activation=None,
+        #         kernel_initializer=tf.keras.initializers.RandomNormal(
+        #             mean=0, stddev=0.01),
+        #     ) for _ in self.strides
+        # ]
 
     @tf.function
     def call(self, feats):
