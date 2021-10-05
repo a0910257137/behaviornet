@@ -3,7 +3,7 @@ import cv2
 import tensorflow as tf
 import numpy as np
 from functools import partial
-from .utils import gen_bboxes
+from .utils import *
 from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
 from .preprocess.utils import Tensorpack
@@ -50,18 +50,27 @@ class GeneralTasks:
                 b_obj_sizes, self.flip_probs, self.is_do_filp, branch_names)
 
             if task == "obj_det":
-                image_input_sizes = tf.tile(self.img_resize_size[None, :],
-                                            [self.batch_size, 1])
-                image_input_sizes = tf.cast(image_input_sizes, tf.float32)
-                b_bboxes, b_cates, num_bbox = gen_bboxes(
-                    self.batch_size, b_coors, b_cates, self.max_obj_num,
-                    image_input_sizes)
-                targets['b_bboxes'] = b_bboxes
-                # one_hot = self._one_hots(b_cates, 1)
-                # targets['b_cates'] = tf.where(one_hot == 0., np.inf,
-                #                               one_hot) - 1.
-                targets['b_cates'] = b_cates
-                targets['num_bbox'] = num_bbox
+                b_hms = tf.py_function(self._draw_kps,
+                                       inp=[
+                                           b_round_kp_idxs, b_obj_sizes,
+                                           self.map_heigh, self.map_width,
+                                           m_cates, b_cates
+                                       ],
+                                       Tout=tf.float32)
+                targets['size_idxs'] = b_round_kp_idxs
+                targets['size_vals'] = tf.where(tf.math.is_nan(b_obj_sizes),
+                                                np.inf, b_obj_sizes)
+                targets['obj_heat_map'] = b_hms
+                # image_input_sizes = tf.tile(self.img_resize_size[None, :],
+                #                             [self.batch_size, 1])
+                # image_input_sizes = tf.cast(image_input_sizes, tf.float32)
+                # b_bboxes, b_cates, num_bbox = gen_bboxes(
+                #     self.batch_size, b_coors, b_cates, self.max_obj_num,
+                #     image_input_sizes)
+                # targets['b_bboxes'] = b_bboxes
+                # # one_hot = self._one_hots(b_cates, 1)
+                # targets['b_cates'] = b_cates
+                # targets['num_bbox'] = num_bbox
         return tf.cast(new_imgs, dtype=tf.float32), targets
 
     def _resize_coors(self, annos, original_sizes, resize_size,
@@ -256,3 +265,20 @@ class GeneralTasks:
         one_hot_code = tf.tensor_scatter_nd_update(rel_classes, b_index,
                                                    tf.ones(shape=valid_counts))
         return one_hot_code
+
+    def _draw_kps(self, b_round_kps, b_obj_sizes, h, w, m, b_cates):
+        def draw(kps, sigmas, cates):
+            mask = ~tf.math.is_inf(kps)[:, 0]
+            kps, sigmas, cates = kps[mask], sigmas[mask], cates[mask]
+            shape = [int(m), int(h), int(w)]
+            hms = np.zeros(shape=shape)
+            for kp, sigma, cate in zip(kps, sigmas, cates):
+                hms[int(cate)] = draw_msra_gaussian(hms[int(cate)], kp, sigma)
+            return hms
+
+        b_sigmas = gaussian_radius(b_obj_sizes)
+        b_hms = tf.map_fn(lambda x: draw(x[0], x[1], x[2]),
+                          (b_round_kps, b_sigmas, b_cates),
+                          parallel_iterations=self.batch_size,
+                          fn_output_signature=tf.float32)
+        return tf.transpose(b_hms, [0, 2, 3, 1])

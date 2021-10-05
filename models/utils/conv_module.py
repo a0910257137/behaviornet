@@ -82,7 +82,7 @@ class ConvBlock(tf.keras.layers.Layer):
 
 
 class TransitionUp(tf.keras.layers.Layer):
-    def __init__(self, filters, up_method, scale, concat, name, **kwargs):
+    def __init__(self, filters, up_method, scale, name, **kwargs):
         super().__init__(**kwargs)
         if up_method == 'bilinear':
             self.up_sample = tf.keras.layers.UpSampling2D(
@@ -97,11 +97,11 @@ class TransitionUp(tf.keras.layers.Layer):
                 strides=(scale, scale),
                 use_bias=False,
                 name='deconv_%s' % name)
-        self.concat = concat
+        # self.concat = concat
 
-    def call(self, inputs, skip=None, **kwargs):
+    def call(self, inputs, skip=None, concat=True, **kwargs):
         out = self.up_sample(inputs)
-        if self.concat:
+        if concat:
             out = tf.concat([out, skip], axis=-1)
         return out
 
