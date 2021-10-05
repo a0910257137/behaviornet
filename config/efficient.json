@@ -13,8 +13,8 @@
     "data_reader": {
         "max_obj_num": 15,
         "resize_size": [
-            224, // height
-            224 // width
+            320, // height
+            320 // width
         ],
         "img_down_ratio": 1, //[height, width]
         "shuffle": true,
@@ -27,7 +27,7 @@
                     "tl",
                     "br"
                 ],
-                "category_path": "./config/cate.txt",
+                "category_path": "./config/cates.txt",
                 "train_folder": "/Users/poanchen/Downloads/hico/kps/train_kps",
                 "test_folder": "/Users/poanchen/Downloads/hico/kps/test_kps"
             }
@@ -52,6 +52,7 @@
         "model_name": "obj_det",
         "frozen_backbone": false,
         "multi_optimizer": false,
+        "optimizer": "adam",
         "backbone": {
             "module_name": "mobilenet",
             "optimizer": "adam",

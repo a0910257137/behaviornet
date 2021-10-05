@@ -1,0 +1,117 @@
+{
+    "train_batch_size": 8,
+    "test_batch_size": 8,
+    "epochs": 45,
+    "learn_rate": 0.001,
+    "model_path": "/Users/poanchen/Desktop/projects/base",
+    "summary": {
+        "scalar_freq": 50,
+        "hist_freq": 150,
+        "img_freq": 250,
+        "log_dir": "/Users/poanchen/Desktop/projects/base/logs/"
+    },
+    "data_reader": {
+        "max_obj_num": 15,
+        "resize_size": [
+            192, // height
+            320 // width
+        ],
+        "img_down_ratio": 1, //[height, width]
+        "shuffle": true,
+        "tasks": [
+            {
+                "preprocess": "obj_det",
+                "read_img": true,
+                "branches": [
+                    "obj_center",
+                    "tl",
+                    "br"
+                ],
+                "category_path": "./config/cates.txt",
+                "train_folder": "/Users/poanchen/Downloads/hico/kps/train_kps",
+                "test_folder": "/Users/poanchen/Downloads/hico/kps/test_kps"
+            }
+        ],
+        "augments": {
+            "color_chains": [
+                "contrast",
+                "saturat",
+                "bright",
+                "hue"
+            ],
+            "tensorpack_aug_chain": [], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "do_flip": true
+        },
+        "coors_down_ratio": [
+            1,
+            1
+        ], //[height, width]
+        "img_root": "/Users/poanchen/Downloads/hico/imgs"
+    },
+    "models": {
+        "model_name": "obj_det",
+        "frozen_backbone": false,
+        "multi_optimizer": false,
+        "optimizer": "adam",
+        "backbone": {
+            "module_name": "mobilenet",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lr": 1e-3
+        },
+        "neck": {
+            "module_name": "fpn",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lr": 1e-3,
+            "structure": {
+                "inter_ch": 32,
+                "skip_conv_ch": [
+                    32,
+                    32,
+                    32,
+                    0
+                ],
+                "up_growth_layer": [
+                    48,
+                    32,
+                    20,
+                    14
+                ],
+                "up_n_layers": [
+                    8,
+                    8,
+                    8,
+                    4
+                ]
+            }
+        },
+        "head": {
+            "module_name": "head",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lr": 1e-3,
+            "pred_layer": {
+                "heat_maps": [
+                    {
+                        "name": "obj_heat_map",
+                        "out_dims": 1
+                    }
+                ],
+                "size_maps": [
+                    {
+                        "name": "obj_size_maps",
+                        "out_dims": 2
+                    }
+                ]
+            }
+        },
+        "loss": { //weighted constant based on DETR paper
+            "type": "center_od",
+            "size_weight":0.5
+        }
+    }
+}
