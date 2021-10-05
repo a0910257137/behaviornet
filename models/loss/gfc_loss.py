@@ -258,7 +258,6 @@ class GFCLoss(GFCBase):
     def loss_single(self, grid_cells, cls_score, bbox_pred, labels,
                     label_weights, bbox_targets, stride, num_total_samples):
         grid_cells = tf.reshape(grid_cells, [-1, 4])
-
         cls_score = tf.reshape(cls_score, [-1, self.cls_out_channels])
         bbox_pred = tf.reshape(bbox_pred, [-1, 4 * (self.reg_max + 1)])
 
@@ -274,20 +273,26 @@ class GFCLoss(GFCBase):
         if len(pos_inds) > 0:
             pos_bbox_targets = tf.gather_nd(bbox_targets, pos_inds[:, None])
             pos_bbox_pred = tf.gather_nd(bbox_pred, pos_inds[:, None])
+
             pos_grid_cells = tf.gather_nd(grid_cells, pos_inds[:, None])
             pos_grid_cell_centers = self.grid_cells_to_center(
                 pos_grid_cells) / stride
-
             weight_targets = tf.nn.sigmoid(cls_score)
 
             weight_targets = tf.math.reduce_max(weight_targets, axis=-1)
             weight_targets = tf.gather(weight_targets, pos_inds[:])
 
             pos_bbox_pred_corners = self.integral_distribution(pos_bbox_pred)
+
             pos_decode_bbox_pred = self.distance2bbox(pos_grid_cell_centers,
                                                       pos_bbox_pred_corners)
 
             pos_decode_bbox_targets = pos_bbox_targets / stride
+            tl = pos_decode_bbox_pred[:, :2]
+            tl = tl[:, ::-1]
+            br = pos_decode_bbox_pred[:, 2:]
+            br = br[:, ::-1]
+            pos_decode_bbox_pred = tf.concat([tl, br], axis=-1)
 
             ious_scrs = bbox_overlaps(pos_decode_bbox_pred,
                                       pos_decode_bbox_targets,
@@ -296,11 +301,18 @@ class GFCLoss(GFCBase):
             score = tf.tensor_scatter_nd_update(score, pos_inds[:, None],
                                                 ious_scrs)
             pred_corners = tf.reshape(pos_bbox_pred, [-1, self.reg_max + 1])
-
-            target_corners = self.bbox2distance(pos_grid_cell_centers,
+            target_corners = self.bbox2distance(pos_grid_cell_centers[:, ::-1],
                                                 pos_decode_bbox_targets,
                                                 self.reg_max)
+            #TODO: do not know the y and x
+            tl = target_corners[:, :2]
+            tl = tl[:, ::-1]
+            br = target_corners[:, 2:]
+            br = br[:, ::-1]
+            target_corners = tf.concat([tl, br], axis=-1)
+
             target_corners = tf.reshape(target_corners, [-1])
+
             # regression loss
             loss_bbox = self._loss_bbox(
                 pos_decode_bbox_pred,
@@ -309,6 +321,7 @@ class GFCLoss(GFCBase):
                 avg_factor=1.0,
             )
             weight = tf.reshape(tf.tile(weight_targets[:, None], [1, 4]), [-1])
+
             loss_dfl = self._loss_dfl(
                 pred_corners,
                 target_corners,
@@ -402,16 +415,25 @@ class GFCLoss(GFCBase):
             Returns:
                 torch.Tensor: Loss tensor with shape (N,).
             """
+
             dis_left = tf.cast(label, tf.int32)
+
             dis_right = dis_left + 1
+
             weight_left = tf.cast(dis_right, tf.float32) - label
+
             weight_right = label - tf.cast(dis_left, tf.float32)
+
             one_hot_code = tf.one_hot(dis_left, depth=pred.shape[-1])
+
             bce_lp_loss = tf.nn.softmax_cross_entropy_with_logits(
                 labels=one_hot_code, logits=pred) * weight_left
             bce_rp_loss = tf.nn.softmax_cross_entropy_with_logits(
-                labels=one_hot_code, logits=pred) * weight_right
+                labels=tf.one_hot(dis_right, depth=pred.shape[-1]),
+                logits=pred) * weight_right
+
             loss = bce_lp_loss + bce_rp_loss
+
             return loss
 
         self.reduction = 'mean'
@@ -423,6 +445,7 @@ class GFCLoss(GFCBase):
                                                         weight,
                                                         reduction=reduction,
                                                         avg_factor=avg_factor)
+
         loss_cls = self.loss_weight * distribution_fc_losss
         return loss_cls
 
@@ -469,8 +492,8 @@ class GFCLoss(GFCBase):
                 len(target) == 2
             ), """target for QFL must be a tuple of two elements, including category label and quality label, respectively"""
             # label denotes the category id, score denotes the quality score
-            label, score = target
             # negatives are supervised by 0 quality score
+            label, score = target
             pred_sigmoid = tf.nn.sigmoid(pred)
             scale_factor = pred_sigmoid
             zerolabel = tf.zeros_like(scale_factor)
@@ -479,6 +502,7 @@ class GFCLoss(GFCBase):
             pred = tf.expand_dims(pred, axis=-1)
             loss = self.bce_lgts_func(zerolabel, pred) * tf.math.pow(
                 scale_factor, self.beta)
+
             # FG cat_id: [0, num_classes -1], BG cat_id: num_classes
             bg_class_ind = tf.shape(pred)[1]
             valid_mask = (label >= 0) & (label < bg_class_ind)
@@ -493,14 +517,11 @@ class GFCLoss(GFCBase):
 
             lbs = tf.squeeze(tf.gather(score, pos), axis=-1)
             lgts = tf.gather_nd(tf.squeeze(pred, axis=-1), indices)
-
             out_loss = self.bce_lgts_func(lbs[:, None], lgts[:, None])
-
             weight = tf.math.pow(tf.math.abs(scale_factor), self.beta)
             out_loss = out_loss * weight
             loss = tf.tensor_scatter_nd_update(loss, indices, out_loss)
             loss = tf.math.reduce_sum(loss, axis=-1, keepdims=False)
-
             return loss
 
         self.use_sigmoid = True

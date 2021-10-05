@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
 import glob, os
+
+from tensorflow.python.ops.gen_math_ops import rint
 from models.loss.assigner.atss_assigner import ATSSAssigner
 from models.loss.gfc_base import GFCBase
 from models.loss.iou_loss import *
@@ -159,11 +161,13 @@ class GFCLoss(GFCBase):
             # pixel level = [1120, 280, 70]
             num_level_cells.append(flatten_len)
         batch_size = tf.cast(batch_size, tf.int8)
+        # mlvl_grid_cells_list = [
+        #     multi_level_grid_cells for i in range(batch_size)
+        # ]
         mlvl_grid_cells_list = tf.concat(multi_level_grid_cells, axis=0)
         mlvl_grid_cells_list = tf.tile(mlvl_grid_cells_list[None, ...],
                                        [batch_size, 1, 1])
         num_level_cells_list = [num_level_cells for _ in range(batch_size)]
-
         if gt_bboxes_ignore_list == -1.:
             gt_bboxes_ignore_list = [-1. for _ in range(batch_size)]
         if tf.math.reduce_any(gt_labels_list == -1):
@@ -174,7 +178,6 @@ class GFCLoss(GFCBase):
         for i in range(batch_size):
             mlvl_grid_cells, num_level_cells = mlvl_grid_cells_list[
                 i], num_level_cells_list[i]
-
             gt_bboxes, gt_bboxes_ignore, gt_labels = gt_bboxes_list[
                 i], gt_bboxes_ignore_list[i], gt_labels_list[i]
 
@@ -183,6 +186,7 @@ class GFCLoss(GFCBase):
             grid_cells, labels, label_weights, bbox_targets, bbox_weights, pos_inds, neg_inds = self.run_single_assign(
                 mlvl_grid_cells, num_level_cells, gt_bboxes, gt_bboxes_ignore,
                 gt_labels, num_bbox)
+
             all_grid_cells += [grid_cells]
             all_labels += [labels]
             all_label_weights += [label_weights]
@@ -196,7 +200,6 @@ class GFCLoss(GFCBase):
         # sampled cells of all images
         num_total_pos = tf.math.reduce_sum(
             [tf.math.maximum(tf.shape(inds)[0], 1) for inds in pos_inds_list])
-
         num_total_neg = tf.math.reduce_sum(
             [tf.math.maximum(tf.shape(inds)[0], 1) for inds in neg_inds_list])
         # merge list of targets tensors into one batch then split to multi levels
@@ -231,16 +234,23 @@ class GFCLoss(GFCBase):
         gt_valids = tf.math.reduce_all(tf.math.is_finite(gt_bboxes), axis=-1)
         gt_bboxes = tf.reshape(gt_bboxes[gt_valids], [-1, 4])
         gt_labels = tf.reshape(gt_labels[gt_valids], [-1, 1])
+        # for bboxes flip
+        # for test
+        tl = gt_bboxes[:, :2]
+        tl = tl[:, ::-1]
+        br = gt_bboxes[:, 2:]
+        br = br[:, ::-1]
+        gt_bboxes = tf.concat([tl, br], axis=-1)
+        # for test
         assign_result = self.assigner.assign(grid_cells, num_level_cells,
                                              gt_bboxes, gt_bboxes_ignore,
                                              gt_labels, num_bbox)
+
         pos_inds, neg_inds, pos_gt_bboxes, pos_assigned_gt_inds = self.sample(
             assign_result, gt_bboxes)
 
         num_cells = grid_cells.get_shape().as_list()[0]
-
         bbox_targets = tf.zeros_like(grid_cells)
-
         bbox_weights = tf.zeros_like(grid_cells)
         labels = tf.constant(self.num_classes, shape=(num_cells, 1))
         label_weights = tf.constant(0., shape=(num_cells, ))
@@ -282,13 +292,13 @@ class GFCLoss(GFCBase):
     def loss_single(self, grid_cells, cls_score, bbox_pred, labels,
                     label_weights, bbox_targets, stride, num_total_samples):
         grid_cells = tf.reshape(grid_cells, [-1, 4])
-
         cls_score = tf.reshape(cls_score, [-1, self.cls_out_channels])
         bbox_pred = tf.reshape(bbox_pred, [-1, 4 * (self.reg_max + 1)])
 
         bbox_targets = tf.reshape(bbox_targets, [-1, 4])
         labels = tf.reshape(labels, [-1])
         label_weights = tf.reshape(label_weights, [-1])
+
         # FG cat_id: [0, num_classes -1], BG cat_id: num_classes
         bg_class_ind = self.num_classes
         valid_mask = (labels >= 0) & (labels < bg_class_ind)
@@ -297,20 +307,26 @@ class GFCLoss(GFCBase):
         if len(pos_inds) > 0:
             pos_bbox_targets = tf.gather_nd(bbox_targets, pos_inds[:, None])
             pos_bbox_pred = tf.gather_nd(bbox_pred, pos_inds[:, None])
+
             pos_grid_cells = tf.gather_nd(grid_cells, pos_inds[:, None])
             pos_grid_cell_centers = self.grid_cells_to_center(
                 pos_grid_cells) / stride
-
             weight_targets = tf.nn.sigmoid(cls_score)
 
             weight_targets = tf.math.reduce_max(weight_targets, axis=-1)
             weight_targets = tf.gather(weight_targets, pos_inds[:])
 
             pos_bbox_pred_corners = self.integral_distribution(pos_bbox_pred)
+
             pos_decode_bbox_pred = self.distance2bbox(pos_grid_cell_centers,
                                                       pos_bbox_pred_corners)
 
             pos_decode_bbox_targets = pos_bbox_targets / stride
+            tl = pos_decode_bbox_pred[:, :2]
+            tl = tl[:, ::-1]
+            br = pos_decode_bbox_pred[:, 2:]
+            br = br[:, ::-1]
+            pos_decode_bbox_pred = tf.concat([tl, br], axis=-1)
 
             ious_scrs = bbox_overlaps(pos_decode_bbox_pred,
                                       pos_decode_bbox_targets,
@@ -319,11 +335,18 @@ class GFCLoss(GFCBase):
             score = tf.tensor_scatter_nd_update(score, pos_inds[:, None],
                                                 ious_scrs)
             pred_corners = tf.reshape(pos_bbox_pred, [-1, self.reg_max + 1])
-
-            target_corners = self.bbox2distance(pos_grid_cell_centers,
+            target_corners = self.bbox2distance(pos_grid_cell_centers[:, ::-1],
                                                 pos_decode_bbox_targets,
                                                 self.reg_max)
+            #TODO: do not know the y and x
+            tl = target_corners[:, :2]
+            tl = tl[:, ::-1]
+            br = target_corners[:, 2:]
+            br = br[:, ::-1]
+            target_corners = tf.concat([tl, br], axis=-1)
+
             target_corners = tf.reshape(target_corners, [-1])
+
             # regression loss
             loss_bbox = self._loss_bbox(
                 pos_decode_bbox_pred,
@@ -332,6 +355,7 @@ class GFCLoss(GFCBase):
                 avg_factor=1.0,
             )
             weight = tf.reshape(tf.tile(weight_targets[:, None], [1, 4]), [-1])
+
             loss_dfl = self._loss_dfl(
                 pred_corners,
                 target_corners,
@@ -425,16 +449,25 @@ class GFCLoss(GFCBase):
             Returns:
                 torch.Tensor: Loss tensor with shape (N,).
             """
+
             dis_left = tf.cast(label, tf.int32)
+
             dis_right = dis_left + 1
+
             weight_left = tf.cast(dis_right, tf.float32) - label
+
             weight_right = label - tf.cast(dis_left, tf.float32)
+
             one_hot_code = tf.one_hot(dis_left, depth=pred.shape[-1])
+
             bce_lp_loss = tf.nn.softmax_cross_entropy_with_logits(
                 labels=one_hot_code, logits=pred) * weight_left
             bce_rp_loss = tf.nn.softmax_cross_entropy_with_logits(
-                labels=one_hot_code, logits=pred) * weight_right
+                labels=tf.one_hot(dis_right, depth=pred.shape[-1]),
+                logits=pred) * weight_right
+
             loss = bce_lp_loss + bce_rp_loss
+
             return loss
 
         self.reduction = 'mean'
@@ -493,8 +526,8 @@ class GFCLoss(GFCBase):
                 len(target) == 2
             ), """target for QFL must be a tuple of two elements, including category label and quality label, respectively"""
             # label denotes the category id, score denotes the quality score
-            label, score = target
             # negatives are supervised by 0 quality score
+            label, score = target
             pred_sigmoid = tf.nn.sigmoid(pred)
             scale_factor = pred_sigmoid
             zerolabel = tf.zeros_like(scale_factor)
@@ -587,4 +620,4 @@ class GFCLoss(GFCBase):
 
 
 gfc = GFCLoss()
-loss = gfc.build_loss(preds=None, targets=None, batch_size=32, training=False)
+loss = gfc.build_loss(preds=None, targets=None, batch_size=1, training=False)

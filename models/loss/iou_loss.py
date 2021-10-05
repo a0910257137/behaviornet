@@ -79,7 +79,7 @@ def bbox_overlaps(bboxes1, bboxes2, mode="iou", is_aligned=False, eps=1e-6):
     # Batch dim: (B1, B2, ... Bn)
     assert shape1[:-2] == shape2[:-2]
     batch_shape = shape1[:-2]
-
+    # print('-' * 100)
     rows = tf.shape(bboxes1)[0]
     cols = tf.shape(bboxes2)[0]
 
@@ -136,7 +136,8 @@ def bbox_overlaps(bboxes1, bboxes2, mode="iou", is_aligned=False, eps=1e-6):
                                           bboxes2[..., None, :, :2])
             enclosed_br = tf.math.maximum(bboxes1[..., :, None, 2:],
                                           bboxes2[..., None, :, 2:])
-    union = tf.math.maximum(union, tf.keras.backend.epsilon())
+    eps = 1e-6
+    union = tf.math.maximum(union, eps)
     ious = overlap / union
     if mode in ["iou", "iof"]:
         ious = tf.cast(ious, tf.float32)

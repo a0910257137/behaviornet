@@ -73,10 +73,8 @@ class GFCBase:
     def sample(self, assign_result, gt_bboxes):
         poses = tf.squeeze(tf.where(assign_result.gt_inds > 0), axis=-1)
         pos_inds, idx = tf.unique(poses)
-
         negs = tf.squeeze(tf.where(assign_result.gt_inds == 0), axis=-1)
         neg_inds, idx = tf.unique(negs)
-
         pos_assigned_gt_inds = tf.gather(assign_result.gt_inds, pos_inds) - 1
         # we need to clean all of the zero ground truth bboxes
         gt_bboxes = tf.reshape(gt_bboxes, (-1, 4))
@@ -91,8 +89,10 @@ class GFCBase:
         :param grid_cells: grid cells of a feature map
         :return: center points
         """
-        cells_cy = (grid_cells[:, 2] + grid_cells[:, 0]) / 2
-        cells_cx = (grid_cells[:, 3] + grid_cells[:, 1]) / 2
+        # why inverse grid_cells !?
+        cells_cx = (grid_cells[:, 2] + grid_cells[:, 0]) / 2
+        cells_cy = (grid_cells[:, 3] + grid_cells[:, 1]) / 2
+
         return tf.concat([cells_cy[:, None], cells_cx[:, None]], axis=-1)
 
     def integral_distribution(self, x):
@@ -123,22 +123,24 @@ class GFCBase:
         Returns:
             Tensor: Decoded bboxes.
         """
+        #TODO: change the h and w clip vals
         y1 = points[:, 0] - distance[:, 0]
         x1 = points[:, 1] - distance[:, 1]
         y2 = points[:, 0] + distance[:, 2]
         x2 = points[:, 1] + distance[:, 3]
         if max_shape is not None:
+            # max_shape = h, w
             y1 = tf.clip_by_value(y1,
                                   clip_value_min=0.,
                                   clip_value_max=max_shape[0])
-            x1 = tf.clip_by_value(y1,
+            x1 = tf.clip_by_value(x1,
                                   clip_value_min=0.,
                                   clip_value_max=max_shape[1])
-            y2 = tf.clip_by_value(y1,
+            y2 = tf.clip_by_value(y2,
                                   clip_value_min=0.,
                                   clip_value_max=max_shape[0])
 
-            x2 = tf.clip_by_value(y1,
+            x2 = tf.clip_by_value(x2,
                                   clip_value_min=0.,
                                   clip_value_max=max_shape[1])
         return tf.concat([y1[:, None], x1[:, None], y2[:, None], x2[:, None]],

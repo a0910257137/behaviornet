@@ -75,17 +75,11 @@ class ATSSAssigner(BaseAssigner):
             :obj:`AssignResult`: The assign result.
         """
         INF = 1e8
-
         num_gt = num_bbox[0]
-
         num_bboxes = tf.shape(bboxes)[0]
-        # gt_valids = tf.math.reduce_all(tf.math.is_finite(gt_bboxes), axis=-1)
-        # gt_bboxes = tf.reshape(gt_bboxes[gt_valids], [-1, 4])
         gt_bboxes = tf.reshape(gt_bboxes, [num_gt, 4])
         # compute iou between all bbox and gt
-
         overlaps = bbox_overlaps(bboxes, gt_bboxes)
-
         # assign 0 by default
         assigned_gt_inds = tf.zeros_like(overlaps[:, 0], dtype=tf.float32)
         if num_gt == 0 or num_bboxes == 0:
@@ -110,9 +104,6 @@ class ATSSAssigner(BaseAssigner):
         bboxes_cy = tf.reshape(bboxes_cy, [-1, 1])
         bboxes_cx = tf.reshape(bboxes_cx, [-1, 1])
         bboxes_points = tf.concat((bboxes_cy, bboxes_cx), axis=-1)
-
-        # sqaure_distances = tf.math.square(
-        #     (bboxes_points[:, None, :] - gt_points[None, :, :]))
         gt_points = gt_points[:, ::-1]
         bboxes_points = bboxes_points[:, ::-1]
         sqaure_distances = tf.math.square(
@@ -123,24 +114,26 @@ class ATSSAssigner(BaseAssigner):
         # Selecting candidates based on the center distance
         candidate_idxs = []
         start_idx = 0
-        # lv_shapes = num_level_bboxes.get_shape().as_list()
         for level, bboxes_per_level in enumerate(num_level_bboxes):
             # on each pyramid level, for each gt,
             # select k bbox whose center are closest to the gt center
             end_idx = start_idx + bboxes_per_level
             distances_per_level = distances[start_idx:end_idx, :]
+
             selectable_k = min(self.topk, bboxes_per_level)
+            distances_per_level += 1e4
             distances_per_level = -tf.transpose(distances_per_level)
+
             values, topk_idxs_per_level = tf.math.top_k(distances_per_level,
                                                         k=selectable_k,
                                                         sorted=True)
             candidate_idxs.append(topk_idxs_per_level + start_idx)
             start_idx = end_idx
-
         candidate_idxs = tf.concat(candidate_idxs, axis=-1)
         # shape  is [9*3, N]
         candidate_idxs = tf.transpose(candidate_idxs)
         for_candidate_idxs = candidate_idxs
+
         n_idx = tf.range(num_gt, dtype=tf.int32)
         # pass to next step
         for_n_idx = n_idx
@@ -161,6 +154,7 @@ class ATSSAssigner(BaseAssigner):
         # limit the positive sample's center in gt
         # Latter check
         for_candidate_idxs += for_n_idx * num_bboxes
+
         #----------------reshape  and make eps bboxes for two coordinations----------------
         ep_bboxes_cy = tf.reshape(bboxes_cy, [1, -1])
         ep_bboxes_cy = tf.tile(ep_bboxes_cy, [num_gt, num_bboxes])
@@ -173,7 +167,6 @@ class ATSSAssigner(BaseAssigner):
         candidate_idxs = tf.reshape(for_candidate_idxs, [-1])
         # calculate the left, top, right, bottom distance between positive
         # bbox center and gt side
-
         l_ = tf.reshape(tf.gather(ep_bboxes_cx, candidate_idxs),
                         [-1, num_gt]) - gt_bboxes[:, 1]  # x1
         t_ = tf.reshape(tf.gather(ep_bboxes_cy, candidate_idxs),
@@ -186,19 +179,29 @@ class ATSSAssigner(BaseAssigner):
             [t_[:, None, :], l_[:, None, :], b_[:, None, :], r_[:, None, :]],
             axis=-2)
         is_in_gts = tf.math.reduce_min(is_in_gts, axis=-2) > .01
+        # is_in_gts_gt = np.load('../nanodet/is_in_gts.npy')
+        # vals = np.isclose(is_in_gts_gt, is_in_gts)
+        # vals = np.where(vals == False)
+        # vals = np.asarray(vals)
+        # if vals.shape[-1] != 0:
+        #     print(vals)
+        #     print('-' * 100)
         is_pos = is_pos & is_in_gts
-
         # if an anchor box is assigned to multiple gts,
         # the one with the highest IoU will be selected.
         overlaps_inf = tf.transpose(tf.ones_like(overlaps) * (-INF))
+
         overlaps_inf = tf.reshape(overlaps_inf, [-1])
+
         index = candidate_idxs[tf.reshape(is_pos, [-1])]
+
         ov_vals = tf.gather(tf.reshape(tf.transpose(overlaps), [-1]), index)
+
         overlaps_inf = tf.tensor_scatter_nd_update(overlaps_inf,
                                                    index[:,
                                                          tf.newaxis], ov_vals)
+
         overlaps_inf = tf.transpose(tf.reshape(overlaps_inf, [num_gt, -1]))
-        # overlaps_inf = overlaps_inf.view(num_gt, -1).t()
         max_overlaps = tf.math.reduce_max(overlaps_inf, axis=-1)
         argmax_overlaps = tf.math.argmax(overlaps_inf, axis=-1)
 
@@ -209,7 +212,6 @@ class ATSSAssigner(BaseAssigner):
         assigned_gt_inds = tf.tensor_scatter_nd_update(assigned_gt_inds,
                                                        valid_inds,
                                                        need_assigned)
-
         if tf.math.reduce_all(gt_labels != -1.) or gt_labels != -1.:
             assigned_labels = -tf.ones_like(assigned_gt_inds)
             pos_inds = tf.where(assigned_gt_inds > 0)
@@ -223,11 +225,11 @@ class ATSSAssigner(BaseAssigner):
                                           axis=-1)
                 assigned_labels = tf.tensor_scatter_nd_update(
                     assigned_labels[:, None], pos_inds, picked_gt_lb)
-
                 assigned_labels = tf.cast(assigned_labels, tf.int32)
                 assigned_labels = tf.squeeze(assigned_labels, axis=-1)
         else:
             assigned_labels = None
+
         return AssignResult(num_gt,
                             assigned_gt_inds,
                             max_overlaps,
