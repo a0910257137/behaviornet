@@ -28,22 +28,20 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
                                                model,
                                                directory=checkpoint_dir,
                                                period=1)
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(
-        log_dir=config.summary.log_dir,
-        histogram_freq=200,
-        write_graph=True,
-        write_images=False,
-        update_freq='batch',
-        profile_batch=0)
+    # tensorboard_callback = tf.keras.callbacks.TensorBoard(
+    #     log_dir=config.summary.log_dir,
+    #     histogram_freq=200,
+    #     write_graph=True,
+    #     write_images=False,
+    #     update_freq='batch',
+    #     profile_batch=0)
     # embedding_map = EmbeddingMap(config=config,
     #                              train_datasets=train_datasets,
     #                              test_datasets=test_datasets,
     #                              update_freq=20)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
-    callbacks.append(
-        [saver_callback, tensorboard_callback,
-         LossAndErrorPrintingCallback()])
+    callbacks.append([saver_callback, LossAndErrorPrintingCallback()])
     return callbacks
 
 

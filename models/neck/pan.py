@@ -20,7 +20,7 @@ class PAN(tf.keras.Model):
                           strides=1,
                           name='lateral_conv{}'.format(i),
                           norm_method='bn',
-                          activation='hs')
+                          activation='leaky_relu')
             ]
             # if i != self.used_backbone_levels - 1:
             #     self.upsampling_layers += [

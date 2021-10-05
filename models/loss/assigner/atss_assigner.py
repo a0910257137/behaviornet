@@ -154,7 +154,7 @@ class ATSSAssigner(BaseAssigner):
         # limit the positive sample's center in gt
         # Latter check
         for_candidate_idxs += for_n_idx * num_bboxes
-
+        num_bboxes = tf.cast(num_bboxes, tf.float32)
         #----------------reshape  and make eps bboxes for two coordinations----------------
         ep_bboxes_cy = tf.reshape(bboxes_cy, [1, -1])
         ep_bboxes_cy = tf.tile(ep_bboxes_cy, [num_gt, num_bboxes])

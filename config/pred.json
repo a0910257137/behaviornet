@@ -1,7 +1,7 @@
 {
     "predictor": {
         "visible_gpu": "0",
-        "pb_path": "/Users/poanchen/Desktop/projects/base",
+        "pb_path": "/aidata/anders/objects/split_hico/archive_model/base",
         "top_k_n": 100,
         "strides":[8, 16, 32],
         "reg_max":7, 

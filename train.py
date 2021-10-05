@@ -17,17 +17,17 @@ from pprint import pprint
 
 
 def train(config, is_restore, excluded_layers):
-    # mirrored_strategy = tf.distribute.MirroredStrategy()
+    mirrored_strategy = tf.distribute.MirroredStrategy()
     general_dataset = GeneralDataset(config.data_reader)
     # Read in Training Data
-    datasets = general_dataset.get_datasets()
+    datasets = general_dataset.get_datasets(mirrored_strategy)
     train_datasets, test_datasets = datasets['train'], datasets['test']
-    # with mirrored_strategy.scope():
-    model, optimizer = ModelFactory(config.models, config.model_path,
-                                    config.learn_rate).build_model()
-    if is_restore:
-        model = Restore(config.model_path).build_restoration(
-            model, excluded_layers)
+    with mirrored_strategy.scope():
+        model, optimizer = ModelFactory(config.models, config.model_path,
+                                        config.learn_rate).build_model()
+        if is_restore:
+            model = Restore(config.model_path).build_restoration(
+                model, excluded_layers)
     callbacks = get_callbacks(config, model, optimizer, train_datasets,
                               test_datasets)
 

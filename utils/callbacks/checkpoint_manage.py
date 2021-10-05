@@ -39,9 +39,10 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
         self.model = model
 
     # def on_batch_begin(self, epoch, logs=None):
-    #     tf.saved_model.save(self.model.model,
-    #                         '/aidata/anders/objects/hico/models/base')
-    #     xxcxcx
+    #     imgs = tf.constant(0., shape=(1, 320, 320, 3))
+    #     self.model.model(imgs, training=False)
+    #     tf.keras.models.save_model(self.model.model, self.directory)
+    #     xxcxc
 
     def on_epoch_end(self, epoch, logs=None):
         epochs_finished = epoch + 1
@@ -63,6 +64,6 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
             # filepath = os.path.join(self.directory,
             #                         filename.format(epoch=self._epoch_count))
             # self.model.save_weights(filepath=filepath, save_format='tf')
-            tf.saved_model.save(self.model.model, self.directory)
+            tf.keras.models.save_model(self.model.model, self.directory)
             # self._manager.save(self._epoch_count)
             self._last_save = self._epoch_count

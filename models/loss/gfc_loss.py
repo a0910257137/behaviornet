@@ -18,6 +18,9 @@ class GFCLoss(GFCBase):
         self.num_classes = self.head_cfg.pred_layer.num_class
         self.reg_max = self.head_cfg.reg_max
         self.use_sigmoid = self.loss_cfg.loss_qfl.use_sigmoid
+        self.layer_keys = [
+            'layer_output_0', 'layer_output_1', 'layer_output_2'
+        ]
 
         self.bce_lgts_func = tf.keras.losses.BinaryCrossentropy(
             reduction=tf.keras.losses.Reduction.NONE, from_logits=True)
@@ -31,7 +34,8 @@ class GFCLoss(GFCBase):
     def build_loss(self, preds, targets, batch_size, training):
         gt_bboxes, gt_labels, num_bboxes = self.get_targets(targets)
         cls_scores, bbox_preds = [], []
-        for key in preds:
+
+        for key in self.layer_keys:
             cls_scores += [preds[key]['cls_scores']]
             bbox_preds += [preds[key]['bbox_pred']]
         gt_bboxes_ignore = -1.

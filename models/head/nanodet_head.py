@@ -73,7 +73,6 @@ class NanoDetHead(tf.keras.Model):
                 bias_initializer=tf.keras.initializers.Constant(value=-4.595),
             ) for _ in self.strides
         ]
-        # TODO: if
         # self.gfl_reg = [
         #     ConvBlock(
         #         filters=4 * (self.reg_max + 1),
@@ -85,6 +84,7 @@ class NanoDetHead(tf.keras.Model):
         #             mean=0, stddev=0.01),
         #     ) for _ in self.strides
         # ]
+        self.gfl_reg = [-1 for _ in self.strides]
 
     @tf.function
     def call(self, feats):
@@ -109,6 +109,7 @@ class NanoDetHead(tf.keras.Model):
             cls_score, bbox_pred = tf.split(
                 feat, [self.cls_out_channels, 4 * (self.reg_max + 1)], axis=-1)
         else:
+            xxxxx
             cls_score = gfl_cls(cls_feat)
             bbox_pred = gfl_reg(reg_feat)
 

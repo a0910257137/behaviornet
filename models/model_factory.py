@@ -19,7 +19,7 @@ class ModelFactory:
         #                                          self.config.resize_size[1],
         #                                          3),
         #                             kernel_initializer='he_uniform')
-        
+
         self.backbone = SuffleNet(input_shape=(self.config.resize_size[0],
                                                self.config.resize_size[1], 3),
                                   kernel_initializer='he_uniform')
@@ -55,14 +55,14 @@ class ModelFactory:
                 optimizer_key = self.config[model_key].optimizer
                 lr = self.config[model_key].lr
                 if optimizer_key == 'adam':
-                    optimizer = tf.keras.optimizers.Adam(lr=lr)
+                    optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
                 elif optimizer_key == 'sgd':
-                    optimizer = tf.keras.optimizers.SGD(lr=lr,
+                    optimizer = tf.keras.optimizers.SGD(learning_rate=lr,
                                                         momentum=0.9,
                                                         nesterov=True)
                 elif optimizer_key == 'nesterov_mom':
-                    optimizer = tf.train.MomentumOptimizer(lr,
-                                                           0.9,
+                    optimizer = tf.train.MomentumOptimizer(learning_rate=lr,
+                                                           momentum=0.9,
                                                            use_nesterov=True)
                 optimizers[model_key] = optimizer
             return optimizers
@@ -70,10 +70,12 @@ class ModelFactory:
             optimizer_key = self.config.optimizer
             lr = self.config.lr
             if optimizer_key == 'adam':
-                return tf.keras.optimizers.Adam(lr=lr)
+                return tf.keras.optimizers.Adam(learning_rate=lr)
             elif optimizer_key == 'sgd':
-                return tf.keras.optimizers.SGD(lr=lr,
+                return tf.keras.optimizers.SGD(learning_rate=lr,
                                                momentum=0.9,
                                                nesterov=True)
             elif optimizer_key == 'nesterov_mom':
-                return tf.train.MomentumOptimizer(lr, 0.9, use_nesterov=True)
+                return tf.train.MomentumOptimizer(learning_rate=lr,
+                                                  momentum=0.9,
+                                                  use_nesterov=True)
