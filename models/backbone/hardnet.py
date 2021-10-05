@@ -1,6 +1,7 @@
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock
 import tensorflow as tf
+from keras_flops import get_flops
 
 
 class HardBlock(tf.keras.layers.Layer):
@@ -21,7 +22,6 @@ class HardBlock(tf.keras.layers.Layer):
             outch, inch, link = self._get_link(i + 1, in_channels, growth_rate,
                                                grmul)
             self.links.append(link)
-
             self.layers.append(
                 ConvBlock(outch,
                           kernel_size=3,
@@ -253,7 +253,9 @@ def HardNet68(input_shape, pooling, kernel_initializer):
                       kernel_initializer=kernel_initializer)
     image_inputs = tf.keras.Input(shape=input_shape, name='image_inputs')
     fmaps = hardnet(image_inputs)
-
+    # flops = get_flops(tf.keras.Model(image_inputs, fmaps, name='backbone'),
+    #                   batch_size=1)
+    # print(f"FLOPS: {flops / 10 ** 9:.03} G")
     return tf.keras.Model(image_inputs, fmaps, name='backbone')
 
 

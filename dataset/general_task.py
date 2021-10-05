@@ -136,7 +136,6 @@ class GeneralTasks:
                 return anno_data
 
         if is_read_img:
-
             anno_data, imgs, origin_sizes = tf.map_fn(
                 lambda x: read(x),
                 anno_paths,

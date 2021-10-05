@@ -1,7 +1,7 @@
 import tensorflow as tf
 from .loss_base import LossBase
 from .loss_functions import *
-# from ..utils import UncertaintyLoss, CoVWeightingLoss
+from ..utils import UncertaintyLoss, CoVWeightingLoss
 from pprint import pprint
 
 
@@ -9,7 +9,7 @@ class CenterODLoss(LossBase):
     def __init__(self, config):
         self.config = config
         self.keys = ["size_loss", "obj_heat_map"]
-        # self.uncertainty_loss = UncertaintyLoss(self.keys)
+        self.uncertainty_loss = UncertaintyLoss(self.keys)
 
     def build_loss(self, logits, targets, batch, training):
         with tf.name_scope("losses_collections"):

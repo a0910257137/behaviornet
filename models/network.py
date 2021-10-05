@@ -1,5 +1,6 @@
 import tensorflow as tf
 from pprint import pprint
+from keras_flops import get_flops
 
 
 class Network(tf.keras.Model):
@@ -15,6 +16,13 @@ class Network(tf.keras.Model):
                                      metrics=['accuracy'])
         self._loss = loss
         self.optimizer = optimizer
+        # .... Define your model here ....
+        # You need to have compiled your model before calling this.
+        # image_inputs = tf.keras.Input(shape=(192, 320, 3), name='image_inputs')
+        # preds = self.model(image_inputs, training=False)
+        # fully_models = tf.keras.Model(image_inputs, preds, name='fully')
+        # flops = get_flops(fully_models, batch_size=1)
+        # print(f"FLOPS: {flops / 10 ** 9:.03} G")
 
     def train_step(self, data):
         training = True
@@ -30,6 +38,7 @@ class Network(tf.keras.Model):
             trainable_vars = self.model.trainable_variables
             grads = tape.gradient(loss['total'], trainable_vars)
             self.optimizer.apply_gradients(zip(grads, trainable_vars))
+
         return loss
 
     def test_step(self, data):
