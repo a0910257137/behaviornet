@@ -272,6 +272,9 @@ class GeneralTasks:
             shape = [int(m), int(h), int(w)]
             hms = np.zeros(shape=shape)
             for kp, sigma, cate in zip(kps, sigmas, cates):
+                if tf.math.is_inf(sigma) or tf.math.reduce_any(
+                        tf.math.is_inf(kp)):
+                    continue
                 hms[int(cate)] = draw_msra_gaussian(hms[int(cate)], kp, sigma)
             return hms
 

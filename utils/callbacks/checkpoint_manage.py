@@ -59,11 +59,11 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
             return
         if self._last_save != self._epoch_count:
             # save per epoch
-            # if self._epoch_count % 5 == 0:
-            # filename = "cp-{epoch:04d}.ckpt"
-            # filepath = os.path.join(self.directory,
-            #                         filename.format(epoch=self._epoch_count))
-            # self.model.save_weights(filepath=filepath, save_format='tf')
-            tf.keras.models.save_model(self.model.model, self.directory)
+            if self._epoch_count % 5 == 0:
+                # filename = "cp-{epoch:04d}.ckpt"
+                # filepath = os.path.join(self.directory,
+                #                         filename.format(epoch=self._epoch_count))
+                # self.model.save_weights(filepath=filepath, save_format='tf')
+                tf.keras.models.save_model(self.model.model, self.directory)
             # self._manager.save(self._epoch_count)
             self._last_save = self._epoch_count
