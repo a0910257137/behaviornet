@@ -136,7 +136,6 @@ class GeneralTasks:
                 return anno_data
 
         if is_read_img:
-
             anno_data, imgs, origin_sizes = tf.map_fn(
                 lambda x: read(x),
                 anno_paths,
@@ -273,6 +272,9 @@ class GeneralTasks:
             shape = [int(m), int(h), int(w)]
             hms = np.zeros(shape=shape)
             for kp, sigma, cate in zip(kps, sigmas, cates):
+                if tf.math.is_inf(sigma) or tf.math.reduce_any(
+                        tf.math.is_inf(kp)):
+                    continue
                 hms[int(cate)] = draw_msra_gaussian(hms[int(cate)], kp, sigma)
             return hms
 

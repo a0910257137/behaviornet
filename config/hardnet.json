@@ -1,22 +1,22 @@
 {
-    "train_batch_size": 8,
-    "test_batch_size": 8,
-    "epochs": 45,
+    "train_batch_size": 6,
+    "test_batch_size": 6,
+    "epochs": 70,
     "learn_rate": 0.001,
-    "model_path": "/Users/poanchen/Desktop/projects/base",
+    "model_path": "/aidata/anders/objects/WF/archive_model/hardnet",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/Users/poanchen/Desktop/projects/base/logs/"
+        "log_dir": "/aidata/anders/objects/WF/archive_model/hardnet/logs/"
     },
     "data_reader": {
-        "max_obj_num": 15,
+        "max_obj_num": 20,
         "resize_size": [
             192, // height
             320 // width
         ],
-        "img_down_ratio": 1, //[height, width]
+        "img_down_ratio": 0.5, //[height, width]
         "shuffle": true,
         "tasks": [
             {
@@ -27,9 +27,9 @@
                     "tl",
                     "br"
                 ],
-                "category_path": "./config/cates.txt",
-                "train_folder": "/Users/poanchen/Downloads/hico/kps/train_kps",
-                "test_folder": "/Users/poanchen/Downloads/hico/kps/test_kps"
+                "category_path": "./config/face.txt",
+                "train_folder": "/aidata/anders/objects/WF/kps/train_kps",
+                "test_folder": "/aidata/anders/objects/WF/kps/test_kps"
             }
         ],
         "augments": {
@@ -43,10 +43,10 @@
             "do_flip": true
         },
         "coors_down_ratio": [
-            1,
-            1
+            0.5,
+            0.5
         ], //[height, width]
-        "img_root": "/Users/poanchen/Downloads/hico/imgs"
+        "img_root": "/aidata/anders/objects/WF/imgs"
     },
     "models": {
         "model_name": "obj_det",
@@ -54,7 +54,7 @@
         "multi_optimizer": false,
         "optimizer": "adam",
         "backbone": {
-            "module_name": "mobilenet",
+            "module_name": "hardnet",
             "optimizer": "adam",
             "num_vars": null,
             "variables": null,
@@ -111,7 +111,7 @@
         },
         "loss": { //weighted constant based on DETR paper
             "type": "center_od",
-            "size_weight":0.5
+            "size_weight":1
         }
     }
 }
