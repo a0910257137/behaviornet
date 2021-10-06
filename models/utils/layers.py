@@ -1,4 +1,48 @@
 import tensorflow as tf
+from tensorflow.python.keras.layers.convolutional import Conv2D
+from .conv_module import ConvBlock
+
+
+class SE(tf.keras.layers.Layer):
+    """Squeeze-and-excitation layer."""
+    def __init__(self, se_filters, output_filters, name=None):
+        super().__init__(name=name)
+
+        self._local_pooling = False
+        self._act = self.act = tf.nn.silu
+        self.conv_kernel_initializer = tf.keras.initializers.HeUniform()
+        # Squeeze and Excitation layer.
+        self._se_reduce = tf.keras.layers.Conv2D(
+            se_filters,
+            kernel_size=1,
+            strides=1,
+            kernel_initializer=self.conv_kernel_initializer,
+            padding='same',
+            use_bias=True,
+            name='conv2d')
+        self._se_expand = tf.keras.layers.Conv2D(
+            output_filters,
+            kernel_size=1,
+            strides=1,
+            kernel_initializer=self.conv_kernel_initializer,
+            padding='same',
+            use_bias=True,
+            name='conv2d_1')
+
+    def call(self, inputs):
+        h_axis, w_axis = [1, 2]
+        if self._local_pooling:
+            se_tensor = tf.nn.avg_pool(
+                inputs,
+                ksize=[1, inputs.shape[h_axis], inputs.shape[w_axis], 1],
+                strides=[1, 1, 1, 1],
+                padding='VALID')
+        else:
+            se_tensor = tf.math.reduce_mean(inputs, [h_axis, w_axis],
+                                            keepdims=True)
+
+        se_tensor = self._se_expand(self._act(self._se_reduce(se_tensor)))
+        return tf.sigmoid(se_tensor) * inputs
 
 
 class MBConvBlock(tf.keras.layers.Layer):
@@ -7,7 +51,15 @@ class MBConvBlock(tf.keras.layers.Layer):
   Attributes:
     endpoints: dict. A list of internal tensors.
   """
-    def __init__(self, input_filter, se_ratio, local_pooling=False, name=None):
+    def __init__(self,
+                 input_filter,
+                 output_filter,
+                 se_ratio,
+                 kernel_size,
+                 expand_ratio,
+                 stride,
+                 local_pooling=False,
+                 name=None):
         """Initializes a MBConv block.
 
     Args:
@@ -21,98 +73,92 @@ class MBConvBlock(tf.keras.layers.Layer):
         self._act = 'silu'
         self._has_se = (self.se_ratio is not None and 0 < self.se_ratio <= 1)
         self.endpoints = None
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.expand_ratio = expand_ratio
+        self.input_filter = input_filter
+        self.output_filter = output_filter
+        self.conv_dropout = None
+        self.conv_kernel_initializer = tf.keras.initializers.HeUniform()
         # Builds the block accordings to arguments.
         self._build()
 
     def _build(self):
         """Builds block according to the arguments."""
-
-        if self._block_args.expand_ratio != 1:
-            tf.keras.layers.Conv2D()
-
-        mconfig = self._mconfig
-        filters = self._block_args.input_filters * self._block_args.expand_ratio
-        kernel_size = self._block_args.kernel_size
-
+        filters = self.input_filter * self.expand_ratio
         # Expansion phase. Called if not using fused convolutions and expansion
         # phase is necessary.
-        if self._block_args.expand_ratio != 1:
-            self._expand_conv = tf.keras.layers.Conv2D(
+        if self.expand_ratio != 1:
+            self._expand_conv = ConvBlock(
                 filters=filters,
                 kernel_size=1,
                 strides=1,
-                kernel_initializer=conv_kernel_initializer,
-                padding='same',
-                data_format=self._data_format,
+                kernel_initializer=self.conv_kernel_initializer,
+                activation='silu',
                 use_bias=False,
-                name=get_conv_name())
-            self._norm0 = utils.normalization(mconfig.bn_type,
-                                              axis=self._channel_axis,
-                                              momentum=mconfig.bn_momentum,
-                                              epsilon=mconfig.bn_epsilon,
-                                              groups=mconfig.gn_groups,
-                                              name=get_norm_name())
+                name='conv2d')
 
         # Depth-wise convolution phase. Called if not using fused convolutions.
-        self._depthwise_conv = tf.keras.layers.DepthwiseConv2D(
-            kernel_size=kernel_size,
-            strides=self._block_args.strides,
-            depthwise_initializer=conv_kernel_initializer,
-            padding='same',
-            data_format=self._data_format,
+        self._depthwise_conv = ConvBlock(
+            filters=filters,
+            kernel_size=self.kernel_size,
+            strides=self.stride,
+            kernel_initializer=self.conv_kernel_initializer,
+            conv_mode='dw_conv2d',
+            activation='silu',
             use_bias=False,
             name='depthwise_conv2d')
 
-        self._norm1 = utils.normalization(mconfig.bn_type,
-                                          axis=self._channel_axis,
-                                          momentum=mconfig.bn_momentum,
-                                          epsilon=mconfig.bn_epsilon,
-                                          groups=mconfig.gn_groups,
-                                          name=get_norm_name())
-
+        #TODO: for debug
         if self._has_se:
-            num_reduced_filters = max(
-                1,
-                int(self._block_args.input_filters *
-                    self._block_args.se_ratio))
-            self._se = SE(self._mconfig,
-                          num_reduced_filters,
-                          filters,
-                          name='se')
+            num_reduced_filters = max(1,
+                                      int(self.input_filter * self.se_ratio))
+            self._se = SE(num_reduced_filters, filters, name='se')
+
         else:
             self._se = None
 
         # Output phase.
-        filters = self._block_args.output_filters
-        self._project_conv = tf.keras.layers.Conv2D(
+        filters = self.output_filter
+
+        self._project_conv = ConvBlock(
             filters=filters,
             kernel_size=1,
             strides=1,
-            kernel_initializer=conv_kernel_initializer,
-            padding='same',
-            data_format=self._data_format,
+            kernel_initializer=self.conv_kernel_initializer,
+            activation=None,
+            norm_method='bn',
             use_bias=False,
-            name=get_conv_name())
-        self._norm2 = utils.normalization(mconfig.bn_type,
-                                          axis=self._channel_axis,
-                                          momentum=mconfig.bn_momentum,
-                                          epsilon=mconfig.bn_epsilon,
-                                          groups=mconfig.gn_groups,
-                                          name=get_norm_name())
+            name='conv2d')
 
     def residual(self, inputs, x, training, survival_prob):
-        if (self._block_args.strides == 1 and self._block_args.input_filters
-                == self._block_args.output_filters):
+        if (self.strides == 1 and self.input_filters == self.output_filter):
             # Apply only if skip connection presents.
             if survival_prob:
-                x = utils.drop_connect(x, training, survival_prob)
+                x = self.drop_connect(x, training, survival_prob)
             x = tf.add(x, inputs)
-
         return x
+
+    def drop_connect(self, inputs, is_training, survival_prob):
+        """Drop the entire conv with given survival probability."""
+        # "Deep Networks with Stochastic Depth", https://arxiv.org/pdf/1603.09382.pdf
+        if not is_training:
+            return inputs
+
+        # Compute tensor.
+        batch_size = tf.shape(inputs)[0]
+        random_tensor = survival_prob
+        random_tensor += tf.random.uniform([batch_size, 1, 1, 1],
+                                           dtype=inputs.dtype)
+        binary_tensor = tf.floor(random_tensor)
+        # Unlike conventional way that multiply survival_prob at test time, here we
+        # divide survival_prob at training time, such that no addition compute is
+        # needed at test time.
+        output = inputs / survival_prob * binary_tensor
+        return output
 
     def call(self, inputs, training, survival_prob=None):
         """Implementation of call().
-
     Args:
       inputs: the inputs tensor.
       training: boolean, whether the model is constructed for training.
@@ -121,29 +167,18 @@ class MBConvBlock(tf.keras.layers.Layer):
     Returns:
       A output tensor.
     """
-        logging.info('Block %s input shape: %s (%s)', self.name, inputs.shape,
-                     inputs.dtype)
         x = inputs
-        if self._block_args.expand_ratio != 1:
-            x = self._act(self._norm0(self._expand_conv(x), training=training))
-            logging.info('Expand shape: %s', x.shape)
-
-        x = self._act(self._norm1(self._depthwise_conv(x), training=training))
-        logging.info('DWConv shape: %s', x.shape)
-
-        if self._mconfig.conv_dropout and self._block_args.expand_ratio > 1:
-            x = tf.keras.layers.Dropout(self._mconfig.conv_dropout)(
-                x, training=training)
-
+        if self.expand_ratio != 1:
+            x = self._expand_conv(x)
+        x = self._depthwise_conv(x)
+        if self.conv_dropout and self.expand_ratio > 1:
+            x = tf.keras.layers.Dropout(self.conv_dropout)(x,
+                                                           training=training)
         if self._se:
             x = self._se(x)
-
         self.endpoints = {'expansion_output': x}
-
-        x = self._norm2(self._project_conv(x), training=training)
-        x = self.residual(inputs, x, training, survival_prob)
-
-        logging.info('Project shape: %s', x.shape)
+        x = self._project_conv(x)
+        x = self.residual(inputs, x, training)
         return x
 
 
@@ -152,19 +187,15 @@ class FusedMBConvBlock(MBConvBlock):
     def _build(self):
         """Builds block according to the arguments."""
         # pylint: disable=g-long-lambda
-        bid = itertools.count(0)
-        get_norm_name = lambda: 'tpu_batch_normalization' + ('' if not next(
-            bid) else '_' + str(next(bid) // 2))
-        cid = itertools.count(0)
-        get_conv_name = lambda: 'conv2d' + ('' if not next(cid) else '_' + str(
-            next(cid) // 2))
+
         # pylint: enable=g-long-lambda
 
-        mconfig = self._mconfig
-        block_args = self._block_args
-        filters = block_args.input_filters * block_args.expand_ratio
-        kernel_size = block_args.kernel_size
-        if block_args.expand_ratio != 1:
+        # block_args = self._block_args
+
+        filters = self.input_filter * self.expand_ratio
+
+        kernel_size = self.kernel_size
+        if self.expand_ratio != 1:
             # Expansion phase:
             self._expand_conv = tf.keras.layers.Conv2D(
                 filters,

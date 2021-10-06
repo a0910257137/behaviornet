@@ -79,6 +79,7 @@ class ATSSAssigner(BaseAssigner):
         num_bboxes = tf.shape(bboxes)[0]
         gt_bboxes = tf.reshape(gt_bboxes, [num_gt, 4])
         # compute iou between all bbox and gt
+        # calculate iou
         overlaps = bbox_overlaps(bboxes, gt_bboxes)
         # assign 0 by default
         assigned_gt_inds = tf.zeros_like(overlaps[:, 0], dtype=tf.float32)
@@ -93,6 +94,7 @@ class ATSSAssigner(BaseAssigner):
             else:
                 assigned_labels = tf.constant(-1., shape=(num_bboxes))
             return (num_gt, assigned_gt_inds, max_overlaps, assigned_labels)
+            
         # compute center distance between all bbox and gt
         gt_cy = (gt_bboxes[:, 0] + gt_bboxes[:, 2]) / 2.0
         gt_cx = (gt_bboxes[:, 1] + gt_bboxes[:, 3]) / 2.0
@@ -115,6 +117,7 @@ class ATSSAssigner(BaseAssigner):
         candidate_idxs = []
         start_idx = 0
         for level, bboxes_per_level in enumerate(num_level_bboxes):
+
             # on each pyramid level, for each gt,
             # select k bbox whose center are closest to the gt center
             end_idx = start_idx + bboxes_per_level
@@ -127,11 +130,13 @@ class ATSSAssigner(BaseAssigner):
             values, topk_idxs_per_level = tf.math.top_k(distances_per_level,
                                                         k=selectable_k,
                                                         sorted=True)
+
             candidate_idxs.append(topk_idxs_per_level + start_idx)
             start_idx = end_idx
         candidate_idxs = tf.concat(candidate_idxs, axis=-1)
         # shape  is [9*3, N]
         candidate_idxs = tf.transpose(candidate_idxs)
+
         for_candidate_idxs = candidate_idxs
 
         n_idx = tf.range(num_gt, dtype=tf.int32)
@@ -145,7 +150,9 @@ class ATSSAssigner(BaseAssigner):
         # get corresponding iou for the these candidates, and compute the
         # mean and std, set mean + std as the iou threshold
         candidate_overlaps = tf.gather_nd(overlaps, candidate_idxs)
+
         overlaps_mean_per_gt = tf.math.reduce_mean(candidate_overlaps, axis=0)
+
         overlaps_std_per_gt = tf.math.reduce_std(candidate_overlaps, axis=0)
         overlaps_thr_per_gt = overlaps_mean_per_gt + overlaps_std_per_gt
 

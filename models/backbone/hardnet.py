@@ -1,7 +1,7 @@
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock
 import tensorflow as tf
-from keras_flops import get_flops
+# from keras_flops import get_flops
 
 
 class HardBlock(tf.keras.layers.Layer):

@@ -43,7 +43,6 @@ class ConvBlock(tf.keras.layers.Layer):
                 name='sp_conv')
         elif conv_mode == 'dw_conv2d':
             self.conv = tf.keras.layers.DepthwiseConv2D(
-                kernel_size,
                 kernel_size=self.kernel_size,
                 strides=self.strides,
                 use_bias=use_bias,

@@ -54,7 +54,7 @@
         "multi_optimizer": false,
         "optimizer": "adam",
         "backbone": {
-            "module_name": "mobilenet",
+            "module_name": "efficient",
             "optimizer": "adam",
             "num_vars": null,
             "variables": null,

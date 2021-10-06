@@ -42,6 +42,7 @@ class GFCLoss(GFCBase):
             np.load("../nanodet/featmap_size_2.npy", allow_pickle=True)
         ]
         gt_bboxes = np.load('../nanodet/gt_bboxes.npy', allow_pickle=True)
+
         gt_labels = np.load('../nanodet/gt_labels.npy', allow_pickle=True)
 
         cls_scores_0 = tf.convert_to_tensor(cls_scores[0])
@@ -180,7 +181,6 @@ class GFCLoss(GFCBase):
                 i], num_level_cells_list[i]
             gt_bboxes, gt_bboxes_ignore, gt_labels = gt_bboxes_list[
                 i], gt_bboxes_ignore_list[i], gt_labels_list[i]
-
             #  num_bboxes = 1-D tensor
             num_bbox = num_bboxes[i]
             grid_cells, labels, label_weights, bbox_targets, bbox_weights, pos_inds, neg_inds = self.run_single_assign(

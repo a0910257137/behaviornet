@@ -50,10 +50,18 @@ class EfficientNetV2(tf.keras.Model):
                                self.se_ratios, self.strides):
             conv_type, expand_ratio, kernel_size, num_repeats, input_filter, output_filter, se_ratio, stride = block_infos
             assert num_repeats > 0
-            input_filters = self.round_filters(input_filters)
+            input_filter = self.round_filters(input_filter)
             output_filter = self.round_filters(output_filter)
             repeats = self.round_repeats(num_repeats, self.depth_coefficient)
-            conv_block = {0: MBConvBlock(), 1: FusedMBConvBlock()}[conv_type]
+
+            conv_block = {
+                0:
+                MBConvBlock(input_filter, output_filter, se_ratio, kernel_size,
+                            stride, expand_ratio),
+                1:
+                FusedMBConvBlock(input_filter, output_filter, se_ratio,
+                                 kernel_size, stride, expand_ratio)
+            }[conv_type]
             print(conv_block)
             xxx
 
