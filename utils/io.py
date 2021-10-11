@@ -38,7 +38,7 @@ def dump_json(path, data):
 
 def load_text(path):
     with open(path) as f:
-        return [l.replace("\n", " ") for l in f.readlines()]
+        return [l.replace("\n", "") for l in f.readlines()]
 
 
 def write_pkl(data, file_name):

@@ -1,14 +1,13 @@
 {
     "predictor": {
-        "visible_gpu": "1",
-        "pb_path": "/home/train-2/data-disk1/taipower_fpg_worker/archived_models/multi_optimizers",
+        "visible_gpu": "-1",
+        "pb_path": "/home/anders/Downloads/archive_model/base",
         "top_k_n": 100,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,
         "n_objs": 15,
         "k_pairings": 7,
-        "mode": "center",
-        "task": "TAIPOWER",
+        "mode": "centernet",
         "img_input_size": [
             640,
             384
@@ -17,9 +16,6 @@
             192,
             320
         ],
-        "cat_path": "./examples/tp_fpg_workers.txt",
-        "categories": [
-            "person"
-        ]
+        "cat_path": "./config/coco_cates.txt"
     }
 }
