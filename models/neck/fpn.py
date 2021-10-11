@@ -36,18 +36,15 @@ class FPN(tf.keras.Model):
                 ConvBlock(up_transi_lists[i],
                           kernel_size=1,
                           use_bias=False,
-                          conv_mode=conv_mode, 
+                          conv_mode=conv_mode,
                           name='up_trans{}'.format(i + 1)))
 
-        self.transitionUp = TransitionUp(filters=None,
-                                         up_method='bilinear',
-                                         scale=(2, 2),
-                                         name='up_last_trans{}'.format(i + 1))
+        self.transitionUp = TransitionUp(name='up_last_trans{}'.format(i + 1))
 
         self.avg_pool_concat = AvgPoolConcat()
         self.final_transition_layer = ConvBlock(self.structure.inter_ch * 2,
                                                 kernel_size=1,
-                                                conv_mode=conv_mode, 
+                                                conv_mode=conv_mode,
                                                 use_bias=False)
 
         # self.self_attention = SelfAttention(388, 'self_attention')
@@ -68,7 +65,10 @@ class FPN(tf.keras.Model):
             #     channel_atten = self.channel_attention(x)
             #     x = self.conv_atten(self_atten + channel_atten)
             skip = skip_connections[sc_keys[i]]
-            x = self.transitionUp(x, skip, concat=i < self.skip_lv)
+            x = self.transitionUp(inputs=x,
+                                  up_method='bilinear',
+                                  skip=skip,
+                                  concat=i < self.skip_lv)
             x = self.conv1x1_ups[i](x)
             end = x.get_shape().as_list()[-1]
             conv_sc.append(x[..., end - self.SC[i]:])

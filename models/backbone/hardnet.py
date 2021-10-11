@@ -238,16 +238,12 @@ class HardNet(tf.keras.Model):
             self._shortcut_layers[1:3] = [3, 6]
         elif arch == 68:
             self._shortcut_layers[1:3] = [3, 8]
-        print(self._shortcut_layers)
 
     def call(self, x):
         skip_connections = {}
         for i in range(len(self._base)):
             x = self._base[i](x)
             if i in self._shortcut_layers:
-                # print('-' * 100)
-                # print(i)
-                # print(x)
                 skip_connections[x.name] = x
         return x, skip_connections
 
