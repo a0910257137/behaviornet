@@ -1,3 +1,4 @@
+from logging import error
 import tensorflow as tf
 from pprint import pprint
 
@@ -53,23 +54,17 @@ class ConvBlock(tf.keras.layers.Layer):
 
         if norm_method == 'bn':
             self.norm = tf.keras.layers.BatchNormalization(name='bn')
-        if activation == 'relu':
-            self.act = tf.keras.layers.Activation(activation='relu',
-                                                  name='act_relu')
-        elif activation == 'hs':
-            self.act = tf.keras.layers.Activation(activation='swish',
-                                                  name='act_hs')
-        elif activation == 'leaky_relu':
-            self.act = tf.keras.layers.LeakyReLU()
+
+        if activation in [
+                'relu', 'swish', 'LeakyReLU', 'silu', 'sigmoid', 'softmax'
+        ]:
+            self.act = tf.keras.layers.Activation(activation=activation,
+                                                  name='act_' + activation)
         elif activation == 'silu':
             self.act = tf.nn.silu
-            # self.act = tf.keras.activations.selu()
-        elif activation == 'sigmoid':
-            self.act = tf.keras.layers.Activation(activation='sigmoid',
-                                                  name='act_sigmoid')
-        elif activation == 'softmax':
-            self.act = tf.keras.layers.Activation(activation='softmax',
-                                                  name='act_softmax')
+        else:
+            raise Exception('Activation not support{}'.format(activation))
+
 
     def call(self, input):
         output = self.conv(input)
@@ -96,7 +91,6 @@ class TransitionUp(tf.keras.layers.Layer):
                 strides=(scale, scale),
                 use_bias=False,
                 name='deconv_%s' % name)
-        # self.concat = concat
 
     def call(self, inputs, skip=None, concat=True, **kwargs):
         out = self.up_sample(inputs)

@@ -3,6 +3,8 @@ from ..utils.conv_module import ConvBlock
 import tensorflow as tf
 # from keras_flops import get_flops
 
+conv_mode = 'sp_conv2d'
+
 
 class HardBlock(tf.keras.layers.Layer):
     def __init__(self,
@@ -27,6 +29,7 @@ class HardBlock(tf.keras.layers.Layer):
                           kernel_size=3,
                           strides=1,
                           use_bias=False,
+                          conv_mode=conv_mode,
                           kernel_initializer=kernel_initializer))
             if (i % 2 == 0) or (i == n_layers - 1):
                 self.out_channels += outch
@@ -131,14 +134,14 @@ class HardNet(tf.keras.Model):
 
         elif arch == 39:
             #HarDNet68
-            first_ch = [32, 64]
-            ch_list = [128, 256, 320, 640]
-            gr = [14, 16, 20, 40]
-            n_layers = [8, 16, 16, 16]
-            downSamp = [1, 0, 1, 1]
+            first_ch = [24, 48]
+            ch_list = [96, 320, 640]
+            gr = [16, 20, 64]
+            n_layers = [4, 16, 8]
+            downSamp = [1, 1, 1]
             last_proj_ch = 192
             last_blk = [
-                576, 72, 8
+                496, 64, 8
             ]  # as hardblock input channel, groth_rate, number of layers
             blks = len(n_layers)
 
@@ -165,12 +168,14 @@ class HardNet(tf.keras.Model):
                       kernel_size=3,
                       strides=2,
                       use_bias=False,
+                      conv_mode=conv_mode,
                       name='init_conv1'))
         self._base.append(
             ConvBlock(first_ch[1],
                       kernel_size=3,
                       strides=1,
                       use_bias=False,
+                      conv_mode=conv_mode,
                       name='init_conv2'))
         self._shortcut_layers.append(len(self._base) - 1)
         self._base.append(
@@ -193,6 +198,7 @@ class HardNet(tf.keras.Model):
                     ConvBlock(ch_list[i],
                               kernel_size=1,
                               use_bias=False,
+                              conv_mode=conv_mode,
                               name='down_trans{}'.format(i + 1)))
             ch = ch_list[i]
             if downSamp[i] == 1:

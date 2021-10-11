@@ -13,7 +13,6 @@ from utils.tools import get_callbacks, load_configger
 from pprint import pprint
 from utils.tools import *
 from utils.io import *
-from pprint import pprint
 
 
 def train(config, is_restore, excluded_layers):

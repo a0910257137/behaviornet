@@ -1,6 +1,6 @@
 import tensorflow as tf
 from pprint import pprint
-# from keras_flops import get_flops
+from keras_flops import get_flops
 
 
 class Network(tf.keras.Model):
