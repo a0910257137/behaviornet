@@ -1,7 +1,9 @@
+import imp
+from re import X
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock
 import tensorflow as tf
-# from keras_flops import get_flops
+from pprint import pprint
 
 conv_mode = 'sp_conv2d'
 
@@ -214,6 +216,7 @@ class HardNet(tf.keras.Model):
                     ConvBlock(last_proj_ch,
                               kernel_size=1,
                               use_bias=False,
+                              conv_mode=conv_mode,
                               name='down_last_trans{}'.format(i + 1)))
                 self._base.append(
                     get_downsampling(pooling,
@@ -229,12 +232,22 @@ class HardNet(tf.keras.Model):
                                 name='down_last_hard_blk{}'.format(i + 1))
                 ch = blk.get_out_ch
                 self._base.append(blk)
+        # hard code architecture 39/68 for skip connections
+        # hardblk output will be the next fpn
+        if arch == 39:
+            self._shortcut_layers[1:3] = [3, 6]
+        elif arch == 68:
+            self._shortcut_layers[1:3] = [3, 8]
+        print(self._shortcut_layers)
 
     def call(self, x):
         skip_connections = {}
         for i in range(len(self._base)):
             x = self._base[i](x)
             if i in self._shortcut_layers:
+                # print('-' * 100)
+                # print(i)
+                # print(x)
                 skip_connections[x.name] = x
         return x, skip_connections
 
@@ -259,9 +272,6 @@ def HardNet68(input_shape, pooling, kernel_initializer):
                       kernel_initializer=kernel_initializer)
     image_inputs = tf.keras.Input(shape=input_shape, name='image_inputs')
     fmaps = hardnet(image_inputs)
-    # flops = get_flops(tf.keras.Model(image_inputs, fmaps, name='backbone'),
-    #                   batch_size=1)
-    # print(f"FLOPS: {flops / 10 ** 9:.03} G")
     return tf.keras.Model(image_inputs, fmaps, name='backbone')
 
 

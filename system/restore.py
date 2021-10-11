@@ -25,7 +25,11 @@ class Restore:
     def build_restoration(self, model, excluded_layers):
         # load by saved model
         restored_model = tf.keras.models.load_model(self.cp_dir)
+        restored_model.summary()
+        print('-' * 100)
         model_layers = self.flatten_model(model.model)
+        model.model.summary()
+        xxxx
         restored_layers = self.flatten_model(restored_model)
         logger.info(f'Train from restoration')
         logger.info(f'Excluded {excluded_layers}'.format(

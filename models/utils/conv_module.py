@@ -65,7 +65,6 @@ class ConvBlock(tf.keras.layers.Layer):
         else:
             raise Exception('Activation not support{}'.format(activation))
 
-
     def call(self, input):
         output = self.conv(input)
         if self.norm_method == 'bn':
@@ -76,23 +75,31 @@ class ConvBlock(tf.keras.layers.Layer):
 
 
 class TransitionUp(tf.keras.layers.Layer):
-    def __init__(self, filters, up_method, scale, name, **kwargs):
-        super().__init__(**kwargs)
-        if up_method == 'bilinear':
-            self.up_sample = tf.keras.layers.UpSampling2D(
-                size=scale, interpolation='bilinear')
-        elif up_method == 'nearest':
-            self.up_sample = tf.keras.layers.UpSampling2D(
-                size=(2, 2), interpolation='nearest')
-        elif up_method == 'trans_deconv':
-            self.up_sample = tf.keras.layers.Conv2DTranspose(
-                filters=filters,
-                kernel_size=(2, 2),
-                strides=(scale, scale),
-                use_bias=False,
-                name='deconv_%s' % name)
+    def call(self, inputs, up_method, skip=None, concat=True):
+        _, h, w, _ = [tf.shape(inputs)[i] for i in range(4)]
+        h, w = h * 2, w * 2
+        out = tf.image.resize(images=inputs,
+                              size=(h, w),
+                              preserve_aspect_ratio=False,
+                              antialias=False,
+                              method=up_method,
+                              name='upsampling_%s' % self.name)
+        if concat:
+            out = tf.concat([out, skip], axis=-1)
+        return out
 
-    def call(self, inputs, skip=None, concat=True, **kwargs):
+
+class TransposeUp(tf.keras.layers.Layer):
+    def __init__(self, filters, scale):
+        super().__init__()
+        self.up_sample = tf.keras.layers.Conv2DTranspose(
+            filters=filters,
+            kernel_size=(2, 2),
+            strides=(scale, scale),
+            use_bias=False,
+            name='deconv_%s' % self.name)
+
+    def call(self, inputs, skip=None, concat=False, **kwargs):
         out = self.up_sample(inputs)
         if concat:
             out = tf.concat([out, skip], axis=-1)

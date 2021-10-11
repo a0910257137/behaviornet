@@ -2,6 +2,8 @@ import tensorflow as tf
 from ..utils import ConvBlock
 from pprint import pprint
 
+conv_mode = 'sp_conv2d'
+
 
 class Head(tf.keras.Model):
     def __init__(self, config, *args, **kwargs):
@@ -22,11 +24,13 @@ class Head(tf.keras.Model):
                                   kernel_size=3,
                                   use_bias=True,
                                   norm_method='bn',
-                                  activation='relu'),
+                                  activation='relu',
+                                  conv_mode=conv_mode),
                         ConvBlock(filters=pred_out_dims,
                                   kernel_size=1,
                                   activation='sigmoid',
                                   norm_method=None,
+                                  conv_mode=conv_mode,
                                   name=branch_name)
                     ]
                 elif 'size' in branch_name:
@@ -35,11 +39,13 @@ class Head(tf.keras.Model):
                                   kernel_size=3,
                                   use_bias=True,
                                   norm_method='bn',
-                                  activation='relu'),
+                                  activation='relu',
+                                  conv_mode=conv_mode),
                         ConvBlock(filters=pred_out_dims,
                                   kernel_size=1,
                                   norm_method=None,
-                                  name=branch_name)
+                                  name=branch_name,
+                                  conv_mode=conv_mode)
                     ]
                 elif 'offset' in branch_name:
                     self.conv[branch_name] = [

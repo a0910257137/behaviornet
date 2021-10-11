@@ -3,6 +3,8 @@ from ..utils.conv_module import *
 from ..backbone.hardnet import *
 from pprint import pprint
 
+conv_mode = 'sp_conv2d'
+
 
 class FPN(tf.keras.Model):
     def __init__(self, config, **kwargs):
@@ -34,6 +36,7 @@ class FPN(tf.keras.Model):
                 ConvBlock(up_transi_lists[i],
                           kernel_size=1,
                           use_bias=False,
+                          conv_mode=conv_mode, 
                           name='up_trans{}'.format(i + 1)))
 
         self.transitionUp = TransitionUp(filters=None,
@@ -44,6 +47,7 @@ class FPN(tf.keras.Model):
         self.avg_pool_concat = AvgPoolConcat()
         self.final_transition_layer = ConvBlock(self.structure.inter_ch * 2,
                                                 kernel_size=1,
+                                                conv_mode=conv_mode, 
                                                 use_bias=False)
 
         # self.self_attention = SelfAttention(388, 'self_attention')
