@@ -14,11 +14,10 @@ import pandas as pd
 from pathlib import Path
 from utils.io import *
 from utils.bdd_process import *
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, './utils/linker-metrics/linkermetrics')
 from linkermetrics.evaluator.bdd_metric_evaluator import BDDMetricEvaluator
-from .behavior_predictor.inference import BehaviorPredictor
+from behavior_predictor.inference import BehaviorPredictor
 
 
 class Eval:
@@ -30,7 +29,7 @@ class Eval:
         self.save_path = save_path
         self.batch_size = batch_size
         self.mode = self.config['mode']
-        self.predictor = model(self.config)
+        # self.predictor = model(self.config)
 
     def _get_conditions(self, cates, task):
         if task == 'TAIPOWER':
@@ -232,6 +231,6 @@ if __name__ == "__main__":
     if not os.path.isfile(args.config):
         raise FileNotFoundError('File %s does not exist.' % args.config)
     config = load_json(args.config)
-    eval = Eval(CenterPredictor, config['predictor'], args.eval_path,
+    eval = Eval(BehaviorPredictor, config['predictor'], args.eval_path,
                 args.img_root, args.save_path, args.batch_size)
     eval.run()

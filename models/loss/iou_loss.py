@@ -83,6 +83,7 @@ def bbox_overlaps(bboxes1, bboxes2, mode="iou", is_aligned=False, eps=1e-6):
     rows = tf.shape(bboxes1)[0]
     cols = tf.shape(bboxes2)[0]
 
+
     if is_aligned:
         assert rows == cols
     if bool(rows * cols == 0):

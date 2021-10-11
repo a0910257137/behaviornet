@@ -94,7 +94,7 @@ class ATSSAssigner(BaseAssigner):
             else:
                 assigned_labels = tf.constant(-1., shape=(num_bboxes))
             return (num_gt, assigned_gt_inds, max_overlaps, assigned_labels)
-            
+
         # compute center distance between all bbox and gt
         gt_cy = (gt_bboxes[:, 0] + gt_bboxes[:, 2]) / 2.0
         gt_cx = (gt_bboxes[:, 1] + gt_bboxes[:, 3]) / 2.0
@@ -161,7 +161,7 @@ class ATSSAssigner(BaseAssigner):
         # limit the positive sample's center in gt
         # Latter check
         for_candidate_idxs += for_n_idx * num_bboxes
-        num_bboxes = tf.cast(num_bboxes, tf.float32)
+        num_bboxes = tf.cast(num_bboxes, tf.int32)
         #----------------reshape  and make eps bboxes for two coordinations----------------
         ep_bboxes_cy = tf.reshape(bboxes_cy, [1, -1])
         ep_bboxes_cy = tf.tile(ep_bboxes_cy, [num_gt, num_bboxes])

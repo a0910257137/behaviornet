@@ -125,6 +125,7 @@ class GFCLoss(GFCBase):
                 bbox_targets, stride, num_total_samples)
             avg_factor = tf.cast(avg_factor, tf.float32)
             losses_qfl += [loss_qfl]
+
             losses_bbox += [loss_bbox]
             losses_dfl += [loss_dfl]
             avg_factors += [avg_factor]
@@ -306,9 +307,11 @@ class GFCLoss(GFCBase):
         score = tf.zeros_like(label_weights)
         if len(pos_inds) > 0:
             pos_bbox_targets = tf.gather_nd(bbox_targets, pos_inds[:, None])
+
             pos_bbox_pred = tf.gather_nd(bbox_pred, pos_inds[:, None])
 
             pos_grid_cells = tf.gather_nd(grid_cells, pos_inds[:, None])
+            # center need y, x
             pos_grid_cell_centers = self.grid_cells_to_center(
                 pos_grid_cells) / stride
             weight_targets = tf.nn.sigmoid(cls_score)
@@ -331,13 +334,14 @@ class GFCLoss(GFCBase):
             ious_scrs = bbox_overlaps(pos_decode_bbox_pred,
                                       pos_decode_bbox_targets,
                                       is_aligned=True)
-
             score = tf.tensor_scatter_nd_update(score, pos_inds[:, None],
                                                 ious_scrs)
             pred_corners = tf.reshape(pos_bbox_pred, [-1, self.reg_max + 1])
+            # i take offset x, y, x, y
             target_corners = self.bbox2distance(pos_grid_cell_centers[:, ::-1],
                                                 pos_decode_bbox_targets,
                                                 self.reg_max)
+
             #TODO: do not know the y and x
             tl = target_corners[:, :2]
             tl = tl[:, ::-1]
@@ -346,7 +350,6 @@ class GFCLoss(GFCBase):
             target_corners = tf.concat([tl, br], axis=-1)
 
             target_corners = tf.reshape(target_corners, [-1])
-
             # regression loss
             loss_bbox = self._loss_bbox(
                 pos_decode_bbox_pred,
@@ -474,6 +477,8 @@ class GFCLoss(GFCBase):
         self.loss_weight = 0.25
         assert reduction_override in (None, "none", "mean", "sum")
         reduction = reduction_override if reduction_override else self.reduction
+        print(pred)
+        xxxx
         distribution_fc_losss = distribution_focal_loss(pred, target)
         distribution_fc_losss = self.weight_reduce_loss(distribution_fc_losss,
                                                         weight,
@@ -620,4 +625,4 @@ class GFCLoss(GFCBase):
 
 
 gfc = GFCLoss()
-loss = gfc.build_loss(preds=None, targets=None, batch_size=1, training=False)
+loss = gfc.build_loss(preds=None, targets=None, batch_size=3, training=False)

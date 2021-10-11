@@ -1,3 +1,4 @@
+from operator import ge
 import tensorflow as tf
 import numpy as np
 from pprint import pprint
@@ -60,6 +61,7 @@ class GFCBase:
 
         [target_img0, target_img1] -> [target_level0, target_level1, ...]
         """
+
         target = tf.stack(target, axis=0)
         level_targets = []
         start = 0
@@ -76,6 +78,7 @@ class GFCBase:
         negs = tf.squeeze(tf.where(assign_result.gt_inds == 0), axis=-1)
         neg_inds, idx = tf.unique(negs)
         pos_assigned_gt_inds = tf.gather(assign_result.gt_inds, pos_inds) - 1
+
         # we need to clean all of the zero ground truth bboxes
         gt_bboxes = tf.reshape(gt_bboxes, (-1, 4))
 
