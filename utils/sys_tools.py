@@ -53,3 +53,8 @@ def set_gpu(gpu_ids):
     gpus = tf.config.experimental.list_physical_devices('GPU')
     for i in range(len(gpus)):
         tf.config.experimental.set_memory_growth(gpus[i], True)
+    gpu_config = tf.compat.v1.ConfigProto()
+    gpu_config.gpu_options.allow_growth = True
+    gpu_config.gpu_options.per_process_gpu_memory_fraction = 0.6
+    tf.compat.v1.keras.backend.set_session(
+        tf.compat.v1.Session(config=gpu_config))

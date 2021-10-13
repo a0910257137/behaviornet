@@ -11,7 +11,8 @@ class FPN(tf.keras.Model):
         super(FPN, self).__init__(**kwargs)
         self.config = config
         self.structure = self.config.neck.structure
-        grmul = 1.6
+        self.h, self.w = 96, 160
+        grmul = 1.7
         self.SC = self.structure.skip_conv_ch
         up_n_layers = self.structure.up_n_layers
         up_gr = self.structure.up_growth_layer
@@ -40,23 +41,26 @@ class FPN(tf.keras.Model):
                           name='up_trans{}'.format(i + 1)))
 
         self.transitionUp = TransitionUp(name='up_last_trans{}'.format(i + 1))
-
         self.avg_pool_concat = AvgPoolConcat()
         self.final_transition_layer = ConvBlock(self.structure.inter_ch * 2,
                                                 kernel_size=1,
-                                                conv_mode=conv_mode,
                                                 use_bias=False)
 
         # self.self_attention = SelfAttention(388, 'self_attention')
         # self.channel_attention = ChannelAttention('channel_attiontion')
         # self.conv_atten = ConvBlock(388, 1, activation=None, norm_method=None)
         # self.sp_pe = PositionEmbeddingSine(output_dim=388, temperature=388)
-
+        # up_filters = [388, 232, 54, 48]
+        # self.transpose_up_layers = []
+        # for i in range(4):
+        #     self.transpose_up_layers.append(
+        #         TransposeUp(filters=up_filters[i], scale=2))
     @tf.function
     def call(self, inputs):
         x, skip_connections = inputs[0], inputs[1]
         sc_keys = list(skip_connections.keys())[::-1]
-        conv_sc = []
+        # conv_sc = []
+        scs = []
         for i in range(4):
             # if i == 1:
             #     sp_mask = tf.ones_like(x, dtype=tf.bool)[..., 0]
@@ -64,6 +68,9 @@ class FPN(tf.keras.Model):
             #     self_atten = self.self_attention(x, sp_pe)
             #     channel_atten = self.channel_attention(x)
             #     x = self.conv_atten(self_atten + channel_atten)
+            # x = self.transpose_up_layers[i](inputs=x,
+            #                                 skip=skip,
+            #                                 concat=i < self.skip_lv)
             skip = skip_connections[sc_keys[i]]
             x = self.transitionUp(inputs=x,
                                   up_method='bilinear',
@@ -71,20 +78,29 @@ class FPN(tf.keras.Model):
                                   concat=i < self.skip_lv)
             x = self.conv1x1_ups[i](x)
             end = x.get_shape().as_list()[-1]
-            conv_sc.append(x[..., end - self.SC[i]:])
-            x = x[..., :end - self.SC[i]]
-            x = self.avg_pool_concat(x)
-            x = self._base_up[i](x)
-        scs = [x]
-        up_h, up_w = x.get_shape().as_list()[1:3]
-        for i in range(len(self.SC)):
+            # conv_sc.append(x[..., end - self.SC[i]:])
             if self.SC[i] > 0:
-                up_conv = tf.image.resize(conv_sc[i], (up_h, up_w),
+                up_conv = tf.image.resize(x[..., end - self.SC[i]:],
+                                          (self.h, self.w),
                                           method='bilinear',
                                           preserve_aspect_ratio=False,
                                           antialias=False,
                                           name='bilinear_upsampling')
                 scs.append(up_conv)
+            x = x[..., :end - self.SC[i]]
+            x = self.avg_pool_concat(x)
+            x = self._base_up[i](x)
+        scs += [x]
         x = tf.concat(scs, axis=-1)
         x = self.final_transition_layer(x)
         return x
+        # # scs = [x]
+        # # up_h, up_w = x.get_shape().as_list()[1:3]
+        # # for i in range(len(self.SC)):
+        # #     if self.SC[i] > 0:
+        # #         up_conv = tf.image.resize(conv_sc[i], (up_h, up_w),
+        # #                                   method='bilinear',
+        # #                                   preserve_aspect_ratio=False,
+        # #                                   antialias=False,
+        # #                                   name='bilinear_upsampling')
+        # #         scs.append(up_conv)

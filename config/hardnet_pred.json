@@ -1,7 +1,7 @@
 {
     "predictor": {
         "visible_gpu": "-1",
-        "pb_path": "/home/anders/Downloads/archive_model/base",
+        "pb_path": "/aidata/anders/objects/WF/archive_model/large_out_test",
         "top_k_n": 100,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,
@@ -9,13 +9,13 @@
         "k_pairings": 7,
         "mode": "centernet",
         "img_input_size": [
-            640,
-            384
+            320,
+            192
         ],
         "resize_size": [
             192,
             320
         ],
-        "cat_path": "./config/coco_cates.txt"
+        "cat_path": "./config/face.txt"
     }
 }

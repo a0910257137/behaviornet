@@ -22,30 +22,30 @@ class Head(tf.keras.Model):
                     self.conv[branch_name] = [
                         ConvBlock(filters=self.out_tran_dims,
                                   kernel_size=3,
-                                  use_bias=True,
+                                  use_bias=False,
                                   norm_method='bn',
                                   activation='relu',
                                   conv_mode=conv_mode),
                         ConvBlock(filters=pred_out_dims,
                                   kernel_size=1,
                                   activation='sigmoid',
+                                  use_bias=False,
                                   norm_method=None,
-                                  conv_mode=conv_mode,
                                   name=branch_name)
                     ]
                 elif 'size' in branch_name:
                     self.conv[branch_name] = [
                         ConvBlock(filters=self.out_tran_dims,
                                   kernel_size=3,
-                                  use_bias=True,
+                                  use_bias=False,
                                   norm_method='bn',
                                   activation='relu',
                                   conv_mode=conv_mode),
                         ConvBlock(filters=pred_out_dims,
                                   kernel_size=1,
+                                  use_bias=False,
                                   norm_method=None,
-                                  name=branch_name,
-                                  conv_mode=conv_mode)
+                                  name=branch_name)
                     ]
                 elif 'offset' in branch_name:
                     self.conv[branch_name] = [

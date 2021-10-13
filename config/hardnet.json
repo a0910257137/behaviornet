@@ -1,29 +1,17 @@
 {
-<<<<<<< HEAD
-    "train_batch_size": 6,
-    "test_batch_size": 6,
-    "epochs": 70,
+    "train_batch_size": 8,
+    "test_batch_size": 8,
+    "epochs": 80,
     "learn_rate": 0.001,
-    "model_path": "/aidata/anders/objects/WF/archive_model/hardnet",
-=======
-    "train_batch_size": 10,
-    "test_batch_size": 10,
-    "epochs": 65,
-    "learn_rate": 0.001,
-    "model_path": "/aidata/anders/objects/split_hico/archive_model/hardnet",
->>>>>>> cfb7b9c222b8c14137234ca250666d34da4dee86
+    "model_path": "/aidata/anders/objects/WF/archive_model/with_hard_up",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-<<<<<<< HEAD
-        "log_dir": "/aidata/anders/objects/WF/archive_model/hardnet/logs/"
-=======
-        "log_dir": "/aidata/anders/objects/split_hico/archive_model/hardnet/logs/"
->>>>>>> cfb7b9c222b8c14137234ca250666d34da4dee86
+        "log_dir": "/aidata/anders/objects/WF/archive_model/with_hard_up/logs/"
     },
     "data_reader": {
-        "max_obj_num": 20,
+        "max_obj_num": 90,
         "resize_size": [
             192, // height
             320 // width
@@ -39,15 +27,9 @@
                     "tl",
                     "br"
                 ],
-<<<<<<< HEAD
                 "category_path": "./config/face.txt",
                 "train_folder": "/aidata/anders/objects/WF/kps/train_kps",
                 "test_folder": "/aidata/anders/objects/WF/kps/test_kps"
-=======
-                "category_path": "./config/cates.txt",
-                "train_folder": "/aidata/anders/objects/split_hico/kps/train_kps",
-                "test_folder": "/aidata/anders/objects/split_hico/kps/test_kps"
->>>>>>> cfb7b9c222b8c14137234ca250666d34da4dee86
             }
         ],
         "augments": {
@@ -64,11 +46,7 @@
             0.5,
             0.5
         ], //[height, width]
-<<<<<<< HEAD
-        "img_root": "/aidata/anders/objects/WF/imgs"
-=======
-        "img_root": "/aidata/anders/objects/hico/imgs"
->>>>>>> cfb7b9c222b8c14137234ca250666d34da4dee86
+        "img_root": "/aidata/anders/objects/WF/imgs/"
     },
     "models": {
         "model_name": "obj_det",
@@ -89,23 +67,23 @@
             "variables": null,
             "lr": 1e-3,
             "structure": {
-                "inter_ch": 32,
+                "inter_ch": 16,
                 "skip_conv_ch": [
-                    32,
-                    32,
-                    32,
+                    24,
+                    24,
+                    24,
                     0
                 ],
                 "up_growth_layer": [
-                    48,
-                    32,
-                    20,
-                    14
+                    24,
+                    16,
+                    10,
+                    7
                 ],
                 "up_n_layers": [
-                    8,
-                    8,
-                    8,
+                    4,
+                    4,
+                    4,
                     4
                 ]
             }
@@ -120,7 +98,7 @@
                 "heat_maps": [
                     {
                         "name": "obj_heat_map",
-                        "out_dims": 1
+                        "out_dims": 80
                     }
                 ],
                 "size_maps": [
