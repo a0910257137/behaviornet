@@ -1,6 +1,7 @@
 import tensorflow as tf
 from ..utils.conv_module import *
 from ..backbone.hardnet import *
+from ..utils import ChannelAttention, SelfAttention, PositionEmbeddingSine
 from pprint import pprint
 
 conv_mode = 'sp_conv2d'
@@ -25,14 +26,14 @@ class FPN(tf.keras.Model):
         for i in range(4):
             if i == 0:
                 ch = (up_transi_lists[i] - self.SC[i]) * 3
-            blk = HardBlock(ch,
-                            up_gr[i],
-                            grmul,
-                            up_n_layers[i],
-                            kernel_initializer=tf.keras.initializers.HeUniform,
-                            name='up_hard_blk{}'.format(i + 1))
-            ch = blk.get_out_ch
-            self._base_up.append(blk)
+            # blk = HardBlock(ch,
+            #                 up_gr[i],
+            #                 grmul,
+            #                 up_n_layers[i],
+            #                 kernel_initializer=tf.keras.initializers.HeUniform,
+            #                 name='up_hard_blk{}'.format(i + 1))
+            # ch = blk.get_out_ch
+            # self._base_up.append(blk)
             self.conv1x1_ups.append(
                 ConvBlock(up_transi_lists[i],
                           kernel_size=1,
@@ -45,16 +46,17 @@ class FPN(tf.keras.Model):
         self.final_transition_layer = ConvBlock(self.structure.inter_ch * 2,
                                                 kernel_size=1,
                                                 use_bias=False)
-
-        # self.self_attention = SelfAttention(388, 'self_attention')
+        self.sp_pe = PositionEmbeddingSine(output_dim=248, temperature=248)
+        self.self_attention = SelfAttention(248, 'self_attention')
         # self.channel_attention = ChannelAttention('channel_attiontion')
-        # self.conv_atten = ConvBlock(388, 1, activation=None, norm_method=None)
-        # self.sp_pe = PositionEmbeddingSine(output_dim=388, temperature=388)
-        # up_filters = [388, 232, 54, 48]
-        # self.transpose_up_layers = []
-        # for i in range(4):
-        #     self.transpose_up_layers.append(
-        #         TransposeUp(filters=up_filters[i], scale=2))
+        self.conv_atten = ConvBlock(248, 1, activation=None, norm_method=None)
+
+        up_filters = [388, 232, 54, 48]
+        self.transpose_up_layers = []
+        for i in range(4):
+            self.transpose_up_layers.append(
+                TransposeUp(filters=up_filters[i], scale=2))
+
     @tf.function
     def call(self, inputs):
         x, skip_connections = inputs[0], inputs[1]
@@ -62,21 +64,22 @@ class FPN(tf.keras.Model):
         # conv_sc = []
         scs = []
         for i in range(4):
-            # if i == 1:
-            #     sp_mask = tf.ones_like(x, dtype=tf.bool)[..., 0]
-            #     sp_pe = self.sp_pe(sp_mask)
-            #     self_atten = self.self_attention(x, sp_pe)
-            #     channel_atten = self.channel_attention(x)
-            #     x = self.conv_atten(self_atten + channel_atten)
-            # x = self.transpose_up_layers[i](inputs=x,
-            #                                 skip=skip,
-            #                                 concat=i < self.skip_lv)
+            # channel_atten = self.channel_attention(x)
+            # x = self.conv_atten(self_atten + channel_atten)
             skip = skip_connections[sc_keys[i]]
-            x = self.transitionUp(inputs=x,
-                                  up_method='bilinear',
-                                  skip=skip,
-                                  concat=i < self.skip_lv)
+            x = self.transpose_up_layers[i](inputs=x,
+                                            skip=skip,
+                                            concat=i < self.skip_lv)
+            # x = self.transitionUp(inputs=x,
+            #   up_method='bilinear',
+            #   skip=skip,
+            #   concat=i < self.skip_lv)
             x = self.conv1x1_ups[i](x)
+            if i == 0:
+                sp_mask = tf.ones_like(x, dtype=tf.bool)[..., 0]
+                sp_pe = self.sp_pe(sp_mask)
+                self_atten = self.self_attention(x, sp_pe)
+                x = self.conv_atten(self_atten)
             end = x.get_shape().as_list()[-1]
             # conv_sc.append(x[..., end - self.SC[i]:])
             if self.SC[i] > 0:
@@ -89,18 +92,8 @@ class FPN(tf.keras.Model):
                 scs.append(up_conv)
             x = x[..., :end - self.SC[i]]
             x = self.avg_pool_concat(x)
-            x = self._base_up[i](x)
+            # x = self._base_up[i](x)
         scs += [x]
         x = tf.concat(scs, axis=-1)
         x = self.final_transition_layer(x)
         return x
-        # # scs = [x]
-        # # up_h, up_w = x.get_shape().as_list()[1:3]
-        # # for i in range(len(self.SC)):
-        # #     if self.SC[i] > 0:
-        # #         up_conv = tf.image.resize(conv_sc[i], (up_h, up_w),
-        # #                                   method='bilinear',
-        # #                                   preserve_aspect_ratio=False,
-        # #                                   antialias=False,
-        # #                                   name='bilinear_upsampling')
-        # #         scs.append(up_conv)

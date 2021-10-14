@@ -14,9 +14,10 @@ import pandas as pd
 from pathlib import Path
 from utils.io import *
 from utils.bdd_process import *
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, './utils/linker-metrics/linkermetrics')
-from linkermetrics.evaluator.bdd_metric_evaluator import BDDMetricEvaluator
+# from linkermetrics.evaluator.bdd_metric_evaluator import BDDMetricEvaluator
 from behavior_predictor.inference import BehaviorPredictor
 
 

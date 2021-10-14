@@ -62,6 +62,8 @@ class ConvBlock(tf.keras.layers.Layer):
                                                   name='act_' + activation)
         elif activation == 'silu':
             self.act = tf.nn.silu
+        elif activation is None:
+            pass
         else:
             raise Exception('Activation not support{}'.format(activation))
 

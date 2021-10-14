@@ -3,15 +3,15 @@
     "test_batch_size": 8,
     "epochs": 80,
     "learn_rate": 0.001,
-    "model_path": "/aidata/anders/objects/WF/archive_model/with_hard_up",
+    "model_path": "/home/anders/Downloads/archive_model/39DS",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/objects/WF/archive_model/with_hard_up/logs/"
+        "log_dir": "/home/anders/Downloads/archive_model/39DS/logs/"
     },
     "data_reader": {
-        "max_obj_num": 90,
+        "max_obj_num": 30,
         "resize_size": [
             192, // height
             320 // width
@@ -28,8 +28,8 @@
                     "br"
                 ],
                 "category_path": "./config/face.txt",
-                "train_folder": "/aidata/anders/objects/WF/kps/train_kps",
-                "test_folder": "/aidata/anders/objects/WF/kps/test_kps"
+                "train_folder": "/home/anders/Downloads/kps/train_kps",
+                "test_folder": "/home/anders/Downloads/kps/test_kps"
             }
         ],
         "augments": {
@@ -46,7 +46,7 @@
             0.5,
             0.5
         ], //[height, width]
-        "img_root": "/aidata/anders/objects/WF/imgs/"
+        "img_root": "/home/anders/Downloads/train2017/"
     },
     "models": {
         "model_name": "obj_det",
