@@ -59,9 +59,8 @@ def img_gen(config_path, img_path_root, save_root):
             orig_imgs.append(img)
             imgs.append(img)
         bboxes = predictor.pred(imgs, origin_shapes)
-        if config['predictor']['mode'] == 'box2d':
-            target_dict = _get_cates(config['predictor']['cat_path'])
-            imgs = draw_box2d(orig_imgs, bboxes, target_dict)
+        target_dict = _get_cates(config['predictor']['cat_path'])
+        imgs = draw_box2d(orig_imgs, bboxes, target_dict)
 
         for img_name, img in zip(img_names, imgs):
             name = img_name.split('_')[-1]

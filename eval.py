@@ -14,9 +14,10 @@ import pandas as pd
 from pathlib import Path
 from utils.io import *
 from utils.bdd_process import *
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, './utils/linker-metrics/linkermetrics')
-from linkermetrics.evaluator.bdd_metric_evaluator import BDDMetricEvaluator
+# from linkermetrics.evaluator.bdd_metric_evaluator import BDDMetricEvaluator
 from behavior_predictor.inference import BehaviorPredictor
 
 
@@ -29,7 +30,7 @@ class Eval:
         self.save_path = save_path
         self.batch_size = batch_size
         self.mode = self.config['mode']
-        # self.predictor = model(self.config)
+        self.predictor = model(self.config)
 
     def _get_conditions(self, cates, task):
         if task == 'TAIPOWER':
@@ -151,7 +152,8 @@ class Eval:
 
     def run(self):
         eval_files = self.get_eval_path()
-        cates = self.config['categories']
+        # cates = self.config['categories']
+        cates = ["FACE"]
         print('Eval categories')
         pprint(cates)
 
@@ -170,16 +172,32 @@ class Eval:
                 ]
                 imgs = [cv2.imread(x) for x in path_batch]
                 img_origin_sizes = [img.shape[:2] for img in imgs]
-
                 total_imgs += len(imgs)
                 preds = self.predictor.pred(imgs, img_origin_sizes)
+                preds = preds.numpy()
+                for pred, img, frame in zip(preds, imgs, batch_frame):
+                    valid_mask = np.all(~np.isinf(pred), axis=-1)
+                    pred = pred[valid_mask]
+                    for p in pred:
+                        tl = p[:2].astype(int)
+                        tl = tl[::-1]
+                        br = p[2:4].astype(int)
+                        br = br[::-1]
+                        img = cv2.rectangle(img, tuple(tl), tuple(br),
+                                            (0, 255, 0), 3)
+                    cv2.imwrite(
+                        os.path.join(
+                            "/aidata/anders/objects/WF/model_imgs/train",
+                            frame["name"]), img)
                 # batch_times.append(cost_times)
                 batch_results.append(preds)
             # batch_results = np.load('pred.npy')
             # to bdd annos by task
-            if self.config['task'] == 'TAIPOWER':
-                eval_bdd_annos = to_tp_od_bdd(batch_results, batch_frames,
-                                              cates)
+            eval_bdd_annos = to_tp_od_bdd(batch_results, batch_frames, cates)
+            dump_json(
+                "/aidata/anders/objects/WF/archive_model/with_trans/pred.json",
+                eval_bdd_annos)
+            xxx
             gt_bdd_annos, eval_bdd_annos = self.with_bddversion(
                 gt_bdd_list), self.with_bddversion(
                     eval_bdd_annos['frame_list'])

@@ -85,10 +85,14 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                     for j, cate in enumerate(cates):
                         pred_hm = tf.expand_dims(pred_hms[..., j], axis=-1)
                         gt_hm = tf.expand_dims(gt_hms[..., j], axis=-1)
-                        tf.summary.image(
-                            name='Predict ' + cate.upper(), data=pred_hm, step=saved_step, max_outputs=2)
-                        tf.summary.image(
-                            name='Input ' + cate.upper(), data=gt_hm, step=saved_step, max_outputs=2)
+                        tf.summary.image(name='Predict ' + cate.upper(),
+                                         data=pred_hm,
+                                         step=saved_step,
+                                         max_outputs=2)
+                        tf.summary.image(name='Input ' + cate.upper(),
+                                         data=gt_hm,
+                                         step=saved_step,
+                                         max_outputs=2)
                 elif 'obj' in task_name and 'obj' in lb_name:
                     cates = task_cates[task_name]
                     for j, cate in enumerate(cates):

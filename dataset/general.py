@@ -46,8 +46,24 @@ class GeneralDataset:
         # batch_size = self.train_batch_size
         batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
         datasets = datasets.batch(batch_size, drop_remainder=True)
-        # for ds in datasets:
-        #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
+        for ds in datasets:
+            b_img, targets = self.gener_task.build_maps(batch_size, ds)
+        #     b_img = b_img.numpy() * 255.
+        #     b_idxs = targets["size_idxs"].numpy()
+        #     b_size_vals = targets['size_vals'].numpy()
+        #     for i, (img, idxs,
+        #             size_vals) in enumerate(zip(b_img, b_idxs, b_size_vals)):
+        #         valid_mask = np.all(np.isfinite(idxs), axis=-1)
+        #         idxs, size_vals = idxs[valid_mask], size_vals[valid_mask]
+        #         for idx, size_val in zip(idxs, size_vals):
+        #             idx = idx * 2
+        #             size_val = size_val * 2
+        #             tl = (idx - size_val / 2).astype(int)
+        #             br = (idx + size_val / 2).astype(int)
+        #             img = cv2.rectangle(img, tuple(tl[::-1]), tuple(br[::-1]),
+        #                                 (0, 255, 0), 2)
+        #         cv2.imwrite("./output_" + str(i) + ".jpg", img[..., ::-1])
+
         datasets = datasets.map(
             lambda *x: self.gener_task.build_maps(batch_size, x),
             num_parallel_calls=tf.data.experimental.AUTOTUNE)

@@ -33,7 +33,6 @@ def train(config, is_restore, excluded_layers):
     model.fit(train_datasets,
               validation_data=test_datasets,
               epochs=config.epochs,
-              use_multiprocessing=True,
               callbacks=callbacks)
 
 

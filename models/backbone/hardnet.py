@@ -138,10 +138,10 @@ class HardNet(tf.keras.Model):
             #HarDNet68
             first_ch = [24, 48]
             ch_list = [96, 320, 640]
-            gr = [16, 20, 64]
+            gr = [14, 18, 54]
             n_layers = [4, 16, 8]
             downSamp = [1, 1, 1]
-            last_proj_ch = 192
+            last_proj_ch = 128
             last_blk = [
                 496, 64, 8
             ]  # as hardblock input channel, groth_rate, number of layers

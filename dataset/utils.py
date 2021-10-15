@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 
-def gaussian_radius(det_size, min_overlap=0.6):
+def gaussian_radius(det_size, min_overlap=0.7):
     """
         The function of gaussian_radius is determined the gaussian radius. They set the target min_overlap = 0.7 and derive
         from the corner tl and br point. The radius r1, r2, and r3 describe how far the corners can be offset to still fulfill min_overlap.

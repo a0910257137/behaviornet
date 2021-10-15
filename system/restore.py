@@ -25,18 +25,18 @@ class Restore:
     def build_restoration(self, model, excluded_layers):
         # load by saved model
         restored_model = tf.keras.models.load_model(self.cp_dir)
-        restored_model = restored_model.backbone.get_layer('hard_net')
+
+        restore_weights = restored_model.backbone.get_layer(
+            'hard_net').get_weights()
+
         model_backbone = model.model.backbone.get_layer('hard_net')
-
-        restored_layers = self.flatten_model(restored_model)
-        model_layers = self.flatten_model(model_backbone)
+        model_backbone.set_weights(restore_weights)
+        restore_weights = restored_model.get_layer('neck').get_weights()
+        model_neck = model.model.get_layer('neck')
+        model_neck.set_weights(restore_weights)
+        # restored_layers = self.flatten_model(restored_model)
+        # model_layers = self.flatten_model(model_backbone)
         # model_layers = self.flatten_model(model.model)
-        for i, (restoer_layer,
-                model_layer) in enumerate(zip(restored_layers, model_layers)):
-            if i == 64:
-                continue
-            model_layer.set_weights(restoer_layer.get_weights())
-
         # logger.info(f'Train from restoration')
         # logger.info(f'Excluded {excluded_layers}'.format(
         #     excluded_layers=excluded_layers))
@@ -44,6 +44,9 @@ class Restore:
         #         restored_layer) in enumerate(zip(model_layers,
         #                                          restored_layers)):
         #     try:
+
+        #         if i in [47, 48, 49]:
+        #             continue
         #         model_name = model_layer.name
         #         restored_name = restored_layer.name
         #         if excluded_layers is None or restored_name not in excluded_layers:
@@ -52,5 +55,5 @@ class Restore:
         #             continue
         #     except KeyError:
         #         print('Restore key error, please check you model')
-        logger.info(f'Finish load-wights')
+        # logger.info(f'Finish load-wights')
         return model

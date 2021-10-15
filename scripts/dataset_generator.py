@@ -240,7 +240,7 @@ def parse_config():
     parser.add_argument('--max_human', default=15, type=int)
     parser.add_argument('--exclude_cates', default=None, nargs='+')
     parser.add_argument('--min_num', default=1, type=int)
-    parser.add_argument('--train_ratio', default=0.8, type=float)
+    parser.add_argument('--train_ratio', default=0.9, type=float)
     return parser.parse_args()
 
 

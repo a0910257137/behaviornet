@@ -7,8 +7,14 @@ def to_tp_od_bdd(batches_preds, batches_frames, cates):
     for batch_preds, batch_frames in zip(batches_preds, batches_frames):
         batch_frame_preds = []
         for preds, frames in zip(batch_preds, batch_frames):
+            # pred_frame = {
+            #     'storage': frames['storage'],
+            #     'dataset': frames['dataset'],
+            #     'sequence': frames['sequence'],
+            #     'name': frames['name'],
+            #     'labels': []
+            # }
             pred_frame = {
-                'storage': frames['storage'],
                 'dataset': frames['dataset'],
                 'sequence': frames['sequence'],
                 'name': frames['name'],
