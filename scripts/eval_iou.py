@@ -11,9 +11,9 @@ from functools import partial
 import copy
 import pandas as pd
 
-gtjson = json.load(open("/aidata/anders/objects/WF/annos/BDD_val.json"))
+gtjson = json.load(open("/aidata/anders/objects/WF/annos/BDD_val,json"))
 evaljson = json.load(
-    open("/aidata/anders/objects/WF/archive_model/with_trans/pred.json", "r"))
+    open("/aidata/anders/objects/WF/archive_model/blazenet/pred.json", "r"))
 
 cates_order = ["FACE"]
 

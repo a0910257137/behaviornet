@@ -69,9 +69,9 @@
             "structure": {
                 "inter_ch": 16,
                 "skip_conv_ch": [
-                    32,
-                    32,
-                    32,
+                    24,
+                    24,
+                    24,
                     0
                 ],
                 "up_growth_layer": [
@@ -98,7 +98,7 @@
                 "heat_maps": [
                     {
                         "name": "obj_heat_map",
-                        "out_dims": 1
+                        "out_dims": 80
                     }
                 ],
                 "size_maps": [
