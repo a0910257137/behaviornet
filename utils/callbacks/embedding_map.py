@@ -19,7 +19,7 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
 
         self.train_seen = 0
         self.eval_seen = 0
-        self.update_freq = 100
+        self.update_freq = update_freq
         self.feed_inputs_display = feed_inputs_display
         self.train_datasets = train_datasets
         self.test_datasets = test_datasets
@@ -27,8 +27,11 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
         self.train_writer = tf.summary.create_file_writer(
             os.path.join(config.summary.log_dir, 'train'))
         self.eval_writer = tf.summary.create_file_writer(
-            os.path.join(config.summary.log_dir, 'eval'))
-        self.writers = {'train': self.train_writer, 'eval': self.eval_writer}
+            os.path.join(config.summary.log_dir, 'validation'))
+        self.writers = {
+            'train': self.train_writer,
+            'validation': self.eval_writer
+        }
 
     def _get_cates(self, tasks):
         def read(path):
@@ -54,7 +57,7 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
         self.train_seen += 1
         if batch % self.update_freq == 0:
             batch_images, batch_labels = next(self.train_iter_ds)
-            fmaps = self.model(batch_images)
+            fmaps = self.model.model(batch_images, training=False)
             for lb_name in batch_labels:
                 if 'heat_map' in lb_name:
                     pred_hms = tf.cast(fmaps[lb_name], tf.float32)
@@ -114,7 +117,7 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
         self.eval_seen += 1
         if batch % self.update_freq == 0:
             batch_images, batch_labels = next(self.test_iter_ds)
-            fmaps = self.model(batch_images)
+            fmaps = self.model.model(batch_images, training=False)
             for lb_name in batch_labels:
                 if 'heat_map' in lb_name:
                     pred_hms = tf.cast(fmaps[lb_name], tf.float32)

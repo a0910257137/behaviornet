@@ -1,5 +1,5 @@
-from models.neck.fpn import FPN
 from .pan import PAN
 from .fpn import FPN
+from .simple_fpn import SFPN
 
-NECK_FACTORY = dict(fpn=FPN, pan=PAN)
+NECK_FACTORY = dict(sfpn=SFPN, fpn=FPN, pan=PAN)

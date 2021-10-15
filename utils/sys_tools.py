@@ -58,4 +58,3 @@ def set_gpu(gpu_ids):
         tf.compat.v1.Session(config=gpu_config))
     for i in range(len(gpus)):
         tf.config.experimental.set_memory_growth(gpus[i], True)
-

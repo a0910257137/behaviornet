@@ -268,3 +268,53 @@ class FusedMBConvBlock(MBConvBlock):
         x = self.residual(inputs, x, training, survival_prob)
         logging.info('Project shape: %s', x.shape)
         return x
+
+
+def aspp_layer(data_in, out_dims, is_train):
+    with tf.variable_scope('aspp_layer'):
+        # conv1
+
+        out_1 = conv_1(data_in, filters=out_dims, name='conv1')
+        out_1 = tf.layers.batch_normalization(out_1, training=is_train)
+        # dilate conv6
+        aout_6 = tf.layers.conv2d(data_in,
+                                  filters=out_dims,
+                                  kernel_size=3,
+                                  dilation_rate=6,
+                                  activation=tf.nn.relu6,
+                                  padding='same')
+        aout_6 = tf.layers.batch_normalization(aout_6, training=is_train)
+
+        # dilate conv12
+        aout_12 = tf.layers.conv2d(data_in,
+                                   filters=out_dims,
+                                   kernel_size=3,
+                                   dilation_rate=12,
+                                   activation=tf.nn.relu6,
+                                   padding='same')
+        aout_12 = tf.layers.batch_normalization(aout_12, training=is_train)
+
+        # dilate conv18
+        aout_18 = tf.layers.conv2d(data_in,
+                                   filters=out_dims,
+                                   kernel_size=3,
+                                   dilation_rate=18,
+                                   activation=tf.nn.relu6,
+                                   padding='same')
+        aout_18 = tf.layers.batch_normalization(aout_18, training=is_train)
+
+        # img pooling
+        img_pool = tf.reduce_mean(data_in, [1, 2],
+                                  name='global_average_pooling',
+                                  keepdims=True)
+        img_pool = conv_1(img_pool, filters=out_dims, name='gap_conv_1')
+        img_pool = tf.image.resize_bilinear(img_pool,
+                                            tf.shape(data_in)[1:3],
+                                            name='up_sampling')
+        img_pool = tf.layers.batch_normalization(img_pool, training=is_train)
+        concat_list = [out_1, aout_6, aout_12, aout_18, img_pool]
+
+        aout = tf.concat(concat_list, axis=-1)
+        out = conv_1(aout, filters=out_dims, name='out_conv1')
+        out = tf.layers.batch_normalization(out, training=is_train)
+        return out

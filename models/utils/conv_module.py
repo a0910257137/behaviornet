@@ -9,6 +9,7 @@ class ConvBlock(tf.keras.layers.Layer):
                  kernel_size,
                  use_bias=True,
                  strides=1,
+                 dilation_rate=1,
                  bias_initializer='zeros',
                  kernel_initializer=tf.keras.initializers.HeUniform(),
                  activation='relu',
@@ -21,6 +22,7 @@ class ConvBlock(tf.keras.layers.Layer):
         self.norm_method = norm_method
         self.kernel_size = (kernel_size, kernel_size)
         self.strides = (strides, strides)
+        self.dilation_rate = (dilation_rate, dilation_rate)
 
         if conv_mode == 'conv2d':
             self.conv = tf.keras.layers.Conv2D(
@@ -30,6 +32,7 @@ class ConvBlock(tf.keras.layers.Layer):
                 use_bias=use_bias,
                 kernel_initializer=kernel_initializer,
                 bias_initializer=bias_initializer,
+                dilation_rate=self.dilation_rate,
                 padding='same',
                 name='conv')
         elif conv_mode == 'sp_conv2d':
@@ -40,6 +43,7 @@ class ConvBlock(tf.keras.layers.Layer):
                 use_bias=use_bias,
                 kernel_initializer=kernel_initializer,
                 bias_initializer=bias_initializer,
+                dilation_rate=self.dilation_rate,
                 padding='same',
                 name='sp_conv')
         elif conv_mode == 'dw_conv2d':
@@ -68,6 +72,7 @@ class ConvBlock(tf.keras.layers.Layer):
             raise Exception('Activation not support{}'.format(activation))
 
     def call(self, input):
+
         output = self.conv(input)
         if self.norm_method == 'bn':
             output = self.norm(output)
@@ -93,17 +98,29 @@ class TransitionUp(tf.keras.layers.Layer):
 
 
 class TransposeUp(tf.keras.layers.Layer):
-    def __init__(self, filters, scale):
+    def __init__(self, filters, scale, norm_method="bn", activation="relu"):
         super().__init__()
+        self.activation = activation
+        self.norm_method = norm_method
         self.up_sample = tf.keras.layers.Conv2DTranspose(
             filters=filters,
             kernel_size=(2, 2),
             strides=(scale, scale),
             use_bias=False,
+            kernel_initializer=tf.keras.initializers.HeUniform(),
             name='deconv_%s' % self.name)
+        if self.norm_method == "bn":
+            self.norm = tf.keras.layers.BatchNormalization(name='bn')
+        if self.activation == "relu":
+            self.act = tf.keras.layers.Activation(activation=activation,
+                                                  name='act_' + activation)
 
     def call(self, inputs, skip=None, concat=False, **kwargs):
         out = self.up_sample(inputs)
+        if self.norm_method is not None:
+            out = self.norm(out)
+        if self.activation is not None:
+            out = self.act(out)
         if concat:
             out = tf.concat([out, skip], axis=-1)
         return out
@@ -143,7 +160,7 @@ class BottleNeck(tf.keras.layers.Layer):
                                     name=None,
                                     activation=self.nl,
                                     norm_method='bn')
-        self.dw = DW(kernel_size=kernel_size, stride=s, n1=self.nl)
+        self.dw = DW(kernel_size=kernel_size, strides=s, n1=self.nl)
         if self.is_squeeze:
             self.se_blk = SE(tchannel)
 
@@ -169,15 +186,16 @@ class BottleNeck(tf.keras.layers.Layer):
 
 
 class DW(tf.keras.layers.Layer):
-    def __init__(self, kernel_size, stride, n1, **kwargs):
+    def __init__(self, kernel_size, strides, n1, **kwargs):
         super(DW, self).__init__(**kwargs)
         self.n1 = n1
-
-        self.dw = tf.keras.layers.DepthwiseConv2D(kernel_size,
-                                                  strides=(stride, stride),
-                                                  depth_multiplier=1,
-                                                  name='dw_conv',
-                                                  padding='same')
+        self.dw = tf.keras.layers.DepthwiseConv2D(
+            kernel_size,
+            strides=(strides, strides),
+            depth_multiplier=1,
+            depthwise_initializer=tf.keras.initializers.HeUniform(),
+            name='dw_conv',
+            padding='same')
 
         self.bn = tf.keras.layers.BatchNormalization(name='dw_bn')
         self.relu = tf.keras.layers.ReLU(max_value=6.0)
@@ -186,16 +204,13 @@ class DW(tf.keras.layers.Layer):
         x = self.dw(x)
         x = self.bn(x)
         if self.n1 == 'relu':
-            """
-            Relu 6
-            """
+            # Relu 6
             x = self.relu(x)
-
-        elif self.n1 == 'HS':
-            """
-            Hard swish
-            """
+        elif self.n1 == 'hard_swish':
+            # hard swish
             x = x * self.relu(x + 3.0) / 6.0
+        elif self.n1 == 'swish':
+            x = tf.keras.activations.swish(x)
         return x
 
 

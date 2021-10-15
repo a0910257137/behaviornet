@@ -35,13 +35,16 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
         write_images=False,
         update_freq='batch',
         profile_batch=0)
-    # embedding_map = EmbeddingMap(config=config,
-    #                              train_datasets=train_datasets,
-    #                              test_datasets=test_datasets,
-    #                              update_freq=20)
+    embedding_map = EmbeddingMap(config=config,
+                                 train_datasets=train_datasets,
+                                 test_datasets=test_datasets,
+                                 update_freq=200)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
-    callbacks.append([saver_callback, LossAndErrorPrintingCallback()])
+    callbacks.append([
+        saver_callback, tensorboard_callback, embedding_map,
+        LossAndErrorPrintingCallback()
+    ])
     return callbacks
 
 

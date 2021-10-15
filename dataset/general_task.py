@@ -128,7 +128,9 @@ class GeneralTasks:
                 else:
                     img = tf.image.decode_jpeg(img, 3)
                 img_shape = tf.shape(img)[:2]
-                img = tf.image.resize(img, self.img_resize_size, method='area')
+                img = tf.image.resize(img,
+                                      self.img_resize_size,
+                                      method='nearest')
                 return anno_data, img, img_shape
             else:
                 return anno_data
@@ -138,7 +140,7 @@ class GeneralTasks:
                 lambda x: read(x),
                 anno_paths,
                 parallel_iterations=self.batch_size,
-                fn_output_signature=(tf.float32, tf.float32, tf.int32))
+                fn_output_signature=(tf.float32, tf.uint8, tf.int32))
             return anno_data, imgs, origin_sizes
         else:
             anno_data = tf.map_fn(lambda x: read(x),

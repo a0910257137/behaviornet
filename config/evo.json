@@ -1,210 +1,97 @@
 {
-    "visible_gpu": "0, 1",
     "train_batch_size": 14,
-    "test_batch_size": 4,
-    "epochs": 60,
-    "learn_rate": 0.00025,
-    "decay_rate": 0.1,
-    "decay_at": [],
-    "eval_trails": 3,
-    "eval_interval": 100,
-    "model_path": "/home/train-2/data-disk2/pzn666/tp_models/kpmodel",
+    "test_batch_size": 14,
+    "epochs": 80,
+    "learn_rate": 0.00075,
+    "model_path": "/aidata/anders/objects/WF/archive_model/evo",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/home/train-2/data-disk2/pzn666/tp_models/kpmodel/logs/"
-    },
-    "data_generator": {
-        "model_type": "key_point",
-        "data_root": "/mnt/data-home/pzn666/bosch_data/crop_annos",
-        "img_root": "/mnt/data-home/pzn666/bosch_data/crop_imgs",
-        "anno_file": "/mnt/data-home/pzn666/bosch_data/crop_annos/R0_pipelineBDDPlusSet.json",
-        "train_test_split": 0.8, // len(train)/len(test)
-        "max_workers": 32,
-        "chunksize": 4,
-        "process_chunk_size": 5000,
-        "hm_down_size_ratio": 0.5
-    },
-    "saver": {
-        "keep_checkpoint_every_n_hours": 2,
-        "checkpoint_dir": "/home/train-2/data-disk2/pzn666/tp_models/kpmodel",
-        "tmp_dir": "/home/train-2/data-disk2/pzn666/tp_models/saved_model",
-        "ckpt_interval": 2500
+        "log_dir": "/aidata/anders/objects/WF/archive_model/evo/logs/"
     },
     "data_reader": {
-        "name": "key_point",
-        "train_folder": "/home/train-2/data-disk1/taipower/kps/train_kps",
-        "test_folder": "/home/train-2/data-disk1/taipower/kps/test_kps",
-        "img_root":"/home/train-2/data-disk1/taipower/imgs",
-        "img_origin_size": [
-            720,
-            1280
-        ], //[height, width]
+        "max_obj_num": 90,
         "resize_size": [
-            384, // height
-            640 // width
+            192, // height
+            320 // width
         ],
-        "anno_down_ratio": [
-            0.5,
-            0.5
-        ], //[height, width]
-        "img_mean": [
-            0,
-            0,
-            0
-        ],
-        "img_std": [
-            1.0,
+        "img_down_ratio": 1.0, //[height, width]
+        "coors_down_ratio": [
             1.0,
             1.0
-        ],
-        "flip": true,
-        "img_format": "jpg",
-        "preprocess": "obj_det",
-        "aug_chain": [
-            "contrast",
-            "saturat"
-        ],
-        "max_obj_num": 15,
-        "rgb_to_gray": false,
+        ], //[height, width]
         "shuffle": true,
-        "repeat_n": 1,
-        "preprocess_workers": 32,
-        "simple_aug": true, // option for simple/complicated color transform
-        "do_aug": true, // do augmentation or not
-        "do_flip": true, //[CAUTION] because flip will cause tl/br -> tr/bl on heatmap, if this problem not solved DO NOT open fipping
-        "do_random_crop": false,
-        "down_ratio": 2,
-        "color_ordering": 0, // order of color transform, need to be checked which order produce the best result and need to avoid full blank results
-        "img_channel_n": 3,
-        "train_strategy": [
+        "tasks": [
             {
-                "data_ratio": 1.0,
-                "epoch_ratio": 1.0
+                "preprocess": "obj_det",
+                "read_img": true,
+                "branches": [
+                    "obj_center",
+                    "tl",
+                    "br"
+                ],
+                "category_path": "./config/face.txt",
+                "train_folder": "/aidata/anders/objects/WF/kps/train_kps",
+                "test_folder": "/aidata/anders/objects/WF/kps/test_kps"
             }
-        ]
+        ],
+        "augments": {
+            "color_chains": [
+                "contrast",
+                "saturat",
+                "bright",
+                "hue"
+            ],
+            "tensorpack_aug_chain": [], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "do_flip": true
+        },
+        
+        "img_root": "/aidata/anders/objects/WF/imgs/"
     },
     "models": {
-        "select": "plain",
-        "backbone": "evo",
-        "categories": [
-            "Human",
-            "Manhole",
-            "Safety_belt",
-            "Safety_helmet",
-            "Safety_vest",
-            "Self_retracting_lifeline",
-            "Tripod",
-            "Ventilation_Duct"
-        ],
-        "pred_layer": {
-            "heat_maps": [
-                "center_heatmap"
-            ],
-            "sizes": [
-                "size_vals"
-            ],
-            "categories": [
-                "Human",
-                "Manhole",
-                "Safety_belt",
-                "Safety_helmet",
-                "Safety_vest",
-                "Self_retracting_lifeline",
-                "Tripod",
-                "Ventilation_Duct"
-            ]
+        "model_name": "obj_det",
+        "frozen_backbone": false,
+        "multi_optimizer": false,
+        "optimizer": "adam",
+        "backbone": {
+            "module_name": "hardnet",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lr": 1e-3
         },
-        "optimizer": "adam", // adam, sgd, nesterov_mom
-        "loss_type": "od",
-        // "hm_loss_func": "focal",
-        // "reg_loss_func": "mse",
-        "reuse": false,
-        "size_weight": 1,
-        "pull_weight": 0.1,
-        "push_weight": 0.1,
-        "guiding_weight": 1,
-        "plain": {
-            "stem_dim": 32,
-            "settings": [
-                {
-                    "out_dim": 16,
-                    "repeat": 1,
-                    "kernel_size": 3,
-                    "stride": 1,
-                    "expand_ratio": 1,
-                    "id_skip": true,
-                    "se_ratio": 0.25
-                },
-                {
-                    "out_dim": 24,
-                    "repeat": 3,
-                    "kernel_size": 3,
-                    "stride": 2,
-                    "expand_ratio": 6,
-                    "id_skip": true,
-                    "se_ratio": 0.25
-                },
-                {
-                    "out_dim": 40,
-                    "repeat": 2,
-                    "kernel_size": 5,
-                    "stride": 2,
-                    "expand_ratio": 6,
-                    "id_skip": true,
-                    "strides": 1,
-                    "se_ratio": 0.25
-                },
-                {
-                    "out_dim": 80,
-                    "repeat": 4,
-                    "kernel_size": 3,
-                    "stride": 2,
-                    "expand_ratio": 6,
-                    "id_skip": true,
-                    "strides": 1,
-                    "se_ratio": 0.25
-                },
-                {
-                    "out_dim": 112,
-                    "repeat": 2,
-                    "kernel_size": 5,
-                    "stride": 1,
-                    "expand_ratio": 6,
-                    "id_skip": true,
-                    "strides": 1,
-                    "se_ratio": 0.25
-                },
-                {
-                    "out_dim": 192,
-                    "repeat": 4,
-                    "kernel_size": 5,
-                    "stride": 1,
-                    "expand_ratio": 6,
-                    "id_skip": true,
-                    "strides": 1,
-                    "se_ratio": 0.25
-                },
-                {
-                    "out_dim": 80,
-                    "repeat": 2,
-                    "kernel_size": 3,
-                    "stride": 1,
-                    "expand_ratio": 6,
-                    "id_skip": true,
-                    "strides": 1,
-                    "se_ratio": 0.25
-                }
-            ],
-            "use_atrous": false,
-            "use_attention": false
+        "neck": {
+            "module_name": "sfpn",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lr": 1e-3
+        },
+        "head": {
+            "module_name": "head",
+            "optimizer": "adam",
+            "num_vars": null,
+            "variables": null,
+            "lr": 1e-3,
+            "pred_layer": {
+                "heat_maps": [
+                    {
+                        "name": "obj_heat_map",
+                        "out_dims": 1
+                    }
+                ],
+                "size_maps": [
+                    {
+                        "name": "obj_size_maps",
+                        "out_dims": 2
+                    }
+                ]
+            }
+        },
+        "loss": { //weighted constant based on DETR paper
+            "type": "center_od",
+            "size_weight":1
         }
-    },
-    "gpu_options": {
-        "allow_growth": true,
-        "allow_soft_placement": true,
-        "per_process_gpu_memory_fraction": 1.0,
-        "log_device_placement": false
     }
 }

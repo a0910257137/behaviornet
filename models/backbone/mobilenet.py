@@ -28,12 +28,6 @@ class MobileNet(tf.keras.Model):
                 'relu', 'relu', 'relu', 'relu', 'relu', 'relu', 'HS', 'HS',
                 'HS', 'HS', 'HS', 'HS', 'HS', 'HS', 'HS', 'HS'
             ]
-            # print(len(filters))
-            # print(len(k_sizes))
-            # print(len(es))
-            # print(len(ss))
-            # print(len(is_squeezes))
-            # print(len(n1s))
             assert len(filters) == len(k_sizes) == len(es) == len(ss) == len(
                 is_squeezes) == len(n1s)
 
