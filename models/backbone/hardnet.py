@@ -1,5 +1,4 @@
 import imp
-from re import X
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock
 import tensorflow as tf

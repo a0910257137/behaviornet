@@ -1,0 +1,210 @@
+{
+    "visible_gpu": "0, 1",
+    "train_batch_size": 14,
+    "test_batch_size": 4,
+    "epochs": 60,
+    "learn_rate": 0.00025,
+    "decay_rate": 0.1,
+    "decay_at": [],
+    "eval_trails": 3,
+    "eval_interval": 100,
+    "model_path": "/home/train-2/data-disk2/pzn666/tp_models/kpmodel",
+    "summary": {
+        "scalar_freq": 50,
+        "hist_freq": 150,
+        "img_freq": 250,
+        "log_dir": "/home/train-2/data-disk2/pzn666/tp_models/kpmodel/logs/"
+    },
+    "data_generator": {
+        "model_type": "key_point",
+        "data_root": "/mnt/data-home/pzn666/bosch_data/crop_annos",
+        "img_root": "/mnt/data-home/pzn666/bosch_data/crop_imgs",
+        "anno_file": "/mnt/data-home/pzn666/bosch_data/crop_annos/R0_pipelineBDDPlusSet.json",
+        "train_test_split": 0.8, // len(train)/len(test)
+        "max_workers": 32,
+        "chunksize": 4,
+        "process_chunk_size": 5000,
+        "hm_down_size_ratio": 0.5
+    },
+    "saver": {
+        "keep_checkpoint_every_n_hours": 2,
+        "checkpoint_dir": "/home/train-2/data-disk2/pzn666/tp_models/kpmodel",
+        "tmp_dir": "/home/train-2/data-disk2/pzn666/tp_models/saved_model",
+        "ckpt_interval": 2500
+    },
+    "data_reader": {
+        "name": "key_point",
+        "train_folder": "/home/train-2/data-disk1/taipower/kps/train_kps",
+        "test_folder": "/home/train-2/data-disk1/taipower/kps/test_kps",
+        "img_root":"/home/train-2/data-disk1/taipower/imgs",
+        "img_origin_size": [
+            720,
+            1280
+        ], //[height, width]
+        "resize_size": [
+            384, // height
+            640 // width
+        ],
+        "anno_down_ratio": [
+            0.5,
+            0.5
+        ], //[height, width]
+        "img_mean": [
+            0,
+            0,
+            0
+        ],
+        "img_std": [
+            1.0,
+            1.0,
+            1.0
+        ],
+        "flip": true,
+        "img_format": "jpg",
+        "preprocess": "obj_det",
+        "aug_chain": [
+            "contrast",
+            "saturat"
+        ],
+        "max_obj_num": 15,
+        "rgb_to_gray": false,
+        "shuffle": true,
+        "repeat_n": 1,
+        "preprocess_workers": 32,
+        "simple_aug": true, // option for simple/complicated color transform
+        "do_aug": true, // do augmentation or not
+        "do_flip": true, //[CAUTION] because flip will cause tl/br -> tr/bl on heatmap, if this problem not solved DO NOT open fipping
+        "do_random_crop": false,
+        "down_ratio": 2,
+        "color_ordering": 0, // order of color transform, need to be checked which order produce the best result and need to avoid full blank results
+        "img_channel_n": 3,
+        "train_strategy": [
+            {
+                "data_ratio": 1.0,
+                "epoch_ratio": 1.0
+            }
+        ]
+    },
+    "models": {
+        "select": "plain",
+        "backbone": "evo",
+        "categories": [
+            "Human",
+            "Manhole",
+            "Safety_belt",
+            "Safety_helmet",
+            "Safety_vest",
+            "Self_retracting_lifeline",
+            "Tripod",
+            "Ventilation_Duct"
+        ],
+        "pred_layer": {
+            "heat_maps": [
+                "center_heatmap"
+            ],
+            "sizes": [
+                "size_vals"
+            ],
+            "categories": [
+                "Human",
+                "Manhole",
+                "Safety_belt",
+                "Safety_helmet",
+                "Safety_vest",
+                "Self_retracting_lifeline",
+                "Tripod",
+                "Ventilation_Duct"
+            ]
+        },
+        "optimizer": "adam", // adam, sgd, nesterov_mom
+        "loss_type": "od",
+        // "hm_loss_func": "focal",
+        // "reg_loss_func": "mse",
+        "reuse": false,
+        "size_weight": 1,
+        "pull_weight": 0.1,
+        "push_weight": 0.1,
+        "guiding_weight": 1,
+        "plain": {
+            "stem_dim": 32,
+            "settings": [
+                {
+                    "out_dim": 16,
+                    "repeat": 1,
+                    "kernel_size": 3,
+                    "stride": 1,
+                    "expand_ratio": 1,
+                    "id_skip": true,
+                    "se_ratio": 0.25
+                },
+                {
+                    "out_dim": 24,
+                    "repeat": 3,
+                    "kernel_size": 3,
+                    "stride": 2,
+                    "expand_ratio": 6,
+                    "id_skip": true,
+                    "se_ratio": 0.25
+                },
+                {
+                    "out_dim": 40,
+                    "repeat": 2,
+                    "kernel_size": 5,
+                    "stride": 2,
+                    "expand_ratio": 6,
+                    "id_skip": true,
+                    "strides": 1,
+                    "se_ratio": 0.25
+                },
+                {
+                    "out_dim": 80,
+                    "repeat": 4,
+                    "kernel_size": 3,
+                    "stride": 2,
+                    "expand_ratio": 6,
+                    "id_skip": true,
+                    "strides": 1,
+                    "se_ratio": 0.25
+                },
+                {
+                    "out_dim": 112,
+                    "repeat": 2,
+                    "kernel_size": 5,
+                    "stride": 1,
+                    "expand_ratio": 6,
+                    "id_skip": true,
+                    "strides": 1,
+                    "se_ratio": 0.25
+                },
+                {
+                    "out_dim": 192,
+                    "repeat": 4,
+                    "kernel_size": 5,
+                    "stride": 1,
+                    "expand_ratio": 6,
+                    "id_skip": true,
+                    "strides": 1,
+                    "se_ratio": 0.25
+                },
+                {
+                    "out_dim": 80,
+                    "repeat": 2,
+                    "kernel_size": 3,
+                    "stride": 1,
+                    "expand_ratio": 6,
+                    "id_skip": true,
+                    "strides": 1,
+                    "se_ratio": 0.25
+                }
+            ],
+            "use_atrous": false,
+            "use_attention": false
+        }
+    },
+    "gpu_options": {
+        "allow_growth": true,
+        "allow_soft_placement": true,
+        "per_process_gpu_memory_fraction": 1.0,
+        "log_device_placement": false
+    }
+}

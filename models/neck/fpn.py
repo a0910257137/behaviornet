@@ -46,10 +46,10 @@ class FPN(tf.keras.Model):
         self.final_transition_layer = ConvBlock(self.structure.inter_ch * 2,
                                                 kernel_size=1,
                                                 use_bias=False)
-        self.sp_pe = PositionEmbeddingSine(output_dim=248, temperature=248)
-        self.self_attention = SelfAttention(248, 'self_attention')
-        # self.channel_attention = ChannelAttention('channel_attiontion')
-        self.conv_atten = ConvBlock(248, 1, activation=None, norm_method=None)
+        # self.sp_pe = PositionEmbeddingSine(output_dim=248, temperature=248)
+        # self.self_attention = SelfAttention(248, 'self_attention')
+        # # self.channel_attention = ChannelAttention('channel_attiontion')
+        # self.conv_atten = ConvBlock(248, 1, activation=None, norm_method=None)
 
         up_filters = [388, 232, 54, 48]
         self.transpose_up_layers = []
