@@ -4,7 +4,7 @@ from .head import HEAD_FACTORY
 from .loss import LOSS_FACTORY
 import tensorflow as tf
 from .network import Network
-# from .backbone.hardnet import *
+from .backbone.hardnet import *
 from .backbone.evo import *
 # from .backbone.efficientv2 import EfficientNet
 # from .backbone.mobilenet import MobileNetV3

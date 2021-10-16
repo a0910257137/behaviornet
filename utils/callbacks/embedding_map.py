@@ -60,8 +60,8 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
             fmaps = self.model.model(batch_images, training=False)
             for lb_name in batch_labels:
                 if 'heat_map' in lb_name:
-                    pred_hms = tf.cast(fmaps[lb_name], tf.float32)
-                    gt_hms = tf.cast(batch_labels[lb_name], tf.float32)
+                    pred_hms = tf.cast(fmaps[lb_name], tf.float16)
+                    gt_hms = tf.cast(batch_labels[lb_name], tf.float16)
                     self._summary_hms(self.train_writer, batch_images, gt_hms,
                                       pred_hms, lb_name, self.cates,
                                       self.train_seen)

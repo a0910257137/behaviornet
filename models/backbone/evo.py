@@ -105,12 +105,19 @@ class EvoModel(tf.keras.Model):
                          id_skip=setting['id_skip'],
                          name=blk_name))
                 # self._base_down.add()
+        self.skip_layers = ["stage_3", "stage_2", "stage_1"]
+        # [0, 3, 5]
 
     def call(self, inputs, training=None):
         x = self.stem_conv(inputs)
-        for layer in self._base_down:
+        skip_connections = {}
+        j = 0
+        for i, layer in enumerate(self._base_down):
             x = layer(x)
-        return x, "None"
+            if i in [0, 3, 5]:
+                skip_connections[self.skip_layers[j]] = x
+                j += 1
+        return x, skip_connections
 
 
 class IRes(tf.keras.layers.Layer):
