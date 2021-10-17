@@ -1,22 +1,26 @@
 {
-    "train_batch_size": 8,
-    "test_batch_size": 8,
-    "epochs": 80,
-    "learn_rate": 0.0005,
-    "model_path": "/aidata/anders/objects/WF/archive_model/with_trans",
+    "train_batch_size": 24,
+    "test_batch_size": 24,
+    "epochs": 120,
+    "learn_rate": 0.001,
+    "model_path": "/work/anders1234/coco",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/objects/WF/archive_model/with_trans/logs/"
+        "log_dir": "/work/anders1234/coco/logs/"
     },
     "data_reader": {
-        "max_obj_num": 90,
+        "max_obj_num": 50,
         "resize_size": [
             192, // height
             320 // width
         ],
-        "img_down_ratio": 0.5, //[height, width]
+        "img_down_ratio": 1.0, //[height, width]
+        "coors_down_ratio": [
+            1.0,
+            1.0
+        ], //[height, width]
         "shuffle": true,
         "tasks": [
             {
@@ -27,9 +31,9 @@
                     "tl",
                     "br"
                 ],
-                "category_path": "./config/face.txt",
-                "train_folder": "/aidata/anders/objects/WF/kps/train_kps",
-                "test_folder": "/aidata/anders/objects/WF/kps/test_kps"
+                "category_path": "./config/coco_cates.txt",
+                "train_folder": "/work/anders1234/coco/kps/train_kps",
+                "test_folder": "/work/anders1234/coco/kps/test_kps"
             }
         ],
         "augments": {
@@ -42,11 +46,7 @@
             "tensorpack_aug_chain": [], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "do_flip": true
         },
-        "coors_down_ratio": [
-            0.5,
-            0.5
-        ], //[height, width]
-        "img_root": "/aidata/anders/objects/WF/imgs/"
+        "img_root": "/work/anders1234/coco/train2017"
     },
     "models": {
         "model_name": "obj_det",
@@ -67,11 +67,11 @@
             "variables": null,
             "lr": 1e-3,
             "structure": {
-                "inter_ch": 16,
+                "inter_ch": 32,
                 "skip_conv_ch": [
-                    24,
-                    24,
-                    24,
+                    32,
+                    32,
+                    32,
                     0
                 ],
                 "up_growth_layer": [
@@ -98,7 +98,7 @@
                 "heat_maps": [
                     {
                         "name": "obj_heat_map",
-                        "out_dims": 80
+                        "out_dims": 1
                     }
                 ],
                 "size_maps": [

@@ -5,6 +5,7 @@ import numpy as np
 import json
 from pathlib import Path
 from pprint import pprint
+from tqdm import tqdm
 
 
 def load_json(path):
@@ -38,13 +39,13 @@ def load_text(path):
         return [l.replace("\n", "") for l in f.readlines()]
 
 
-path = "/aidata/anders/objects/WF/wider_face_split/wider_face_val_bbx_gt.txt"
+path = "/work/anders1234/WF/wider_face_split/wider_face_val_bbx_gt.txt"
 lines = load_text(path)
-img_root = "/aidata/anders/objects/WF/WIDER_val/images"
-save_root = "/aidata/anders/objects/WF/imgs/"
+img_root = "/work/anders1234/WF/WIDER_val/images"
+save_root = "/work/anders1234/WF/imgs/"
 bdd_results = {"frame_list": []}
 
-for i, line in enumerate(lines):
+for i, line in enumerate(tqdm(lines)):
     tmp_line = list(line.split(" "))
     if len(tmp_line) == 11:
         box_line = tmp_line
@@ -79,9 +80,9 @@ for i, line in enumerate(lines):
                 "labels": []
             }
             file_line = tmp_line
-            # img = cv2.imread(os.path.join(img_root, tmp_line[0]))
-            # cv2.imwrite(os.path.join(save_root, unkown_line[-1]), img)
+            img = cv2.imread(os.path.join(img_root, tmp_line[0]))
+            cv2.imwrite(os.path.join(save_root, unkown_line[-1]), img)
         elif len(unkown_line) == 1:
             box_num = int(unkown_line[0])
             c_frame = 0
-dump_json("/aidata/anders/objects/WF/annos/BDD_val,json", bdd_results)
+dump_json("/work/anders1234/WF/annos/BDD_val.json", bdd_results)

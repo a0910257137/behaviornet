@@ -57,6 +57,7 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
         self.train_seen += 1
         if batch % self.update_freq == 0:
             batch_images, batch_labels = next(self.train_iter_ds)
+
             fmaps = self.model.model(batch_images, training=False)
             for lb_name in batch_labels:
                 if 'heat_map' in lb_name:

@@ -30,20 +30,20 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
                                                period=1)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(
         log_dir=config.summary.log_dir,
-        histogram_freq=200,
         write_graph=False,
         write_images=False,
         update_freq='batch',
         profile_batch=0)
-    # embedding_map = EmbeddingMap(config=config,
-    #                              train_datasets=train_datasets,
-    #                              test_datasets=test_datasets,
-    #                              update_freq=200)
+    embedding_map = EmbeddingMap(config=config,
+                                 train_datasets=train_datasets,
+                                 test_datasets=test_datasets,
+                                 update_freq=500)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
-    callbacks.append(
-        [saver_callback, tensorboard_callback,
-         LossAndErrorPrintingCallback()])
+    callbacks.append([
+        saver_callback, tensorboard_callback, embedding_map,
+        LossAndErrorPrintingCallback()
+    ])
     return callbacks
 
 

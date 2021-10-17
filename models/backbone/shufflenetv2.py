@@ -9,7 +9,6 @@ from pprint import pprint
 # as public function
 def channel_shuffle(x, groups):
     _, height, width, num_channels = x.get_shape().as_list()
-
     channels_per_group = num_channels // groups
     # reshape
     x = tf.reshape(x, [-1, height, width, groups, channels_per_group])

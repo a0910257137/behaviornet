@@ -233,17 +233,34 @@ class HardNet(tf.keras.Model):
                 self._base.append(blk)
         # hard code architecture 39/68 for skip connections
         # hardblk output will be the next fpn
+        self.skip_layers = ["stage_4", "stage_3", "stage_2", "stage_1"]
+        self.shuffle_layer = [3, 6, 9, 13]
         if arch == 39:
             self._shortcut_layers[1:3] = [3, 6]
         elif arch == 68:
             self._shortcut_layers[1:3] = [3, 8]
 
+    # as public function
+    def channel_shuffle(self, x, groups):
+        _, height, width, num_channels = x.get_shape().as_list()
+        channels_per_group = num_channels // groups
+        # reshape
+        x = tf.reshape(x, [-1, height, width, groups, channels_per_group])
+        x = tf.transpose(x, [0, 1, 2, 4, 3])
+        # flatten
+        x = tf.reshape(x, [-1, height, width, num_channels])
+        return x
+
     def call(self, x):
         skip_connections = {}
+        j = 0
         for i in range(len(self._base)):
             x = self._base[i](x)
+            if i in self.shuffle_layer:
+                x = self.channel_shuffle(x, 2)
             if i in self._shortcut_layers:
-                skip_connections[x.name] = x
+                skip_connections[self.skip_layers[j]] = x
+                j += 1
         return x, skip_connections
 
 

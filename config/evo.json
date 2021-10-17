@@ -1,14 +1,14 @@
 {
-    "train_batch_size": 10,
-    "test_batch_size": 10,
+    "train_batch_size": 2,
+    "test_batch_size": 2,
     "epochs": 120,
     "learn_rate": 0.001,
-    "model_path": "/home/anders/Downloads",
+    "model_path": "/work/anders1234/WF/archive_model/evo_lateral",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/home/anders/Downloads/logs/"
+        "log_dir": "/work/anders1234/WF/archive_model/evo_lateral/logs/"
     },
     "data_reader": {
         "max_obj_num": 90,
@@ -32,8 +32,8 @@
                     "br"
                 ],
                 "category_path": "./config/face.txt",
-                "train_folder": "/home/anders/Downloads/kps/train_kps",
-                "test_folder": "/home/anders/Downloads/kps/test_kps"
+                "train_folder": "/work/anders1234/WF/kps/train_kps",
+                "test_folder": "/work/anders1234/WF/kps/test_kps"
             }
         ],
         "augments": {
@@ -47,7 +47,7 @@
             "do_flip": true
         },
         
-        "img_root": "/home/anders/Downloads/train2017"
+        "img_root": "/work/anders1234/WF/imgs"
     },
     "models": {
         "model_name": "obj_det",

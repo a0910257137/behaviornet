@@ -11,8 +11,6 @@ class FPN(tf.keras.Model):
     def __init__(self, config, **kwargs):
         super(FPN, self).__init__(**kwargs)
         self.config = config
-        self.structure = self.config.neck.structure
-        self.SC = self.structure.skip_conv_ch
         up_transi_lists = [
             224 + self.SC[0], 96 + self.SC[1], 64 + self.SC[2], 32 + self.SC[3]
         ]
@@ -28,11 +26,11 @@ class FPN(tf.keras.Model):
 
         self.transitionUp = TransitionUp(name='up_last_trans{}'.format(i + 1))
         self.avg_pool_concat = AvgPoolConcat()
-        self.final_transition_layer = ConvBlock(self.structure.inter_ch * 2,
-                                                kernel_size=1,
-                                                use_bias=False)
-        self.sp_pe = PositionEmbeddingSine(output_dim=120, temperature=120)
-        self.self_attention = SelfAttention(120, 'self_attention')
+        # self.final_transition_layer = ConvBlock(self.structure.inter_ch * 2,
+        #                                         kernel_size=1,
+        #                                         use_bias=False)
+        # self.sp_pe = PositionEmbeddingSine(output_dim=120, temperature=120)
+        # self.self_attention = SelfAttention(120, 'self_attention')
         # self.channel_attention = ChannelAttention('channel_attiontion')
         # self.conv_atten = ConvBlock(120, 1, activation=None, norm_method=None)
 
@@ -44,7 +42,7 @@ class FPN(tf.keras.Model):
                             scale=2,
                             norm_method="bn",
                             activation="relu"))
-        self.final_up = TransposeUp(filters=32,
+        self.final_up = TransposeUp(filters=self.structure.inter_ch,
                                     scale=2,
                                     norm_method="bn",
                                     activation="relu")
