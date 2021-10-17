@@ -24,36 +24,27 @@ class Restore:
 
     def build_restoration(self, model, excluded_layers):
         # load by saved model
+        restore_keys = ['backbone', 'neck', 'head']
         restored_model = tf.keras.models.load_model(self.cp_dir)
-
-        restore_weights = restored_model.backbone.get_layer(
-            'hard_net').get_weights()
-
-        model_backbone = model.model.backbone.get_layer('hard_net')
-        model_backbone.set_weights(restore_weights)
-        restore_weights = restored_model.get_layer('neck').get_weights()
-        model_neck = model.model.get_layer('neck')
-        model_neck.set_weights(restore_weights)
-        # restored_layers = self.flatten_model(restored_model)
-        # model_layers = self.flatten_model(model_backbone)
-        # model_layers = self.flatten_model(model.model)
-        # logger.info(f'Train from restoration')
-        # logger.info(f'Excluded {excluded_layers}'.format(
-        #     excluded_layers=excluded_layers))
-        # for i, (model_layer,
-        #         restored_layer) in enumerate(zip(model_layers,
-        #                                          restored_layers)):
-        #     try:
-
-        #         if i in [47, 48, 49]:
-        #             continue
-        #         model_name = model_layer.name
-        #         restored_name = restored_layer.name
-        #         if excluded_layers is None or restored_name not in excluded_layers:
-        #             model_layer.set_weights(restored_layer.get_weights())
-        #         elif restored_name in excluded_layers:
-        #             continue
-        #     except KeyError:
-        #         print('Restore key error, please check you model')
-        # logger.info(f'Finish load-wights')
+        logger.info(f'Train from restoration')
+        logger.info(f'Initialize for building')
+        model.model(tf.constant(0., shape=(192, 320, 3), training=False))
+        logger.info(f'Excluded {excluded_layers}'.format(
+            excluded_layers=excluded_layers))
+        for key in restore_keys:
+            try:
+                if key == 'backbone':
+                    load_weights = restored_model.backbone.get_layer(
+                        'hard_net').get_weights()
+                    model.model.backbone.get_layer('hard_net').set_weights(
+                        load_weights)
+                elif excluded_layers is not None and key in excluded_layers:
+                    continue
+                else:
+                    load_weights = restored_model.get_layer(key).get_weights()
+                    model.model.get_layer(key).set_weights(
+                        load_weights)
+            except KeyError:
+                print('Restore key error, please check you model')
+        logger.info(f'Finish load-wights')
         return model

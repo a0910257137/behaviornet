@@ -1,14 +1,14 @@
 {
-    "train_batch_size": 24,
-    "test_batch_size": 24,
-    "epochs": 120,
+    "train_batch_size": 64,
+    "test_batch_size": 64,
+    "epochs": 200,
     "learn_rate": 0.001,
-    "model_path": "/work/anders1234/coco",
+    "model_path": "/work/anders1234/coco/archive_model/39DS",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/work/anders1234/coco/logs/"
+        "log_dir": "/work/anders1234/coco/archive_model/39DS/logs/"
     },
     "data_reader": {
         "max_obj_num": 50,
@@ -73,18 +73,6 @@
                     32,
                     32,
                     0
-                ],
-                "up_growth_layer": [
-                    36,
-                    16,
-                    10,
-                    7
-                ],
-                "up_n_layers": [
-                    6,
-                    6,
-                    6,
-                    4
                 ]
             }
         },
@@ -98,7 +86,7 @@
                 "heat_maps": [
                     {
                         "name": "obj_heat_map",
-                        "out_dims": 1
+                        "out_dims": 80
                     }
                 ],
                 "size_maps": [
