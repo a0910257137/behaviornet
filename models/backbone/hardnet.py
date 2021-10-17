@@ -256,8 +256,6 @@ class HardNet(tf.keras.Model):
         j = 0
         for i in range(len(self._base)):
             x = self._base[i](x)
-            if i in self.shuffle_layer:
-                x = self.channel_shuffle(x, 2)
             if i in self._shortcut_layers:
                 skip_connections[self.skip_layers[j]] = x
                 j += 1
