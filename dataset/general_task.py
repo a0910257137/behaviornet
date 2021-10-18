@@ -7,7 +7,7 @@ from .utils import *
 from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
 from .preprocess.utils import Tensorpack
-# import albumentations as A
+# import albumentations as Compose, CoarseDropout, Griddropout
 
 
 class GeneralTasks:

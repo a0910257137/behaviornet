@@ -11,7 +11,8 @@ class FPN(tf.keras.Model):
     def __init__(self, config, **kwargs):
         super(FPN, self).__init__(**kwargs)
         self.config = config
-        self.structure = self.config.structure
+        self.structure = self.config.neck.structure
+        self.SC = self.structure.skip_conv_ch
         up_transi_lists = [
             224 + self.SC[0], 96 + self.SC[1], 64 + self.SC[2], 32 + self.SC[3]
         ]

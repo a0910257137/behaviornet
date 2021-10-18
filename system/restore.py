@@ -28,7 +28,7 @@ class Restore:
         restored_model = tf.keras.models.load_model(self.cp_dir)
         logger.info(f'Train from restoration')
         logger.info(f'Initialize for building')
-        model.model(tf.constant(0., shape=(192, 320, 3), training=False))
+        model.model(tf.constant(0., shape=(1, 192, 320, 3)), training=False)
         logger.info(f'Excluded {excluded_layers}'.format(
             excluded_layers=excluded_layers))
         for key in restore_keys:
@@ -42,8 +42,7 @@ class Restore:
                     continue
                 else:
                     load_weights = restored_model.get_layer(key).get_weights()
-                    model.model.get_layer(key).set_weights(
-                        load_weights)
+                    model.model.get_layer(key).set_weights(load_weights)
             except KeyError:
                 print('Restore key error, please check you model')
         logger.info(f'Finish load-wights')
