@@ -1,5 +1,4 @@
 from pprint import pprint
-from numpy.core.fromnumeric import reshape
 from tqdm import tqdm
 from box import Box
 import numpy as np
@@ -8,6 +7,20 @@ import argparse
 import cv2
 import os
 import json
+import tensorflow as tf
+import math
+
+
+def _bytes_feature(value):
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+
+def _int64_feature(value):
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+
+def _float32_feature(value):
+    return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 
 def get_2d(box):
@@ -41,6 +54,12 @@ def build_2d_obj(obj, obj_cates, img_info):
     obj_kp = np.where(bool_mask, np.inf, obj_kp)
 
     return obj_kp
+
+
+def make_dir(path):
+    if not os.path.exists(path):
+        os.umask(0)
+        os.makedirs(path, mode=0o755)
 
 
 def build_human_keypoint(obj, kp_cates, img_info):
@@ -102,13 +121,13 @@ def complement(annos, max_num):
 
 
 def get_coors(img_root,
+              img_size,
               anno_path,
               min_num,
               exclude_cates,
               max_obj=None,
               obj_classes=None,
-              max_human=None,
-              human_classes=None):
+              train_ratio=0.8):
     def is_img_valid(img_path):
         img_info = {}
         if not os.path.exists(img_path):
@@ -128,40 +147,33 @@ def get_coors(img_root,
             return json.loads(f.read())
 
     anno = load_json(anno_path)
-    batch_kps, batch_rels, batch_human_kps = [], [], []
-    img_paths, img_infos = [], []
+    batch_kps = []
+    img_paths = []
     discard_imgs = Box({
         'invalid': 0,
         'less_than': 0,
     })
-    obj_counts = Box({'total_2d': 0, 'total_3d': 0, 'total_humankp': 0})
+    obj_counts = Box({'total_2d': 0})
     if obj_classes is not None:
         obj_cates = {k: i for i, k in enumerate(obj_classes)}
+    num_frames = len(anno['frame_list'])
+    num_train_files = math.ceil(num_frames * train_ratio)
+    num_test_files = num_frames - num_train_files
+    save_root = os.path.abspath(os.path.join(img_root, os.pardir,
+                                             'tf_records'))
 
-    if human_classes is not None:
-        human_kp_cates = {k: i for i, k in enumerate(human_classes)}
     # gen btach frame list
     for frame in tqdm(anno['frame_list']):
-        frame_kps, frame_rels, frame_human_kps = [], [], []
-        if 'sequence' not in frame.keys():
-            continue
-        if len(frame['labels']) == 0:
-            continue
+        num_train_files -= 1
+        frame_kps = []
         img_name = frame['name']
-        # img_name = frame['name']
         img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
-        if not img_info:
+        img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
+        if not img_info or len(frame['labels']) == 0:
             discard_imgs.invalid += 1
             continue
-        if len(frame['labels']) == 0:
-            continue
-        img_infos.append(
-            np.asarray([img_info['height'], img_info['width']], np.float32))
-
         for obj in frame['labels']:
-            if 'box2d' not in list(obj.keys()):
-                continue
             if exclude_cates and obj['category'].lower() in exclude_cates:
                 continue
             if obj_classes is not None:
@@ -171,73 +183,57 @@ def get_coors(img_root,
                 if min_num > len(frame_kps):
                     discard_imgs.less_than += 1
                     continue
-            if human_classes is not None:
-                if sum(obj['attributes']['keypointState'].values()) == 0:
-                    continue
-                human_kp = build_human_keypoint(obj, human_kp_cates, img_info)
-                obj_counts.total_humankp += 1
-                frame_human_kps.append(human_kp)
+
         if obj_classes is not None:
             frame_kps = np.asarray(frame_kps, dtype=np.float32)
             frame_kps = complement(frame_kps, max_obj)
-            c, _, _ = frame_kps.shape
             batch_kps.append(frame_kps)
-        if human_classes is not None:
-            frame_human_kps = np.asarray(frame_human_kps, dtype=np.float32)
-            frame_human_kps = complement(frame_human_kps, max_obj)
-            batch_human_kps.append(frame_human_kps)
+
+        frame_kps = frame_kps.tostring()
+        img = img[..., ::-1]
+        img = img.tostring()
+        filename = img_path.split('/')[-1].replace('jpg', 'tfrecords')
+
+        example = tf.train.Example(features=tf.train.Features(
+            feature={
+                'origin_height': _int64_feature(img_info['height']),
+                'origin_width': _int64_feature(img_info['width']),
+                'b_images': _bytes_feature(img),
+                'b_coords': _bytes_feature(frame_kps)
+            }))
+
+        if num_train_files > 0:
+            save_dir = os.path.join(save_root, 'train')
+            make_dir(save_dir)
+            writer = tf.io.TFRecordWriter(os.path.join(save_dir, filename))
+            writer.write(example.SerializeToString())
+        else:
+            save_dir = os.path.join(save_root, 'test')
+            make_dir(save_dir)
+            writer = tf.io.TFRecordWriter(os.path.join(save_dir, filename))
+            writer.write(example.SerializeToString())
+        writer.close()
         img_paths.append(img_path)
-    total_frames = len(img_paths)
-    output = {'imgs': img_paths, 'img_infos': img_infos}
-    if obj_classes is not None:
-        output['kps'] = batch_kps
-    if human_classes is not None:
-        output['human_kps'] = batch_human_kps
-    return output, discard_imgs, obj_counts
+    output = {
+        'total_2d': obj_counts.total_2d,
+        'total_frames': num_frames,
+        'train_frames': num_train_files,
+        'test_frames': num_test_files,
+        "discard_invalid_imgs": discard_imgs.invalid,
+        "discard_less_than": discard_imgs.less_than
+    }
 
-
-def save(payload, save_roots, dataset_root, train_ratio):
-    npy_names = [
-        x.split('/')[-1].split('.')[0] + '.npy' for x in payload['imgs']
-    ]
-    split = int(len(npy_names) * train_ratio)
-    img_info_root = os.path.join(dataset_root, 'img_infos')
-    if not os.path.exists(img_info_root):
-        os.makedirs(img_info_root)
-    for idx in range(len(payload['imgs'])):
-        info_name = npy_names[idx]
-        elem = payload['img_infos'][idx]
-        np.save(os.path.join(img_info_root, info_name), elem)
-    payload.pop('imgs')
-    payload.pop('img_infos')
-    for key in payload:
-        train_save_root = os.path.join(save_roots[key], 'train_%s' % key)
-        test_save_root = os.path.join(save_roots[key], 'test_%s' % key)
-        if not os.path.exists(train_save_root):
-            os.makedirs(train_save_root)
-        if not os.path.exists(test_save_root):
-            os.makedirs(test_save_root)
-        # train
-        for idx in range(len(payload[key][:split])):
-            elem = payload[key][:split][idx]
-            npy_name = npy_names[:split][idx]
-            np.save(os.path.join(train_save_root, npy_name), elem)
-        # test
-        for idx in range(len(payload[key][split:])):
-            elem = payload[key][split:][idx]
-            npy_name = npy_names[split:][idx]
-            np.save(os.path.join(test_save_root, npy_name), elem)
+    return output
 
 
 def parse_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--anno_root', type=str)
-    parser.add_argument('--img_root', type=str)
     parser.add_argument('--anno_file_names', default=None, nargs='+')
+    parser.add_argument('--img_root', type=str)
+    parser.add_argument('--img_size', default=[320, 192])
     parser.add_argument('--obj_cate_file', type=str)
     parser.add_argument('--max_obj', default=15, type=int)
-    parser.add_argument('--human_kps_cate_file', type=str, default=None)
-    parser.add_argument('--max_human', default=15, type=int)
     parser.add_argument('--exclude_cates', default=None, nargs='+')
     parser.add_argument('--min_num', default=1, type=int)
     parser.add_argument('--train_ratio', default=0.9, type=float)
@@ -262,12 +258,11 @@ if __name__ == '__main__':
         sys.exit(0)
 
     save_root = os.path.abspath(os.path.join(args.anno_root, os.pardir))
-    kp_root_folder = os.path.join(save_root, 'kps')
     total_discards = Box({
         'invalid': 0,
         'less_than': 0,
     })
-    total_counts = Box({'total_2d': 0, 'total_3d': 0, 'total_humankp': 0})
+    total_counts = Box({'total_2d': 0})
     # read object categories
     if args.obj_cate_file:
         with open(args.obj_cate_file) as f:
@@ -275,38 +270,19 @@ if __name__ == '__main__':
             obj_cates = [x.strip() for x in obj_cates]
     else:
         obj_cates = None
-
-    if args.human_kps_cate_file:
-        with open(args.human_kps_cate_file) as f:
-            human_kp_cates = f.readlines()
-            human_kp_cates = [x.strip() for x in human_kp_cates]
-    else:
-        human_kp_cates = None
-
-    save_roots = {'kps': os.path.join(save_root, 'kps')}
-
-    if human_kp_cates is not None:
-        save_roots['human_kps'] = os.path.join(save_root, 'human_kps')
-
     for anno_file_name in anno_file_names:
         print('Process %s' % anno_file_name)
         anno_path = os.path.join(args.anno_root, anno_file_name)
-        output, discard_imgs, obj_counts = get_coors(
-            args.img_root,
-            anno_path,
-            args.min_num,
-            exclude_cates,
-            max_obj=args.max_obj,
-            obj_classes=obj_cates,
-            max_human=args.max_human,
-            human_classes=human_kp_cates)
-        save(output, save_roots, save_root, args.train_ratio)
-        print('generated npy annos are saved in %s' % save_root)
-    total_discards.invalid += discard_imgs.invalid
-    total_discards.less_than += discard_imgs.less_than
-    total_counts.total_2d += obj_counts.total_2d
-    total_counts.total_3d += obj_counts.total_3d
-    total_counts.total_humankp += obj_counts.total_humankp
-    print('Total 2d objs: %i, total 3d objs: %i, total humankp objs: %i' %
-          (total_counts.total_2d, total_counts.total_3d,
-           total_counts.total_humankp))
+        output = get_coors(args.img_root,
+                           args.img_size,
+                           anno_path,
+                           args.min_num,
+                           exclude_cates,
+                           max_obj=args.max_obj,
+                           obj_classes=obj_cates,
+                           train_ratio=args.train_ratio)
+        print('generated TF records are saved in %s' % save_root)
+        print(
+            'Total 2d objs: %i, Total invalid objs: %i, Total less_than objs: %i'
+            % (output['total_2d'], output['discard_invalid_imgs'],
+               output['discard_less_than']))

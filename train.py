@@ -20,7 +20,8 @@ def train(config, is_restore, excluded_layers):
     general_dataset = GeneralDataset(config.data_reader)
     # Read in Training Data
     datasets = general_dataset.get_datasets(mirrored_strategy)
-    train_datasets, test_datasets = datasets['train'], datasets['test']
+    train_datasets, step_per_epoch = datasets['train']
+    test_datasets, _ = datasets['test']
     with mirrored_strategy.scope():
         model, optimizer = ModelFactory(config.models, config.model_path,
                                         config.learn_rate).build_model()

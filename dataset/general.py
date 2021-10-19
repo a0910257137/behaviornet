@@ -1,11 +1,13 @@
 import os
+import tensorflow as tf
+import multiprocessing
+import math
 from .general_task import GeneralTasks
 from box import Box
 from pprint import pprint
-import tensorflow as tf
-import numpy as np
-import cv2
-import time
+from glob import glob
+
+threads = multiprocessing.cpu_count()
 
 
 class GeneralDataset:
@@ -28,13 +30,22 @@ class GeneralDataset:
         datasets = []
         for task in self.config.tasks:
             if is_train:
-                ds = tf.data.Dataset.list_files(task.train_folder + "/*.npy",
-                                                shuffle=False)
+                filenames = glob(os.path.join(task.train_folder,
+                                              '*.tfrecords'))
+                step_per_epoch = math.ceil(
+                    len(filenames)) / (mirrored_strategy.num_replicas_in_sync *
+                                       self.train_batch_size)
+                ds = tf.data.TFRecordDataset(filenames,
+                                             num_parallel_reads=threads)
             else:
-                ds = tf.data.Dataset.list_files(task.test_folder + "/*.npy",
-                                                shuffle=False)
+                filenames = glob(os.path.join(task.test_folder, '*.tfrecords'))
+                step_per_epoch = math.ceil(
+                    len(filenames) / mirrored_strategy.num_replicas_in_sync *
+                    self.test_batch_size)
+                ds = tf.data.TFRecordDataset(filenames,
+                                             num_parallel_reads=threads)
             datasets.append(ds)
-        datasets = tf.data.Dataset.zip(tuple(datasets))
+        datasets = tf.data.TFRecordDataset.zip(tuple(datasets))
         if self.config.shuffle:
             datasets = datasets.shuffle(buffer_size=10000)
         options = tf.data.Options()
@@ -42,9 +53,8 @@ class GeneralDataset:
         datasets = datasets.with_options(options)
         if not is_train:
             batch_size = mirrored_strategy.num_replicas_in_sync * self.test_batch_size
-            # batch_size = self.test_batch_size
-        # batch_size = self.train_batch_size
         batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
+
         datasets = datasets.batch(batch_size, drop_remainder=True)
         # for ds in datasets:
         #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
@@ -56,8 +66,8 @@ class GeneralDataset:
         #         valid_mask = np.all(np.isfinite(idxs), axis=-1)
         #         idxs, size_vals = idxs[valid_mask], size_vals[valid_mask]
         #         for idx, size_val in zip(idxs, size_vals):
-        #             idx = idx * 2
-        #             size_val = size_val * 2
+        #             idx = idx
+        #             size_val = size_val
         #             tl = (idx - size_val / 2).astype(int)
         #             br = (idx + size_val / 2).astype(int)
         #             img = cv2.rectangle(img, tuple(tl[::-1]), tuple(br[::-1]),
@@ -66,9 +76,9 @@ class GeneralDataset:
 
         datasets = datasets.map(
             lambda *x: self.gener_task.build_maps(batch_size, x),
-            num_parallel_calls=tf.data.experimental.AUTOTUNE)
+            num_parallel_calls=threads)
         datasets = datasets.prefetch(tf.data.experimental.AUTOTUNE)
-        return datasets
+        return datasets, step_per_epoch
 
     def get_datasets(self, mirrored_strategy):
         return {

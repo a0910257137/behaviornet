@@ -14,6 +14,7 @@ import pandas as pd
 from pathlib import Path
 from utils.io import *
 from utils.bdd_process import *
+from utils.eval_iou import ComputeIOU
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, './utils/linker-metrics/linkermetrics')
@@ -150,13 +151,36 @@ class Eval:
             ]
         return eval_files
 
+    def iou_report(self, iou, cates_order):
+        resultList = []
+        for thres in [0.95, 0.75, 0.5, 0.25, 0.1, 0.01]:
+            result_dict = iou.report('AP', thres)
+            for cate in cates_order:
+                try:
+                    value = result_dict[cate]
+                except:
+                    value = '0'
+                resultList.append([cate, thres, 'precision', value])
+
+            result_dict = iou.report('AR', thres)
+            for cate in cates_order:
+                try:
+                    value = result_dict[cate]
+                except:
+                    value = '0'
+                resultList.append([cate, thres, 'recall', value])
+
+        df = pd.DataFrame(
+            resultList,
+            columns=["category", "IoU_thres", "point_type", "value"])
+
+        df.to_csv('infer_test_iou.csv', float_format='%.3f')
+
     def run(self):
         eval_files = self.get_eval_path()
-        # cates = self.config['categories']
-        cates = ["FACE"]
+        self.cates = ["FACE"]
         print('Eval categories')
-        pprint(cates)
-
+        pprint(self.cates)
         total_imgs = 0
         batch_times = []
         for eval_file in eval_files:
@@ -174,45 +198,44 @@ class Eval:
                 img_origin_sizes = [img.shape[:2] for img in imgs]
                 total_imgs += len(imgs)
                 preds = self.predictor.pred(imgs, img_origin_sizes)
-                preds = preds.numpy()
-                for pred, img, frame in zip(preds, imgs, batch_frame):
-                    valid_mask = np.all(~np.isinf(pred), axis=-1)
-                    pred = pred[valid_mask]
-                    for p in pred:
-                        tl = p[:2].astype(int)
-                        tl = tl[::-1]
-                        br = p[2:4].astype(int)
-                        br = br[::-1]
-                        img = cv2.rectangle(img, tuple(tl), tuple(br),
-                                            (0, 255, 0), 3)
-                    cv2.imwrite(
-                        os.path.join(
-                            "/aidata/anders/objects/WF/model_imgs/train",
-                            frame["name"]), img)
-                # batch_times.append(cost_times)
+                # preds = preds.numpy()
+                # for pred, img, frame in zip(preds, imgs, batch_frame):
+                #     valid_mask = np.all(~np.isinf(pred), axis=-1)
+                #     pred = pred[valid_mask]
+                #     for p in pred:
+                #         tl = p[:2].astype(int)
+                #         tl = tl[::-1]
+                #         br = p[2:4].astype(int)
+                #         br = br[::-1]
+                #         img = cv2.rectangle(img, tuple(tl), tuple(br),
+                #                             (0, 255, 0), 3)
+                #     cv2.imwrite(
+                #         os.path.join(
+                #             "/aidata/anders/objects/WF/model_imgs/train",
+                #             frame["name"]), img)
                 batch_results.append(preds)
-            # batch_results = np.load('pred.npy')
             # to bdd annos by task
-            eval_bdd_annos = to_tp_od_bdd(batch_results, batch_frames, cates)
-            dump_json(
-                "/aidata/anders/objects/WF/archive_model/with_trans/pred.json",
-                eval_bdd_annos)
-            xxx
+            eval_bdd_annos = to_tp_od_bdd(batch_results, batch_frames,
+                                          self.cates)
             gt_bdd_annos, eval_bdd_annos = self.with_bddversion(
                 gt_bdd_list), self.with_bddversion(
                     eval_bdd_annos['frame_list'])
-            __Condistions = self._get_conditions(cates, self.config['task'])
+            if self.config['eval_method'] == 'IoU':
+                iou = ComputeIOU(gt_bdd_annos, eval_bdd_annos)
+                self.iou_report(iou, self.cates)
+            elif self.config['eval_method'] == 'keypoint':
+                __Condistions = self._get_conditions(self.cates,
+                                                     self.config['task'])
 
-            evaluator = BDDMetricEvaluator(
-                frame_matcher=dict(name='BDDFrameToFrameMatcher'),
-                conditions=__Condistions)
-            evaluator(dict(gt=gt_bdd_annos, eval=eval_bdd_annos))
-            # report from linker metrics
-            reports = evaluator.report
-            # pprint(reports)
-            # list of dictionary, each dictionary save one category
-            tot_dict = self.transform_pd_data(reports)
-            pprint(tot_dict)
+                evaluator = BDDMetricEvaluator(
+                    frame_matcher=dict(name='BDDFrameToFrameMatcher'),
+                    conditions=__Condistions)
+                evaluator(dict(gt=gt_bdd_annos, eval=eval_bdd_annos))
+                # report from linker metrics
+                reports = evaluator.report
+                # list of dictionary, each dictionary save one category
+                tot_dict = self.transform_pd_data(reports)
+                pprint(tot_dict)
         print('Finish evaluating')
         print(
             'Totoal speding %5fs, avg %5fs per batch with %i batch size, %i imgs'
