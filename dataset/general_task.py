@@ -6,8 +6,9 @@ from .utils import *
 from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
 from .preprocess.utils import Tensorpack
-
+import time
 # import albumentations as Compose, CoarseDropout, Griddropout
+from scipy.stats import multivariate_normal
 
 
 class GeneralTasks:
@@ -23,22 +24,33 @@ class GeneralTasks:
                                         dtype=tf.float32)
         self.tensorpack = Tensorpack(self.config.augments.tensorpack_aug_chain)
         self.max_obj_num = self.config.max_obj_num
+        self.features = {
+            "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
+            "origin_width": tf.io.FixedLenFeature([], dtype=tf.int64),
+            "b_images": tf.io.FixedLenFeature([], dtype=tf.string),
+            "b_coords": tf.io.FixedLenFeature([], dtype=tf.string)
+        }
 
     def build_maps(self, batch_size, task_infos):
         targets = {}
         self.batch_size = batch_size
         self.do_clc, self.flip_probs, self.do_ten_pack = self.random_param()
+
         for task_infos, infos in zip(self.task_configs, task_infos):
             task, branch_names, m_cates = task_infos['preprocess'], task_infos[
                 'branches'], len(task_infos['cates'])
+
             b_coords, b_imgs, b_origin_sizes = self._parse_TFrecord(
                 task, infos)
+
             b_coords, new_imgs = self._augments(b_coords, b_imgs,
                                                 b_origin_sizes)
+
             b_coords, down_ratios = self._resize_coors(b_coords,
                                                        b_origin_sizes,
                                                        self.img_resize_size,
                                                        self.coors_down_ratio)
+
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_objs_kps, b_cates = b_coords[..., :-1], b_coords[..., -1][..., 0]
             b_obj_sizes = self._obj_sizes(b_objs_kps, task)
@@ -47,6 +59,7 @@ class GeneralTasks:
                 b_obj_sizes, self.flip_probs, self.is_do_filp, branch_names)
 
             if task == "obj_det":
+
                 b_hms = tf.py_function(self._draw_kps,
                                        inp=[
                                            b_round_kp_idxs, b_obj_sizes,
@@ -54,10 +67,12 @@ class GeneralTasks:
                                            m_cates, b_cates
                                        ],
                                        Tout=tf.float32)
+
                 targets['size_idxs'] = b_round_kp_idxs
                 targets['size_vals'] = tf.where(tf.math.is_nan(b_obj_sizes),
                                                 np.inf, b_obj_sizes)
                 targets['obj_heat_map'] = b_hms
+
         return tf.cast(new_imgs, dtype=tf.float32), targets
 
     def _resize_coors(self, annos, original_sizes, resize_size,
@@ -66,8 +81,10 @@ class GeneralTasks:
         img_down_ratio = tf.cast(img_down_ratio, tf.float32)
         down_ratios = tf.cast(coors_down_ratio * img_down_ratio, tf.float32)
         annos, cates = annos[..., :-1], annos[..., -1:]
+
         annos = tf.einsum('b n c d, b  d ->b n c d', annos, down_ratios)
         annos = tf.concat([annos, cates], axis=-1)
+
         return annos, down_ratios
 
     def random_param(self):
@@ -207,18 +224,20 @@ class GeneralTasks:
             mask = ~tf.math.is_inf(kps)[:, 0]
             kps, sigmas, cates = kps[mask], sigmas[mask], cates[mask]
             shape = [int(m), int(h), int(w)]
-            hms = np.zeros(shape=shape)
+            hms = np.zeros(shape=shape, dtype=np.float32)
             for kp, sigma, cate in zip(kps, sigmas, cates):
                 if tf.math.is_inf(sigma) or tf.math.reduce_any(
                         tf.math.is_inf(kp)):
                     continue
-                hms[int(cate)] = draw_msra_gaussian(hms[int(cate)], kp, sigma)
+                hms[int(cate)] = draw_msra_gaussian(
+                    hms[int(cate)], np.asarray(kp, dtype=np.float32),
+                    np.asarray(sigma, dtype=np.float32))
             return hms
 
         b_sigmas = gaussian_radius(b_obj_sizes)
         b_hms = tf.map_fn(lambda x: draw(x[0], x[1], x[2]),
                           (b_round_kps, b_sigmas, b_cates),
-                          parallel_iterations=self.batch_size,
+                          back_prop=False,
                           fn_output_signature=tf.float32)
         return tf.transpose(b_hms, [0, 2, 3, 1])
 
@@ -230,13 +249,7 @@ class GeneralTasks:
         elif task == "humankeypoint":
             anno_shape = [-1, self.max_obj_num, 13, 3]
 
-        features = {
-            "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
-            "origin_width": tf.io.FixedLenFeature([], dtype=tf.int64),
-            "b_images": tf.io.FixedLenFeature([], dtype=tf.string),
-            "b_coords": tf.io.FixedLenFeature([], dtype=tf.string)
-        }
-        parse_vals = tf.io.parse_example(infos, features)
+        parse_vals = tf.io.parse_example(infos, self.features)
         b_images = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)
         b_coords = tf.io.decode_raw(parse_vals['b_coords'], tf.float32)
         b_images = tf.reshape(b_images,

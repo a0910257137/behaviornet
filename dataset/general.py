@@ -54,8 +54,10 @@ class GeneralDataset:
         if not is_train:
             batch_size = mirrored_strategy.num_replicas_in_sync * self.test_batch_size
         batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
-
+        # datasets = datasets.apply(
+        #     tf.data.experimental.prefetch_to_device("/gpu:0"))
         datasets = datasets.batch(batch_size, drop_remainder=True)
+
         # for ds in datasets:
         #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
         #     b_img = b_img.numpy() * 255.
@@ -76,7 +78,7 @@ class GeneralDataset:
 
         datasets = datasets.map(
             lambda *x: self.gener_task.build_maps(batch_size, x),
-            num_parallel_calls=threads)
+            num_parallel_calls=tf.data.experimental.AUTOTUNE)
         datasets = datasets.prefetch(tf.data.experimental.AUTOTUNE)
         return datasets, step_per_epoch
 
