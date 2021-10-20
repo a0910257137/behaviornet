@@ -22,7 +22,8 @@ class CenterODLoss(LossBase):
                                           gt_size_vals,
                                           batch_size=batch,
                                           max_obj_num=self.config.max_obj_num)
-            losses["total"] = self.uncertainty_loss(losses)
+            # losses["total"] = self.uncertainty_loss(losses)
+            losses["total"] = losses['obj_heat_map'] + losses["size_loss"]
         return losses
 
     def get_targets(self, targets):

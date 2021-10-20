@@ -6,7 +6,6 @@ from .general_task import GeneralTasks
 from box import Box
 from pprint import pprint
 from glob import glob
-
 threads = multiprocessing.cpu_count()
 
 
