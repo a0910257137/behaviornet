@@ -168,6 +168,10 @@ def get_coors(img_root,
         frame_kps = []
         img_name = frame['name']
         img_path = os.path.join(img_root, img_name)
+        if 'Wider' in frame['dataset']:
+            img_path = os.path.join('/work/anders1234/WF/imgs', img_name)
+        else:
+            img_path = os.path.join(img_root, 'aug_' + img_name)
         img, img_info = is_img_valid(img_path)
         img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
         if not img_info or len(frame['labels']) == 0:
