@@ -45,6 +45,7 @@ def build_2d_obj(obj, obj_cates, img_info):
     cat_lb = obj_cates[cat_key]
     cat_lb = np.expand_dims(np.asarray([cat_lb, cat_lb]), axis=-1)
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
+    # obj_kp = obj_kp.astype(np.float)
     bool_mask = np.isinf(obj_kp).astype(np.float)
     obj_kp = np.where(obj_kp > 0., obj_kp, 0.)
     obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_info['height'], obj_kp[:, 0],
@@ -161,7 +162,6 @@ def get_coors(img_root,
     num_test_files = num_frames - num_train_files
     save_root = os.path.abspath(os.path.join(img_root, os.pardir,
                                              'tf_records'))
-
     # gen btach frame list
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
@@ -170,8 +170,10 @@ def get_coors(img_root,
         img_path = os.path.join(img_root, img_name)
         if 'Wider' in frame['dataset']:
             img_path = os.path.join('/work/anders1234/WF/imgs', img_name)
+        elif 'VOC2028' in frame['dataset']:
+            img_path = os.path.join(img_root, img_name)
         else:
-            img_path = os.path.join(img_root, 'aug_' + img_name)
+            exit(1)
         img, img_info = is_img_valid(img_path)
         img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
         if not img_info or len(frame['labels']) == 0:
@@ -192,7 +194,6 @@ def get_coors(img_root,
             frame_kps = np.asarray(frame_kps, dtype=np.float32)
             frame_kps = complement(frame_kps, max_obj)
             batch_kps.append(frame_kps)
-
         frame_kps = frame_kps.tostring()
         img = img[..., ::-1]
         img = img.tostring()

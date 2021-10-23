@@ -1,17 +1,17 @@
 {
-    "train_batch_size": 64,
-    "test_batch_size": 64,
-    "epochs": 200,
+    "train_batch_size": 96,
+    "test_batch_size": 96,
+    "epochs": 300,
     "learn_rate": 0.001,
-    "model_path": "/work/anders1234/coco/archive_model/39DS",
+    "model_path": "/work/anders1234/VOC2028/archive_model/pretrain_weight",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/work/anders1234/coco/archive_model/39DS/logs/"
+        "log_dir": "/work/anders1234/VOC2028/archive_model/pretrain_weight/logs/"
     },
     "data_reader": {
-        "max_obj_num": 50,
+        "max_obj_num": 90,
         "resize_size": [
             192, // height
             320 // width
@@ -31,9 +31,9 @@
                     "tl",
                     "br"
                 ],
-                "category_path": "./config/coco_cates.txt",
-                "train_folder": "/work/anders1234/coco/kps/train_kps",
-                "test_folder": "/work/anders1234/coco/kps/test_kps"
+                "category_path": "./config/face.txt",
+                "train_folder": "/work/anders1234/VOC2028/tf_records/train",
+                "test_folder": "/work/anders1234/VOC2028/tf_records/test"
             }
         ],
         "augments": {
@@ -46,7 +46,7 @@
             "tensorpack_aug_chain": [], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "do_flip": true
         },
-        "img_root": "/work/anders1234/coco/train2017"
+        "img_root": "/work/anders1234/VOC2028/imgs"
     },
     "models": {
         "model_name": "obj_det",
@@ -86,7 +86,7 @@
                 "heat_maps": [
                     {
                         "name": "obj_heat_map",
-                        "out_dims": 80
+                        "out_dims": 1
                     }
                 ],
                 "size_maps": [

@@ -6,6 +6,7 @@ from .general_task import GeneralTasks
 from box import Box
 from pprint import pprint
 from glob import glob
+
 threads = multiprocessing.cpu_count()
 
 
@@ -53,8 +54,6 @@ class GeneralDataset:
         if not is_train:
             batch_size = mirrored_strategy.num_replicas_in_sync * self.test_batch_size
         batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
-        # datasets = datasets.apply(
-        #     tf.data.experimental.prefetch_to_device("/gpu:0"))
         datasets = datasets.batch(batch_size, drop_remainder=True)
 
         # for ds in datasets:
