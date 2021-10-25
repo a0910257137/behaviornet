@@ -170,8 +170,10 @@ def get_coors(img_root,
         img_path = os.path.join(img_root, img_name)
         if 'Wider' in frame['dataset']:
             img_path = os.path.join('/work/anders1234/WF/imgs', img_name)
-        elif 'VOC2028' in frame['dataset']:
-            img_path = os.path.join(img_root, img_name)
+        elif 'OPEN_FACE_FFHQ' == frame['dataset']:
+            img_path = os.path.join(img_root, 'aug_' + img_name)
+        elif 'FDDB' == frame['dataset']:
+            img_path = os.path.join('/work/anders1234/FDDB/imgs', img_name)
         else:
             exit(1)
         img, img_info = is_img_valid(img_path)

@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 
-def gaussian_radius(det_size, min_overlap=0.7):
+def gaussian_radius(det_size, min_overlap=0.5):
     """
         The function of gaussian_radius is determined the gaussian radius. They set the target min_overlap = 0.7 and derive
         from the corner tl and br point. The radius r1, r2, and r3 describe how far the corners can be offset to still fulfill min_overlap.
@@ -122,7 +122,6 @@ def gen_bboxes(batch_size, b_coors, b_cates, max_obj_num, image_input_sizes):
     finite_mask = tf.where(finite_mask == True, 1., 0.)
     num_bbox = tf.math.reduce_sum(finite_mask, axis=-1, keepdims=True)
     b_bboxes = b_coors[:, :, 1:3, :]
-
     # b_bboxes = tf.einsum('b n c d, b d -> b n c d', b_bboxes,
     #                      1 / image_input_sizes)
     b_bboxes = tf.reshape(b_bboxes, [batch_size, -1, 4])

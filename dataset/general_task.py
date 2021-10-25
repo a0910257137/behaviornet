@@ -7,8 +7,7 @@ from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
 from .preprocess.utils import Tensorpack
 import time
-# import albumentations as Compose, CoarseDropout, Griddropout
-from scipy.stats import multivariate_normal
+from .augmentation.augmentation import Augmentation
 
 
 class GeneralTasks:
@@ -22,7 +21,7 @@ class GeneralTasks:
         self.img_resize_size = tf.cast(self.config.resize_size, dtype=tf.int32)
         self.coors_down_ratio = tf.cast(self.config.coors_down_ratio,
                                         dtype=tf.float32)
-        self.tensorpack = Tensorpack(self.config.augments.tensorpack_aug_chain)
+        self.tensorpack = Tensorpack(self.config.augments.tensorpack_chains)
         self.max_obj_num = self.config.max_obj_num
         self.features = {
             "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
@@ -34,32 +33,32 @@ class GeneralTasks:
     def build_maps(self, batch_size, task_infos):
         targets = {}
         self.batch_size = batch_size
-        self.do_clc, self.flip_probs, self.do_ten_pack = self.random_param()
-
+        # self.do_clc, self.flip_probs, self.do_ten_pack = self.random_param()
         for task_infos, infos in zip(self.task_configs, task_infos):
             task, branch_names, m_cates = task_infos['preprocess'], task_infos[
                 'branches'], len(task_infos['cates'])
 
             b_coords, b_imgs, b_origin_sizes = self._parse_TFrecord(
                 task, infos)
-
-            b_coords, new_imgs = self._augments(b_coords, b_imgs,
-                                                b_origin_sizes)
-
+            # b_coords, new_imgs = self._augments(b_coords, b_imgs,
+            #                                     b_origin_sizes)
             b_coords, down_ratios = self._resize_coors(b_coords,
                                                        b_origin_sizes,
                                                        self.img_resize_size,
                                                        self.coors_down_ratio)
-
+            _multi_aug_funcs = Augmentation(self.config, self.img_resize_size,
+                                            self.batch_size)
+            b_imgs, b_coords, self.flip_probs = _multi_aug_funcs(
+                b_imgs, b_coords, b_origin_sizes)
+            # b_coords, new_imgs = self._augments(b_coords, b_imgs,
+            #                                     b_origin_sizes)
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_objs_kps, b_cates = b_coords[..., :-1], b_coords[..., -1][..., 0]
             b_obj_sizes = self._obj_sizes(b_objs_kps, task)
             b_round_kp_idxs, b_kp_idxs, b_coors, offset_vals = offer_kps_func(
                 self.batch_size, b_objs_kps, self.map_height, self.map_width,
                 b_obj_sizes, self.flip_probs, self.is_do_filp, branch_names)
-
             if task == "obj_det":
-
                 b_hms = tf.py_function(self._draw_kps,
                                        inp=[
                                            b_round_kp_idxs, b_obj_sizes,
@@ -73,7 +72,7 @@ class GeneralTasks:
                                                 np.inf, b_obj_sizes)
                 targets['obj_heat_map'] = b_hms
 
-        return tf.cast(new_imgs, dtype=tf.float32), targets
+        return tf.cast(b_imgs, dtype=tf.float32), targets
 
     def _resize_coors(self, annos, original_sizes, resize_size,
                       coors_down_ratio):
@@ -97,7 +96,7 @@ class GeneralTasks:
             shape=[self.batch_size], maxval=1, dtype=tf.float32) < flip_thre
 
         ten_pack_thres = 0.5 if len(
-            self.config.augments.tensorpack_aug_chain) else 0.0
+            self.config.augments.tensorpack_chains) else 0.0
         do_ten_pack = tf.random.uniform(shape=[self.batch_size],
                                         maxval=1,
                                         dtype=tf.float32) < ten_pack_thres
@@ -125,17 +124,6 @@ class GeneralTasks:
         def filp_img(imgs):
             return tf.image.flip_left_right(imgs)
 
-        # b_coors, imgs = tf.py_function(self.tensorpack.do_augment,
-        #                                inp=[
-        #                                    b_coors, imgs, img_sizes,
-        #                                    self.map_heigh, self.map_width,
-        #                                    self.do_ten_pack
-        #                                ],
-        #                                Tout=[tf.float32, tf.float32])
-        # imgs = tf.reshape(imgs, [
-        #     self.batch_size, self.img_resize_size[0], self.img_resize_size[1],
-        #     3
-        # ])
         if self.is_do_filp:
             filp_imgs = tf.image.flip_left_right(imgs)
             tmp_logic = tf.tile(

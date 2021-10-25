@@ -4,7 +4,6 @@ from tensorpack.dataflow import *
 import tensorflow as tf
 
 
-
 class RandomPasetWithMeanBackground(imgaug.RandomPaste):
     def get_transform(self, img):
         img_shape = img.shape[:2]
@@ -264,7 +263,12 @@ def _coor_clip(kps, h_thres, w_thres):
     return result
 
 
-def debug_kps(img, coors, origin_img_size, coor_resize, task, name='output.jpg'):
+def debug_kps(img,
+              coors,
+              origin_img_size,
+              coor_resize,
+              task,
+              name='output.jpg'):
     img = img[..., ::-1]
     # origin_img_size = origin_img_size.numpy()
     if img.shape[0] != origin_img_size[0] or img.shape[1] != origin_img_size[1]:
@@ -284,17 +288,17 @@ def debug_kps(img, coors, origin_img_size, coor_resize, task, name='output.jpg')
         coor_n, yx = obj_kps.shape
         if coor_n == 2:
             tl, br = obj_kps
-            img = cv2.rectangle(img, tuple(
-                tl[::-1]), tuple(br[::-1]), (255, 0, 0), 3)
+            img = cv2.rectangle(img, tuple(tl[::-1]), tuple(br[::-1]),
+                                (255, 0, 0), 3)
         elif coor_n == 3:
             center, tl, br = obj_kps
             img = cv2.circle(img, tuple(center[::-1]), 3, (0, 255, 0), -1)
         elif coor_n == 4:
             obj_tl, obj_br = obj_kps[0], obj_kps[1]
             sub_tl, sub_br = obj_kps[2], obj_kps[3]
-            img = cv2.rectangle(img, tuple(
-                obj_tl[::-1]), tuple(obj_br[::-1]), (255, 0, 0), 3)
-            img = cv2.rectangle(img, tuple(
-                sub_tl[::-1]), tuple(sub_br[::-1]), (0, 255, 0), 3)
+            img = cv2.rectangle(img, tuple(obj_tl[::-1]), tuple(obj_br[::-1]),
+                                (255, 0, 0), 3)
+            img = cv2.rectangle(img, tuple(sub_tl[::-1]), tuple(sub_br[::-1]),
+                                (0, 255, 0), 3)
             # img = cv2.circle(img, tuple(center[::-1]), 3, (0, 255, 0), -1)
     cv2.imwrite(name, img)

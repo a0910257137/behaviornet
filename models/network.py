@@ -1,6 +1,7 @@
 import tensorflow as tf
 from pprint import pprint
 from keras_flops import get_flops
+from tensorflow.python.ops.math_ops import truediv
 
 
 class Network(tf.keras.Model):
