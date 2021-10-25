@@ -56,8 +56,8 @@ class Base:
         b_imgs = tf.numpy_function(func=album_aug, inp=[b_imgs], Tout=tf.uint8)
         return b_imgs
 
-    def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, do_ten_pack,
-                        tensorpack_chains):
+    def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, max_obj_num,
+                        do_ten_pack, tensorpack_chains):
         f'''
             Do random ratation, crop and resize by using "tensorpack" augmentation class.
                 https://github.com/tensorpack/tensorpack
@@ -76,9 +76,10 @@ class Base:
         b_imgs = np.asarray(b_imgs).astype(np.uint8)
         _, h, w, c = b_imgs.shape
         aug_prob = .5
+        tmp_coors = []
         for img, coors, is_do in zip(b_imgs, b_coors, do_ten_pack):
-            if not is_do:
-                continue
+            # if not is_do:
+            #     continue
             valid_mask = np.all(np.isfinite(coors), axis=-1)
             valid_mask = valid_mask[:, 0]
             coors = coors[valid_mask]
@@ -96,13 +97,20 @@ class Base:
                     # do random paste
                     if random.random() < aug_prob:
                         img, coors, cates = self.random_paste(img, coors, h, w)
+
                 elif tensorpack_aug == "WarpAffineTransform":
-                    img, coors, cates = self.warp_affine_transform(
-                        img, coors, h, w)
-        # flip to y, x coordinate
-        b_xy_coors = b_coors[..., :2]
-        b_cates = b_coors[..., -1:]
-        b_coors = np.concatenate([b_xy_coors[..., ::-1], b_cates], axis=-1)
+                    if random.random() < aug_prob:
+                        img, coors, cates = self.warp_affine_transform(
+                            img, coors, h, w)
+            # flip to y, x coordinate
+            coors = np.concatenate([coors[..., ::-1], cates], axis=-1)
+            n, c, d = coors.shape
+            complement = np.empty([max_obj_num - n, c, d])
+            complement.fill(np.inf)
+            complement = complement.astype(np.float32)
+            coors = np.concatenate([coors, complement], axis=0)
+            tmp_coors.append(coors)
+        b_coors = np.stack(tmp_coors)
         return b_imgs, b_coors
 
     def crop_transform(self, img, coors, h, w):
@@ -175,6 +183,7 @@ class Base:
         brs = center_kps + wh / 2
         annos_out = np.concatenate([tls[:, None, :], brs[:, None, :]], axis=-2)
         annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
+
         if annos_out.any():
             return img_out, annos_out[..., :2], annos_out[..., -1:]
         else:

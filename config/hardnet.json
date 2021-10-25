@@ -43,15 +43,15 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": ["WarpAffineTransform"], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["CropTransform"], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains":{
                 "cutout":{
-                    "max_holes":7,
-                    "max_height":15,
-                    "max_width":15,
+                    "max_holes":10,
                     "min_holes":5,
-                    "min_height":5,
-                    "min_width":5,
+                    "max_height":30,
+                    "max_width":30,
+                    "min_height":10,
+                    "min_width":10,
                     "fill_value":0
                 }
             },

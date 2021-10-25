@@ -2,6 +2,7 @@ import random
 import tensorflow as tf
 import numpy as np
 # from .mosaic import Mosaic
+import cv2
 from .base import Base
 from ..preprocess.utils import Tensorpack
 
@@ -34,15 +35,29 @@ class Augmentation(Base):
                 do_clc[:, None, None, None],
                 [1, self.img_resize_size[0], self.img_resize_size[1], 3])
             b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, aug_imgs)
+
         if len(self.augments.album_chains.keys()) != 0:
             b_imgs = self.album_augs(self.augments.album_chains, b_imgs)
+            # b_imgs = b_imgs.numpy()
+            # b_coors = b_coors.numpy()
+            # b_coors = b_coors[..., :2]
+            # for coors, img in zip(b_coors, b_imgs):
+            #     mask = np.all(np.isfinite(coors), axis=-1)
+            #     coors = coors[mask]
+            #     coors = coors.reshape([-1, 2, 2])
+            #     for coor in coors:
+            #         tl = coor[0].astype(int)
+            #         br = coor[1].astype(int)
+            #         cv2.rectangle(img, tuple(tl[::-1]), tuple(br[::-1]),
+            #                       (0, 255, 0), 1)
+            #     cv2.imwrite('output.jpg', img[..., ::-1])
         #----------------------b_ccords will be changed in augmentations---------------------
         if len(self.augments.tensorpack_chains) != 0:
             b_imgs, b_coors = tf.py_function(
                 self.tensorpack_augs,
                 inp=[
-                    b_coors, b_imgs, b_origin_sizes, do_ten_pack,
-                    self.augments.tensorpack_chains
+                    b_coors, b_imgs, b_origin_sizes, self.max_obj_num,
+                    do_ten_pack, self.augments.tensorpack_chains
                 ],
                 Tout=[tf.uint8, tf.float32])
         b_imgs = b_imgs / 255

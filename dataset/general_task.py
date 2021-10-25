@@ -1,12 +1,14 @@
 import os
 import tensorflow as tf
 import numpy as np
+import time
+import cv2
 from functools import partial
 from .utils import *
 from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
 from .preprocess.utils import Tensorpack
-import time
+
 from .augmentation.augmentation import Augmentation
 
 
@@ -37,7 +39,6 @@ class GeneralTasks:
         for task_infos, infos in zip(self.task_configs, task_infos):
             task, branch_names, m_cates = task_infos['preprocess'], task_infos[
                 'branches'], len(task_infos['cates'])
-
             b_coords, b_imgs, b_origin_sizes = self._parse_TFrecord(
                 task, infos)
             # b_coords, new_imgs = self._augments(b_coords, b_imgs,
