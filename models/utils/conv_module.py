@@ -23,7 +23,7 @@ class ConvBlock(tf.keras.layers.Layer):
         self.kernel_size = (kernel_size, kernel_size)
         self.strides = (strides, strides)
         self.dilation_rate = (dilation_rate, dilation_rate)
-
+        reg_layer = tf.keras.regularizers.L2()
         if conv_mode == 'conv2d':
             self.conv = tf.keras.layers.Conv2D(
                 filters,
@@ -33,6 +33,7 @@ class ConvBlock(tf.keras.layers.Layer):
                 kernel_initializer=kernel_initializer,
                 bias_initializer=bias_initializer,
                 dilation_rate=self.dilation_rate,
+                kernel_regularizer=reg_layer,
                 padding='same',
                 name='conv')
         elif conv_mode == 'sp_conv2d':
@@ -41,7 +42,10 @@ class ConvBlock(tf.keras.layers.Layer):
                 kernel_size=self.kernel_size,
                 strides=self.strides,
                 use_bias=use_bias,
-                kernel_initializer=kernel_initializer,
+                depthwise_initializer=kernel_initializer,
+                pointwise_initializer=kernel_initializer,
+                depthwise_regularizer=reg_layer,
+                pointwise_regularizer=reg_layer,
                 bias_initializer=bias_initializer,
                 dilation_rate=self.dilation_rate,
                 padding='same',
@@ -51,7 +55,8 @@ class ConvBlock(tf.keras.layers.Layer):
                 kernel_size=self.kernel_size,
                 strides=self.strides,
                 use_bias=use_bias,
-                kernel_initializer=kernel_initializer,
+                depthwise_initializer=kernel_initializer,
+                depthwise_regularizer=reg_layer,
                 bias_initializer=bias_initializer,
                 padding='same',
                 name='dw_conv')

@@ -24,7 +24,6 @@ class Network(tf.keras.Model):
         # fully_models = tf.keras.Model(image_inputs, preds, name='fully')
         # flops = get_flops(fully_models, batch_size=1)
         # print(f"FLOPS: {flops / 10 ** 9:.03} G")
-        # xxxxx
 
     def train_step(self, data):
         training = True

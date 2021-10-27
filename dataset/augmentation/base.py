@@ -98,7 +98,6 @@ class Base:
                         img, coors, cates = self.crop_transform(
                             img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
-
                 elif tensorpack_aug == "RandomPaste":
                     # do random paste
                     if random.random() < aug_prob:
