@@ -6,6 +6,7 @@ from functools import partial
 from tensorpack.dataflow import *
 from albumentations import Compose, CoarseDropout, GridDropout
 import math
+import copy
 
 
 class Base:
@@ -77,9 +78,12 @@ class Base:
         _, h, w, c = b_imgs.shape
         aug_prob = .5
         tmp_coors = []
+        tmp_imgs = []
         for img, coors, is_do in zip(b_imgs, b_coors, do_ten_pack):
-            # if not is_do:
-            #     continue
+            if not is_do:
+                tmp_imgs.append(img)
+                tmp_coors.append(coors)
+                continue
             valid_mask = np.all(np.isfinite(coors), axis=-1)
             valid_mask = valid_mask[:, 0]
             coors = coors[valid_mask]
@@ -93,17 +97,33 @@ class Base:
                     if random.random() < aug_prob:
                         img, coors, cates = self.crop_transform(
                             img, coors, h, w)
+                        coors = np.concatenate([coors, cates], axis=-1)
+
                 elif tensorpack_aug == "RandomPaste":
                     # do random paste
                     if random.random() < aug_prob:
                         img, coors, cates = self.random_paste(img, coors, h, w)
-
+                        coors = np.concatenate([coors, cates], axis=-1)
                 elif tensorpack_aug == "WarpAffineTransform":
                     if random.random() < aug_prob:
                         img, coors, cates = self.warp_affine_transform(
                             img, coors, h, w)
+                        coors = np.concatenate([coors, cates], axis=-1)
+            tmp_imgs.append(img)
+            # coors = coors[..., :2]
+            # print(coors)
+            # for coor in coors:
+            #     # coor = coor[:, :2]
+            #     tl = coor[0].astype(int)
+            #     br = coor[1].astype(int)
+            #     cv2.rectangle(img, tuple(tl), tuple(br), (0, 255, 0), 1)
+            # cv2.imwrite('output.jpg', img[..., ::-1])
             # flip to y, x coordinate
-            coors = np.concatenate([coors[..., ::-1], cates], axis=-1)
+            # coors = np.concatenate([coors[..., ::-1], cates], axis=-1)
+            annos = coors[..., :2]
+            annos = annos[..., ::-1]
+            coors = np.concatenate([annos, coors[..., -1:]], axis=-1)
+
             n, c, d = coors.shape
             complement = np.empty([max_obj_num - n, c, d])
             complement.fill(np.inf)
@@ -111,6 +131,8 @@ class Base:
             coors = np.concatenate([coors, complement], axis=0)
             tmp_coors.append(coors)
         b_coors = np.stack(tmp_coors)
+
+        b_imgs = np.stack(tmp_imgs)
         return b_imgs, b_coors
 
     def crop_transform(self, img, coors, h, w):
@@ -140,6 +162,7 @@ class Base:
         #     br = coor[1].astype(int)
         #     cv2.rectangle(img_out, tuple(tl), tuple(br), (0, 255, 0), 1)
         # cv2.imwrite('output.jpg', img_out[..., ::-1])
+        # xxxx
         if annos_out.any():
             return img_out, annos_out[..., :-1], annos_out[..., -1:]
         else:
@@ -178,6 +201,7 @@ class Base:
         mat = cv2.getRotationMatrix2D(img_center, rotation_angle, 1)
         affine = WarpAffineTransform(mat, (w, h))
         img_out = affine.apply_image(img)
+
         center_kps = affine.apply_coords(center_kps)
         tls = center_kps - wh / 2
         brs = center_kps + wh / 2
@@ -194,14 +218,14 @@ class Base:
             check = np.all(check, axis=-1)
             return check
 
-        valid_indice_x = np.where(annos[..., 0] > w1)
-        valid_indice_y = np.where(annos[..., 1] > h1)
-        annos[valid_indice_x][:, 0] = w1
-        annos[valid_indice_y][:, 1] = h1
+        valid_indice_x = np.where(annos[..., 0] < w1)
+        valid_indice_y = np.where(annos[..., 1] < h1)
+        annos[:, :, 0][valid_indice_x] = w1
+        annos[:, :, 1][valid_indice_y] = h1
         valid_indice_x = np.where(annos[..., 0] > w2)
         valid_indice_y = np.where(annos[..., 1] > h2)
-        annos[valid_indice_x][:, 0] = w2
-        annos[valid_indice_y][:, 1] = h2
+        annos[:, :, 0][valid_indice_x] = w2
+        annos[:, :, 1][valid_indice_y] = h2
 
         annos = np.concatenate([annos, cates], axis=-1)
         _, _, c = annos.shape

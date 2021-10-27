@@ -1,14 +1,14 @@
 {
     "train_batch_size": 96,
     "test_batch_size": 96,
-    "epochs": 300,
+    "epochs": 200,
     "learn_rate": 0.001,
-    "model_path": "/work/anders1234/demo/archive_model/pretrain_weight",
+    "model_path": "/work/anders1234/fhhq/archive_model/10_27_model",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/work/anders1234/demo/archive_model/pretrain_weight/logs/"
+        "log_dir": "/work/anders1234/fhhq/archive_model/10_27_model/logs/"
     },
     "data_reader": {
         "max_obj_num": 90,
@@ -32,8 +32,8 @@
                     "br"
                 ],
                 "category_path": "./config/face.txt",
-                "train_folder": "/work/anders1234/demo/tf_records/train",
-                "test_folder": "/work/anders1234/demo/tf_records/test"
+                "train_folder": "/work/anders1234/fhhq/tf_records/train",
+                "test_folder": "/work/anders1234/fhhq/tf_records/test"
             }
         ],
         "augments": {
@@ -43,10 +43,10 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": ["CropTransform"], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["CropTransform", "WarpAffineTransform", "RandomPaste"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains":{
                 "cutout":{
-                    "max_holes":10,
+                    "max_holes":12,
                     "min_holes":5,
                     "max_height":30,
                     "max_width":30,
@@ -57,7 +57,7 @@
             },
             "do_flip": true
         },
-        "img_root": "/work/anders1234/demo/imgs"
+        "img_root": "/work/anders1234/fhhq/imgs"
     },
     "models": {
         "model_name": "obj_det",

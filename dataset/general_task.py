@@ -43,6 +43,7 @@ class GeneralTasks:
                 task, infos)
             # b_coords, new_imgs = self._augments(b_coords, b_imgs,
             #                                     b_origin_sizes)
+
             b_coords, down_ratios = self._resize_coors(b_coords,
                                                        b_origin_sizes,
                                                        self.img_resize_size,
@@ -51,6 +52,7 @@ class GeneralTasks:
                                             self.batch_size)
             b_imgs, b_coords, self.flip_probs = _multi_aug_funcs(
                 b_imgs, b_coords, b_origin_sizes)
+
             # b_coords, new_imgs = self._augments(b_coords, b_imgs,
             #                                     b_origin_sizes)
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps

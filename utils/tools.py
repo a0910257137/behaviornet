@@ -40,7 +40,10 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
                                  update_freq=500)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
-    callbacks.append([saver_callback, LossAndErrorPrintingCallback()])
+    callbacks.append([
+        saver_callback, tensorboard_callback, embedding_map,
+        LossAndErrorPrintingCallback()
+    ])
     return callbacks
 
 
