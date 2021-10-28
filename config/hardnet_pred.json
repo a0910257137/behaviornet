@@ -1,20 +1,22 @@
 {
     "predictor": {
-        "visible_gpu": "0",
-        "pb_path": "/aidata/anders/objects/WF/archive_model/with_trans",
+        "visible_gpu": "-1",
+        "pb_path": "/work/anders1234/fhhq/archive_model/10_27_model",
         "top_k_n": 100,
         "nms_iou_thres": 0.5,
-        "kp_thres": 0.3,
+        "kp_thres": 0.5,
         "n_objs": 30,
         "k_pairings": 7,
+        "gpu_fraction":1.0, 
+        "eval_method":"IoU",
         "mode": "centernet",
         "img_input_size": [
             320,
             192
         ],
         "resize_size": [
-            96,
-            160
+            192,
+            320
         ],
         "cat_path": "./config/face.txt"
     }

@@ -1,8 +1,8 @@
 {
     "train_batch_size": 96,
     "test_batch_size": 96,
-    "epochs": 200,
-    "learn_rate": 0.001,
+    "epochs": 100,
+    "learn_rate": 0.0005,
     "model_path": "/work/anders1234/fhhq/archive_model/10_27_model",
     "summary": {
         "scalar_freq": 50,
@@ -43,10 +43,10 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": ["CropTransform", "WarpAffineTransform", "RandomPaste"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["WarpAffineTransform"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains":{
                 "cutout":{
-                    "max_holes":12,
+                    "max_holes":15,
                     "min_holes":5,
                     "max_height":30,
                     "max_width":30,

@@ -64,9 +64,7 @@ class ConvBlock(tf.keras.layers.Layer):
         if norm_method == 'bn':
             self.norm = tf.keras.layers.BatchNormalization(name='bn')
 
-        if activation in [
-                'relu', 'swish', 'LeakyReLU', 'silu', 'sigmoid', 'softmax'
-        ]:
+        if activation in ['relu', 'swish', 'LeakyReLU', 'sigmoid', 'softmax']:
             self.act = tf.keras.layers.Activation(activation=activation,
                                                   name='act_' + activation)
         elif activation == 'silu':
