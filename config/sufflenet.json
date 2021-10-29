@@ -16,6 +16,10 @@
             256, // height
             256 // width
         ],
+        "coors_down_ratio": [
+            1,
+            1
+        ], //[height, width]
         "img_down_ratio": 1, //[height, width]
         "shuffle": true,
         "tasks": [
@@ -24,8 +28,8 @@
                 "read_img": true,
                 "branches": ["keypoint"],
                 "category_path": "./config/face.txt",
-                "train_folder": "/home/anders/Downloads/WF/tf_records/train",
-                "test_folder": "/home/anders/Downloads/WF/tf_records/test"
+                "train_folder": "/home/anders/Downloads/WF/records//train",
+                "test_folder": "/home/anders/Downloads/WF/records//test"
             }
         ],
         "augments": {
@@ -35,13 +39,10 @@
                 "bright",
                 "hue"
             ],
+            "album_chains":{},
             "tensorpack_chains": [], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "do_flip": true
         },
-        "coors_down_ratio": [
-            1,
-            1
-        ], //[height, width]
         "img_root": "/aidata/anders/objects/hico/imgs/" 
     },
     "models": {

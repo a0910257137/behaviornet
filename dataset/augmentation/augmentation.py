@@ -4,11 +4,10 @@ import numpy as np
 # from .mosaic import Mosaic
 import cv2
 from .base import Base
-from ..preprocess.utils import Tensorpack
 
 
 class Augmentation(Base):
-    def __init__(self, config, img_resize_size, batch_size):
+    def __init__(self, config, img_resize_size, batch_size, task):
         super(Augmentation, self).__init__()
         self.config = config
         self.max_obj_num = self.config.max_obj_num
@@ -16,7 +15,7 @@ class Augmentation(Base):
         self.is_do_filp = self.augments.do_flip
         self.img_resize_size = img_resize_size
         self.batch_size = batch_size
-        self.tensorpack = Tensorpack(self.augments.tensorpack_chains)
+        self.task = task
 
     def __call__(self, b_imgs, b_coors, b_origin_sizes):
         b_coors = tf.cast(b_coors, tf.float32)
@@ -38,19 +37,7 @@ class Augmentation(Base):
 
         if len(self.augments.album_chains.keys()) != 0:
             b_imgs = self.album_augs(self.augments.album_chains, b_imgs)
-            # b_imgs = b_imgs.numpy()
-            # b_coors = b_coors.numpy()
-            # b_coors = b_coors[..., :2]
-            # for coors, img in zip(b_coors, b_imgs):
-            #     mask = np.all(np.isfinite(coors), axis=-1)
-            #     coors = coors[mask]
-            #     coors = coors.reshape([-1, 2, 2])
-            #     for coor in coors:
-            #         tl = coor[0].astype(int)
-            #         br = coor[1].astype(int)
-            #         cv2.rectangle(img, tuple(tl[::-1]), tuple(br[::-1]),
-            #                       (0, 255, 0), 1)
-            #     cv2.imwrite('output.jpg', img[..., ::-1])
+            
         #----------------------b_ccords will be changed in augmentations---------------------
         if len(self.augments.tensorpack_chains) != 0:
             b_imgs, b_coors = tf.py_function(
@@ -62,8 +49,11 @@ class Augmentation(Base):
                 Tout=[tf.uint8, tf.float32])
         b_imgs = b_imgs / 255
         # for obj det
-        b_coors = tf.reshape(b_coors,
-                             shape=(self.batch_size, self.max_obj_num, 2, 3))
+        if self.task == "obj_det":
+            anno_shape = [self.batch_size, self.max_obj_num, 2, 3]
+        elif self.task == "keypoint":
+            anno_shape = [self.batch_size, self.max_obj_num, 70, 3]
+        b_coors = tf.reshape(b_coors, shape=anno_shape)
         b_imgs = tf.reshape(b_imgs, [
             self.batch_size, self.img_resize_size[0], self.img_resize_size[1],
             3

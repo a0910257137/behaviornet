@@ -13,7 +13,7 @@ class ObjDet:
         b_center_kps = (b_objs_kps[:, :, 1, :] + b_objs_kps[:, :, 0, :]) / 2
         b_center_kps = b_center_kps[:, :, tf.newaxis, :]
         b_objs_kps = tf.concat([b_center_kps, b_objs_kps], axis=-2)
-
+        
         if is_do_filp:
             _, n, c, d = tf.shape(b_objs_kps)[0], tf.shape(b_objs_kps)[
                 1], tf.shape(b_objs_kps)[2], tf.shape(b_objs_kps)[3]
