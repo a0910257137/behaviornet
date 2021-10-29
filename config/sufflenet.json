@@ -1,35 +1,31 @@
 {
-    "train_batch_size": 36,
-    "test_batch_size": 36,
+    "train_batch_size": 1,
+    "test_batch_size": 1,
     "epochs": 70,
     "learn_rate": 0.001,
-    "model_path": "/aidata/anders/objects/split_hico/archive_model/base",
+    "model_path": "/home/anders/Downloads/WF/archive_model/base",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/objects/split_hico/archive_model/base/logs/"
+        "log_dir": "/home/anders/Downloads/WF/archive_model/base/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
         "resize_size": [
-            320, // height
-            320 // width
+            256, // height
+            256 // width
         ],
         "img_down_ratio": 1, //[height, width]
         "shuffle": true,
         "tasks": [
             {
-                "preprocess": "obj_det",
+                "preprocess": "keypoint",
                 "read_img": true,
-                "branches": [
-                    "obj_center",
-                    "tl",
-                    "br"
-                ],
-                "category_path": "./config/cates.txt",
-                "train_folder": "/aidata/anders/objects/split_hico/kps/train_kps",
-                "test_folder": "/aidata/anders/objects/split_hico/kps/test_kps"
+                "branches": ["keypoint"],
+                "category_path": "./config/face.txt",
+                "train_folder": "/home/anders/Downloads/WF/tf_records/train",
+                "test_folder": "/home/anders/Downloads/WF/tf_records/test"
             }
         ],
         "augments": {
@@ -39,7 +35,7 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_aug_chain": [], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": [], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "do_flip": true
         },
         "coors_down_ratio": [
