@@ -1,9 +1,7 @@
-import random
 import tensorflow as tf
 import numpy as np
-# from .mosaic import Mosaic
-import cv2
 from .base import Base
+# from .mosaic import Mosaic
 
 
 class Augmentation(Base):
@@ -37,7 +35,6 @@ class Augmentation(Base):
 
         if len(self.augments.album_chains.keys()) != 0:
             b_imgs = self.album_augs(self.augments.album_chains, b_imgs)
-            
         #----------------------b_ccords will be changed in augmentations---------------------
         if len(self.augments.tensorpack_chains) != 0:
             b_imgs, b_coors = tf.py_function(
@@ -67,7 +64,6 @@ class Augmentation(Base):
         flip_thre = 0.5 if self.augments.do_flip else 0.0
         do_flip = tf.random.uniform(
             shape=[self.batch_size], maxval=1, dtype=tf.float16) < flip_thre
-
         ten_pack_thres = 0.5 if len(self.augments.tensorpack_chains) else 0.0
         do_ten_pack = tf.random.uniform(shape=[self.batch_size],
                                         maxval=1,

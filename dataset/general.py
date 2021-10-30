@@ -56,8 +56,8 @@ class GeneralDataset:
         batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
         datasets = datasets.batch(batch_size, drop_remainder=True)
 
-        for ds in datasets:
-            b_img, targets = self.gener_task.build_maps(batch_size, ds)
+        # for ds in datasets:
+        #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
         #     b_img = b_img.numpy() * 255.
         #     b_idxs = targets["size_idxs"].numpy()
         #     b_size_vals = targets['size_vals'].numpy()

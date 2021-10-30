@@ -1,8 +1,5 @@
 import tensorflow as tf
-from ..utils.conv_module import ConvBlock
-from ..utils.ops import *
 from pprint import pprint
-# from keras_flops import get_flops
 
 
 class ObjDet(tf.keras.Model):

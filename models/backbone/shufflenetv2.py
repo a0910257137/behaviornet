@@ -31,7 +31,7 @@ class ShuffleV2Block(tf.keras.layers.Layer):
         self.branch_features = oup // 2
         # self.initial_layer = tf.keras.initializers.RandomNormal(mean=0,
         #                                                         stddev=.1)
-        self.initial_laye = tf.keras.initializers.HeNormal()
+        self.initial_layer = tf.keras.initializers.HeNormal()
 
         if self.stride > 1:
             self.branch1 = tf.keras.Sequential(name='branch1')

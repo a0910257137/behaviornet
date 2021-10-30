@@ -69,8 +69,13 @@ class GeneralTasks:
                                                 np.inf, b_obj_sizes)
                 targets['obj_heat_map'] = b_hms
             elif task == "keypoint":
-                print(b_coors)
-                xxxx
+                # normalize keypoints the shape is B, N, C, D, where C are each facial landmarks and D are x, y
+                feat_map_shape = tf.concat(
+                    [self.map_width[None], self.map_height[None]], axis=-1)
+                b_coors = tf.einsum('b n c d, d-> b n c d', b_coors,
+                                    1 / feat_map_shape)
+
+                targets['landmarks'] = b_coors
 
         return tf.cast(b_imgs, dtype=tf.float32), targets
 

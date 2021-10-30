@@ -18,6 +18,9 @@ class YLoss(LossBase):
 
     def build_loss(self, logits, targets, batch, training):
         with tf.name_scope("losses_collections"):
+            landmarks = targets["landmarks"]
+            pprint(landmarks)
+            xxx
             losses = {k: None for k in self.keys}
             gt_size_idxs, gt_size_vals = self.get_targets(targets)
             losses['obj_heat_map'] = penalty_reduced_focal_loss(

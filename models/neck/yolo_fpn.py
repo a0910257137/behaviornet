@@ -15,7 +15,7 @@ class C3(tf.keras.layers.Layer):
         # self.initial_layer = tf.keras.initializers.RandomNormal(mean=0,
         #                                                         stddev=.1)
 
-        self.initial_layer = tf.keras.initializers.HeNormal(),
+        self.initial_layer = tf.keras.initializers.HeNormal()
         self.conv_1 = ConvBlock(filters=self.branch_channels,
                                 kernel_size=1,
                                 strides=1,

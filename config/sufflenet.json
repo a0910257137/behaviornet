@@ -58,7 +58,7 @@
             "lr": 1e-3
         },
         "neck": {
-            "module_name": "pan",
+            "module_name": "yolo_fpn",
             "optimizer": "sgd",
             "num_vars": null,
             "variables": null,
@@ -66,40 +66,27 @@
             "lr": 1e-3
         },
         "head": {
-            "module_name": "nanodet_head",
+            "module_name": "yolo_head",
             "optimizer": "sgd",
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,
-            "stacked_convs":2,
-            "reg_max":7,
-            "share_cls_reg":true, 
             "strides":[8, 16, 32], 
             "pred_layer": {
+                "P4":48,
+                "P5":48,
+                "P6":48,
                 "num_class": 1
             }
         },
         "loss": { //weighted constant based on DETR paper
-            "type": "gfc",
+            "type": "yolo_loss",
             "strides": [8, 16, 32],
-            "octave_base_scale": 5,
-            "loss_qfl":
-            {
-                "name": "QualityFocalLoss",
-                "use_sigmoid": true,
-                "beta": 2.0,
-                "loss_weight": 1.0
-            },
-            "loss_dfl":
-            {
-                "name": "DistributionFocalLoss",
-                "loss_weight": 0.25
-            },
-            "loss_bbox":
-            {
-                "name": "GIoULoss",
-                "loss_weight":  2.0
-            }
+            "anchors":[
+                [4, 5, 8, 10, 13, 16],
+                [23, 29, 43, 55, 73, 105],
+                [146, 217, 231, 300, 335, 433],
+            ]
         }
     }
 }

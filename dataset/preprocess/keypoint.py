@@ -19,5 +19,5 @@ class KeyPoints:
             b_objs_kps = tf.where(tf.math.logical_not(tmp_logic), b_objs_kps,
                                   filp_kps)
 
-        b_objs_kps = tf.where(b_objs_kps < 1e-8, np.inf, b_objs_kps)
+        b_objs_kps = tf.where(b_objs_kps == -np.inf, np.inf, b_objs_kps)
         return None, None, b_objs_kps, None
