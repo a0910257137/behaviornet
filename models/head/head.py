@@ -36,6 +36,7 @@ class Head(tf.keras.Model):
                     kernel_initializer=tf.keras.initializers.HeUniform()),
                 tf.keras.layers.Dense(
                     self.num_lnmks * 2,
+                    activation='sigmoid',
                     kernel_initializer=tf.keras.initializers.HeUniform())
             ])
 

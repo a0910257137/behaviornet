@@ -12,7 +12,7 @@ class Network(tf.keras.Model):
 
     def compile(self, optimizer, loss, run_eagerly=None):
         super(Network, self).compile(optimizer=optimizer,
-                                     run_eagerly=True,
+                                     run_eagerly=run_eagerly,
                                      metrics=['accuracy'])
         self._loss = loss
         self.optimizer = optimizer
