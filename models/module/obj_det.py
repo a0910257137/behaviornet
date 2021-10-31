@@ -1,3 +1,4 @@
+from re import X
 import tensorflow as tf
 from pprint import pprint
 
@@ -12,7 +13,10 @@ class ObjDet(tf.keras.Model):
 
     @tf.function
     def call(self, x):
-        down_x, skip_connections = self.backbone(x)
-        fpn_x = self.neck([down_x, skip_connections])
-        preds = self.head(fpn_x)
+        x, skip_connections = self.backbone(x)
+        if self.neck is None:
+            pass
+        else:
+            x = self.neck([x, skip_connections])
+        preds = self.head(x)
         return preds

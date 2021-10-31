@@ -1,5 +1,6 @@
 from .gfc_loss import GFCLoss
 from .center_od import CenterODLoss
-from .yolo_loss import YLoss
 
-LOSS_FACTORY = dict(center_od=CenterODLoss, gfc=GFCLoss, yolo_loss=YLoss)
+LOSS_FACTORY = dict(center_od=CenterODLoss,
+                    gfc=GFCLoss,
+                    landmarks=CenterODLoss)

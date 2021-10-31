@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+from tensorflow._api.v2 import math
 from tensorflow.python import tf2
 
 
@@ -518,4 +519,29 @@ def infonce(b_idxs, b_kp_hms, batch_size, max_obj_num, tau=0.2):
                                                           b_logists / tau)
         loss = tf.reduce_sum(loss, axis=-1) / tf.cast(n, tf.float32)
         loss += 2 * tau * loss
+        return loss
+
+
+def lnmk_loss(pred, tars, batch_size, max_obj_num, w=10.0, epsilon=2.0):
+    """
+    Arguments:
+        landmarks, labels: float tensors with shape [batch_size, num_landmarks, 2].
+        w, epsilon: a float numbers.
+    Returns:
+        a float tensor with shape [].
+    """
+    sigma = 1
+    with tf.name_scope('wing_loss'):
+        pred = tf.reshape(pred, [-1, 68, 2])
+        tars = tf.reshape(tars, [batch_size, max_obj_num, 68, 2])
+        valid_mask = tf.math.reduce_all(tf.math.is_finite(tars[..., 0]),
+                                        axis=-1)
+        tars = tars[valid_mask]
+        x = pred - tars
+        c = w * (1.0 - tf.math.log(1.0 + w / epsilon))
+        absolute_x = tf.math.abs(x)
+        losses = tf.where(tf.greater(w, absolute_x),
+                          w * tf.math.log(1.0 + absolute_x / epsilon),
+                          absolute_x - c)
+        loss = tf.reduce_mean(tf.reduce_sum(losses, axis=[1, 2]), axis=0)
         return loss
