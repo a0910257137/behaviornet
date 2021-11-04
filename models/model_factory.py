@@ -6,8 +6,6 @@ import tensorflow as tf
 from .network import Network
 from .backbone.hardnet import *
 # from .backbone.evo import *
-# from .backbone.efficientv2 import EfficientNet
-# from .backbone.mobilenet import MobileNetV3
 # from .backbone.shufflenetv2 import SuffleNet
 
 from pprint import pprint

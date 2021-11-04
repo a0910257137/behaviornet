@@ -10,7 +10,6 @@ import numpy as np
 from pprint import pprint
 from pathlib import Path
 from draw import *
-
 import tensorflow as tf
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -26,12 +25,6 @@ def img_gen(config_path, img_path_root, save_root):
         target_cat_dict = {i: k for i, k in enumerate(cates)}
         return target_cat_dict
 
-    def gpu_setting():
-        gpu_devices = tf.config.experimental.list_physical_devices('GPU')
-        for device in gpu_devices:
-            tf.config.experimental.set_memory_growth(device, True)
-
-    # gpu_setting()
     with open(config_path) as f:
         config = commentjson.loads(f.read())
 
@@ -58,9 +51,13 @@ def img_gen(config_path, img_path_root, save_root):
             origin_shapes.append((h, w))
             orig_imgs.append(img)
             imgs.append(img)
-        bboxes = predictor.pred(imgs, origin_shapes)
-        target_dict = _get_cates(config['predictor']['cat_path'])
-        imgs = draw_box2d(orig_imgs, bboxes, target_dict)
+        rets = predictor.pred(imgs, origin_shapes)
+
+        if config['predictor']['mode'] == "centernet":
+            target_dict = _get_cates(config['predictor']['cat_path'])
+            imgs = draw_box2d(orig_imgs, rets, target_dict)
+        elif config['predictor']['mode'] == "landmark":
+            imgs = draw_landmark(orig_imgs, rets)
 
         for img_name, img in zip(img_names, imgs):
             name = img_name.split('_')[-1]

@@ -2,15 +2,15 @@ import tensorflow as tf
 import numpy as np
 import cv2
 import random
+
 from functools import partial
 from tensorpack.dataflow import *
 from albumentations import Compose, CoarseDropout, GridDropout
-import math
-import copy
+from pprint import pprint
 
 
 class Base:
-    def __init__(self):
+    def __init__(self, task):
         self.clc_aug_funcs = {
             "bright": partial(tf.image.random_brightness, max_delta=0.1),
             "saturat": partial(tf.image.random_saturation,
@@ -20,6 +20,7 @@ class Base:
             "contrast": partial(tf.image.random_contrast, lower=0.6,
                                 upper=1.4),
         }
+        self.task = task
 
     def color_aug(self, b_imgs, aug_chains):
         if not aug_chains or len(aug_chains) == 0:
@@ -58,7 +59,7 @@ class Base:
         return b_imgs
 
     def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, max_obj_num,
-                        do_ten_pack, tensorpack_chains, task):
+                        do_ten_pack, tensorpack_chains):
         f'''
             Do random ratation, crop and resize by using "tensorpack" augmentation class.
                 https://github.com/tensorpack/tensorpack
@@ -104,10 +105,10 @@ class Base:
                         img, coors, cates = self.random_paste(img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
                 elif tensorpack_aug == "WarpAffineTransform":
-                    # if random.random() < aug_prob:
-                    img, coors, cates = self.warp_affine_transform(
-                        img, coors, h, w, task)
-                    coors = np.concatenate([coors, cates], axis=-1)
+                    if random.random() < aug_prob:
+                        img, coors, cates = self.warp_affine_transform(
+                            img, coors, h, w)
+                        coors = np.concatenate([coors, cates], axis=-1)
             tmp_imgs.append(img)
             # coors = coors[..., :2]
             # for coor in coors:
@@ -142,13 +143,14 @@ class Base:
         h1, w1 = np.random.randint(low=0, high=h - h_crop +
                                    1), np.random.randint(low=0,
                                                          high=w - w_crop + 1)
-        crop_transform = imgaug.CropTransform(h1, w1, h_crop, w_crop)
+        crop_transform = CropTransform(h1, w1, h_crop, w_crop)
         img_out = crop_transform.apply_image(img)
         annos, cates = coors[..., :-1], coors[..., -1:]
+        # N, C, D
         annos_out = crop_transform.apply_coords(annos)
 
-        resize_transform = imgaug.ResizeTransform(h_crop, w_crop, h, w,
-                                                  cv2.INTER_CUBIC)
+        resize_transform = ResizeTransform(h_crop, w_crop, h, w,
+                                           cv2.INTER_CUBIC)
         img_out = resize_transform.apply_image(img_out)
         annos_out = resize_transform.apply_coords(annos_out)
         annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
@@ -176,8 +178,8 @@ class Base:
         img_out = obj._impl(img, l)
         annos_out = annos + l
         if annos_out.any():
-            resize_transform = imgaug.ResizeTransform(bg_h, bg_w, h, w,
-                                                      cv2.INTER_CUBIC)
+            resize_transform = ResizeTransform(bg_h, bg_w, h, w,
+                                               cv2.INTER_CUBIC)
             img_out = resize_transform.apply_image(img_out)
             annos_out = resize_transform.apply_coords(annos_out)
             annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
@@ -188,17 +190,15 @@ class Base:
         else:
             return img, annos, cates
 
-    def warp_affine_transform(self, img, coors, h, w, task):
-        #TODO: fixed augementation by task and use public key
+    def warp_affine_transform(self, img, coors, h, w):
         annos, cates = coors[..., :-1], coors[..., -1:]
         img_center = (w / 2, h / 2)
-        rotation_angle = np.random.randint(low=-30, high=-20)
+        rotation_angle = np.random.randint(low=-8, high=8)
         mat = cv2.getRotationMatrix2D(img_center, rotation_angle, 1)
         affine = WarpAffineTransform(mat, (w, h))
         img_out = affine.apply_image(img)
-
-        if task == "keypoint":
-            annos_out = affine.apply_coords(annos, task)
+        if self.task == "keypoint":
+            annos_out = affine.apply_coords(annos, self.task)
             return img_out, annos_out, cates
         else:
             center_kps = (annos[:, 1, :] + annos[:, 0, :]) / 2
@@ -228,8 +228,9 @@ class Base:
         valid_indice_y = np.where(annos[..., 1] > h2)
         annos[:, :, 0][valid_indice_x] = w2
         annos[:, :, 1][valid_indice_y] = h2
-
         annos = np.concatenate([annos, cates], axis=-1)
+        if self.task == "keypoint" or self.task == "landmark":
+            return annos
         _, _, c = annos.shape
         axis_check = annos[:, 0, :2] != annos[:, 1, :2]
         if np.any(axis_check == False):
@@ -308,6 +309,51 @@ class WarpAffineTransform:
             coords = np.concatenate((coords, expand_ones), axis=-1)
             rotate_matrices = self.mat.T
         coords = np.dot(coords, rotate_matrices)
+        return coords
+
+
+class CropTransform(imgaug.Transform):
+    """
+    Crop a subimage from an image.
+    """
+    def __init__(self, y0, x0, h, w):
+        super(CropTransform, self).__init__()
+        self._init(locals())
+
+    def apply_image(self, img):
+        return img[self.y0:self.y0 + self.h, self.x0:self.x0 + self.w]
+
+    def apply_coords(self, coords):
+        coords[:, :, 0] -= self.x0
+        coords[:, :, 1] -= self.y0
+        return coords
+
+
+class ResizeTransform(imgaug.Transform):
+    """
+    Resize the image.
+    """
+    def __init__(self, h, w, new_h, new_w, interp):
+        """
+        Args:
+            h, w (int):
+            new_h, new_w (int):
+            interp (int): cv2 interpolation method
+        """
+        super(ResizeTransform, self).__init__()
+        self._init(locals())
+
+    def apply_image(self, img):
+        assert img.shape[:2] == (self.h, self.w)
+        ret = cv2.resize(img, (self.new_w, self.new_h),
+                         interpolation=self.interp)
+        if img.ndim == 3 and ret.ndim == 2:
+            ret = ret[:, :, np.newaxis]
+        return ret
+
+    def apply_coords(self, coords):
+        coords[..., 0] = coords[..., 0] * (self.new_w * 1.0 / self.w)
+        coords[..., 1] = coords[..., 1] * (self.new_h * 1.0 / self.h)
         return coords
 
 

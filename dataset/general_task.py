@@ -90,27 +90,10 @@ class GeneralTasks:
         elif task == "keypoint":
             #normalizer via image high and width for each y x
             down_ratios = img_down_ratio
-            # annos = tf.einsum('b n c d, b  d ->b n c d', annos, img_down_ratio)
 
         annos = tf.einsum('b n c d, b  d ->b n c d', annos, down_ratios)
         annos = tf.concat([annos, cates], axis=-1)
         return annos, down_ratios
-
-    def random_param(self):
-        col_thre = 0.5 if len(self.config.augments.color_chains) else 0.0
-        do_col = tf.random.uniform(
-            shape=[self.batch_size], maxval=1, dtype=tf.float32) < col_thre
-        flip_thre = 0.5 if self.config.augments.do_flip else 0.0
-
-        do_flip = tf.random.uniform(
-            shape=[self.batch_size], maxval=1, dtype=tf.float32) < flip_thre
-
-        ten_pack_thres = 0.5 if len(
-            self.config.augments.tensorpack_chains) else 0.0
-        do_ten_pack = tf.random.uniform(shape=[self.batch_size],
-                                        maxval=1,
-                                        dtype=tf.float32) < ten_pack_thres
-        return do_col, do_flip, do_ten_pack
 
     def _draw_mask(self, b_objs_kps, b_cates, h, w, flip_probs, is_do_filp):
         def draw(objs_kps, cates):

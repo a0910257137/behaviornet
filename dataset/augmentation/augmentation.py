@@ -6,7 +6,7 @@ from .base import Base
 
 class Augmentation(Base):
     def __init__(self, config, img_resize_size, batch_size, task):
-        super(Augmentation, self).__init__()
+        super(Augmentation, self).__init__(task)
         self.config = config
         self.max_obj_num = self.config.max_obj_num
         self.augments = self.config.augments
@@ -41,7 +41,7 @@ class Augmentation(Base):
                 self.tensorpack_augs,
                 inp=[
                     b_coors, b_imgs, b_origin_sizes, self.max_obj_num,
-                    do_ten_pack, self.augments.tensorpack_chains, self.task
+                    do_ten_pack, self.augments.tensorpack_chains
                 ],
                 Tout=[tf.uint8, tf.float32])
         b_imgs = b_imgs / 255

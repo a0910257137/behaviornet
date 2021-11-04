@@ -1,0 +1,21 @@
+{
+    "predictor": {
+        "visible_gpu": "0",
+        "pb_path": "/home/anders/Downloads/ffhq/archive_model/transfer",
+        "eval_method":"IoU",
+        "mode": "landmark",
+        "gpu_fraction":1.0, 
+        "top_k_n": 100,
+        "nms_iou_thres": 0.5,
+        "img_input_size": [
+            256,
+            256
+        ],
+        "resize_size": [
+            256,
+            256
+        ],
+        "n_landmarks": 68,
+        "cat_path": "./config/face.txt"
+    }
+}

@@ -1,4 +1,3 @@
-import json
 import argparse
 import time
 import numpy as np
@@ -14,7 +13,7 @@ import pandas as pd
 from pathlib import Path
 from utils.io import *
 from utils.bdd_process import *
-from utils.eval_iou import ComputeIOU
+from metrics.compute import ComputeIOU
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, './utils/linker-metrics/linkermetrics')
@@ -152,28 +151,33 @@ class Eval:
         return eval_files
 
     def iou_report(self, iou, cates_order):
-        resultList = []
-        for thres in [0.95, 0.75, 0.5, 0.25, 0.1, 0.01]:
-            result_dict = iou.report('AP', thres)
+        precs, recs = [], []
+        cates = []
+        threshold = [0.95, 0.75, 0.5, 0.25, 0.1, 0.01]
+        for thres in threshold:
+            result_prec = iou.report('AP', thres)
+            result_rec = iou.report('AR', thres)
+
             for cate in cates_order:
                 try:
-                    value = result_dict[cate]
+                    prec_val = result_prec[cate]
+                    rec_val = result_rec[cate]
                 except:
-                    value = '0'
-                resultList.append([cate, thres, 'precision', value])
+                    prec_val = '0'
+                    rec_val = '0'
+                precs.append(prec_val)
+                recs.append(rec_val)
+                cates.append(cate)
 
-            result_dict = iou.report('AR', thres)
-            for cate in cates_order:
-                try:
-                    value = result_dict[cate]
-                except:
-                    value = '0'
-                resultList.append([cate, thres, 'recall', value])
+        dict = {
+            "Category": cates,
+            "Threshold": threshold,
+            "Precision": precs,
+            'Recall': recs
+        }
 
-        df = pd.DataFrame(
-            resultList,
-            columns=["category", "IoU_thres", "point_type", "value"])
-
+        df = pd.DataFrame(dict)
+        pprint(df)
         df.to_csv('infer_test_iou.csv', float_format='%.3f')
 
     def run(self):
@@ -226,7 +230,6 @@ class Eval:
             elif self.config['eval_method'] == 'keypoint':
                 __Condistions = self._get_conditions(self.cates,
                                                      self.config['task'])
-
                 evaluator = BDDMetricEvaluator(
                     frame_matcher=dict(name='BDDFrameToFrameMatcher'),
                     conditions=__Condistions)

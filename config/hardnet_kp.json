@@ -39,7 +39,7 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": ["WarpAffineTransform"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": [], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains": {
                 "cutout": {
                     "max_holes": 15,
@@ -51,7 +51,7 @@
                     "fill_value": 0
                 }
             },
-            "do_flip": false
+            "do_flip": true
         },
         "img_root": "/work/anders1234/fhhq/imgs"
     },
