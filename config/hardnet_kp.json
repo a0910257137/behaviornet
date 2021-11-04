@@ -1,14 +1,14 @@
 {
-    "train_batch_size": 24,
-    "test_batch_size": 24,
+    "train_batch_size": 96,
+    "test_batch_size": 96,
     "epochs": 200,
-    "learn_rate": 0.001,
-    "model_path": "/aidata/anders/objects/ffhq/archive_model/kp_suffle",
+    "learn_rate": 0.00025,
+    "model_path": "/home/anders/Downloads/ffhq/archive_model/transfer",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/objects/ffhq/archive_model/kp_suffle/logs/"
+        "log_dir": "/home/anders/Downloads/ffhq/archive_model/transfer/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -16,20 +16,20 @@
             256, // height
             256 // width
         ],
+        "img_down_ratio": 1.0, //[height, width]
         "coors_down_ratio": [
-            1,
-            1
+            1.0,
+            1.0
         ], //[height, width]
-        "img_down_ratio": 1, //[height, width]
         "shuffle": true,
         "tasks": [
             {
                 "preprocess": "keypoint",
                 "read_img": true,
-                "branches": ["keypoint"],
+                "branches":["keypoint"],
                 "category_path": "./config/face.txt",
-                "train_folder": "/aidata/anders/objects/ffhq/tf_records//train",
-                "test_folder": "/aidata/anders/objects/ffhq/tf_records//test"
+                "train_folder": "/home/anders/Downloads/ffhq/tf_records/train",
+                "test_folder": "/home/anders/Downloads/ffhq/tf_records/test"
             }
         ],
         "augments": {
@@ -39,11 +39,21 @@
                 "bright",
                 "hue"
             ],
-            "album_chains":{},
-            "tensorpack_chains": [], //"CropTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
-            "do_flip": true
+            "tensorpack_chains": ["WarpAffineTransform"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "album_chains": {
+                "cutout": {
+                    "max_holes": 15,
+                    "min_holes": 5,
+                    "max_height": 30,
+                    "max_width": 30,
+                    "min_height": 10,
+                    "min_width": 10,
+                    "fill_value": 0
+                }
+            },
+            "do_flip": false
         },
-        "img_root": "/aidata/anders/objects/hico/imgs/" 
+        "img_root": "/work/anders1234/fhhq/imgs"
     },
     "models": {
         "model_name": "obj_det",
@@ -51,7 +61,7 @@
         "multi_optimizer": false,
         "optimizer": "adam",
         "backbone": {
-            "module_name": "sufflenet",
+            "module_name": "hardnet",
             "optimizer": "sgd",
             "num_vars": null,
             "variables": null,

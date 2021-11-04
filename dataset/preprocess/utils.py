@@ -4,13 +4,13 @@ from tensorpack.dataflow import *
 import tensorflow as tf
 
 
-# @tf.function
+@tf.function
 def _flip(b_objs_kps, b_obj_wid, w, channel_names, do_flip):
     if "kp" in channel_names or "keypoint" in channel_names:
-        b_objs_x = b_objs_kps[..., :1]
+        b_objs_x = b_objs_kps[..., 1:2]
         b_objs_x = -b_objs_x + w - 1
-        b_objs_y = b_objs_kps[..., 1:2]
-        b_objs_kps = tf.concat([b_objs_x, b_objs_y], axis=-1)
+        b_objs_y = b_objs_kps[..., :1]
+        b_objs_kps = tf.concat([b_objs_y, b_objs_x], axis=-1)
     else:
         tmp_coors = []
         for i, channel_name in enumerate(channel_names):

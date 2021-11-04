@@ -58,7 +58,7 @@ class Base:
         return b_imgs
 
     def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, max_obj_num,
-                        do_ten_pack, tensorpack_chains):
+                        do_ten_pack, tensorpack_chains, task):
         f'''
             Do random ratation, crop and resize by using "tensorpack" augmentation class.
                 https://github.com/tensorpack/tensorpack
@@ -104,13 +104,12 @@ class Base:
                         img, coors, cates = self.random_paste(img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
                 elif tensorpack_aug == "WarpAffineTransform":
-                    if random.random() < aug_prob:
-                        img, coors, cates = self.warp_affine_transform(
-                            img, coors, h, w)
-                        coors = np.concatenate([coors, cates], axis=-1)
+                    # if random.random() < aug_prob:
+                    img, coors, cates = self.warp_affine_transform(
+                        img, coors, h, w, task)
+                    coors = np.concatenate([coors, cates], axis=-1)
             tmp_imgs.append(img)
             # coors = coors[..., :2]
-            # print(coors)
             # for coor in coors:
             #     # coor = coor[:, :2]
             #     tl = coor[0].astype(int)
@@ -154,14 +153,12 @@ class Base:
         annos_out = resize_transform.apply_coords(annos_out)
         annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
         # coors = annos_out[..., :2]
-        # print(coors)
         # for coor in coors:
         #     # coor = coor[:, :2]
         #     tl = coor[0].astype(int)
         #     br = coor[1].astype(int)
         #     cv2.rectangle(img_out, tuple(tl), tuple(br), (0, 255, 0), 1)
         # cv2.imwrite('output.jpg', img_out[..., ::-1])
-        # xxxx
         if annos_out.any():
             return img_out, annos_out[..., :-1], annos_out[..., -1:]
         else:
@@ -191,20 +188,26 @@ class Base:
         else:
             return img, annos, cates
 
-    def warp_affine_transform(self, img, coors, h, w):
+    def warp_affine_transform(self, img, coors, h, w, task):
+        #TODO: fixed augementation by task and use public key
         annos, cates = coors[..., :-1], coors[..., -1:]
-        center_kps = (annos[:, 1, :] + annos[:, 0, :]) / 2
-        wh = annos[:, 1, :] - annos[:, 0, :]
-        rotation_angle = np.random.randint(low=-8, high=8)
         img_center = (w / 2, h / 2)
+        rotation_angle = np.random.randint(low=-30, high=-20)
         mat = cv2.getRotationMatrix2D(img_center, rotation_angle, 1)
         affine = WarpAffineTransform(mat, (w, h))
         img_out = affine.apply_image(img)
 
-        center_kps = affine.apply_coords(center_kps)
-        tls = center_kps - wh / 2
-        brs = center_kps + wh / 2
-        annos_out = np.concatenate([tls[:, None, :], brs[:, None, :]], axis=-2)
+        if task == "keypoint":
+            annos_out = affine.apply_coords(annos, task)
+            return img_out, annos_out, cates
+        else:
+            center_kps = (annos[:, 1, :] + annos[:, 0, :]) / 2
+            wh = annos[:, 1, :] - annos[:, 0, :]
+            center_kps = affine.apply_coords(center_kps)
+            tls = center_kps - wh / 2
+            brs = center_kps + wh / 2
+            annos_out = np.concatenate([tls[:, None, :], brs[:, None, :]],
+                                       axis=-2)
         annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
 
         if annos_out.any():
@@ -291,11 +294,19 @@ class WarpAffineTransform:
             ret = ret[:, :, np.newaxis]
         return ret
 
-    def apply_coords(self, coords):
-        n, d = coords.shape
-        expand_ones = np.ones((n, 1), dtype='f4')
-        coords = np.concatenate((coords, expand_ones), axis=-1)
-        rotate_matrices = self.mat.T
+    def apply_coords(self, coords, task):
+        if task == "keypoint":
+            n, c, d = coords.shape
+            expand_ones = np.ones((n, c, 1), dtype='f4')
+            coords = np.concatenate((coords, expand_ones), axis=-1)
+            rotate_matrices = self.mat.T
+            # coords = np.dot(coords, rotate_matrices)
+
+        else:
+            n, d = coords.shape
+            expand_ones = np.ones((n, 1), dtype='f4')
+            coords = np.concatenate((coords, expand_ones), axis=-1)
+            rotate_matrices = self.mat.T
         coords = np.dot(coords, rotate_matrices)
         return coords
 

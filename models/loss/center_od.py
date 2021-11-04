@@ -22,10 +22,10 @@ class CenterODLoss(LossBase):
                 losses = {k: None for k in self.keys}
                 pred_landmarks = logits["landmarks"]
                 tar_landmarks = targets["landmarks"]
-
                 loss = lnmk_loss(pred_landmarks, tar_landmarks, batch,
                                  self.config.max_obj_num)
-                xxxx
+                losses["landmarks"] = loss
+                losses["total"] = loss
 
             elif "center_od" == self.loss_cfg.type:
                 losses = {k: None for k in self.keys}

@@ -41,7 +41,7 @@ class Augmentation(Base):
                 self.tensorpack_augs,
                 inp=[
                     b_coors, b_imgs, b_origin_sizes, self.max_obj_num,
-                    do_ten_pack, self.augments.tensorpack_chains
+                    do_ten_pack, self.augments.tensorpack_chains, self.task
                 ],
                 Tout=[tf.uint8, tf.float32])
         b_imgs = b_imgs / 255

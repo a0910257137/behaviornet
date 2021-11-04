@@ -39,11 +39,10 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
         self.model = model
 
     # def on_batch_begin(self, epoch, logs=None):
-    #     imgs = tf.constant(0., shape=(1, 192, 320, 3))
+    #     imgs = tf.constant(0., shape=(1, 256, 256, 3))
     #     self.model.model(imgs, training=False)
-    #     tf.keras.models.save_model(self.model.model,
-    #                                '/aidata/anders/objects/tflite/base')
-    #     xxcxc
+    #     tf.keras.models.save_model(
+    #         self.model.model, '/home/anders/Downloads/ffhq/archive_model')
 
     def on_epoch_end(self, epoch, logs=None):
         epochs_finished = epoch + 1

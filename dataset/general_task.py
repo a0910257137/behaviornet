@@ -71,7 +71,7 @@ class GeneralTasks:
             elif task == "keypoint":
                 # normalize keypoints the shape is B, N, C, D, where C are each facial landmarks and D are x, y
                 feat_map_shape = tf.concat(
-                    [self.map_width[None], self.map_height[None]], axis=-1)
+                    [self.map_height[None], self.map_width[None]], axis=-1)
                 b_coors = tf.einsum('b n c d, d-> b n c d', b_coors,
                                     1 / feat_map_shape)
 
@@ -89,7 +89,7 @@ class GeneralTasks:
                                   tf.float32)
         elif task == "keypoint":
             #normalizer via image high and width for each y x
-            down_ratios = img_down_ratio[::-1]
+            down_ratios = img_down_ratio
             # annos = tf.einsum('b n c d, b  d ->b n c d', annos, img_down_ratio)
 
         annos = tf.einsum('b n c d, b  d ->b n c d', annos, down_ratios)
@@ -222,22 +222,8 @@ class GeneralTasks:
         b_images = tf.reshape(b_images,
                               [-1, self.map_height, self.map_width, 3])
         b_coords = tf.reshape(b_coords, anno_shape)
-
         origin_height = tf.reshape(parse_vals['origin_height'], (-1, 1))
         origin_width = tf.reshape(parse_vals['origin_width'], (-1, 1))
         b_origin_sizes = tf.concat([origin_height, origin_width], axis=-1)
         b_origin_sizes = tf.cast(b_origin_sizes, tf.int32)
-        # img = b_images.numpy()[0]
-        # b_coords = b_coords.numpy()[0, 0]
-        # b_coords = b_coords[..., :2]
-        # b_origin_sizes = b_origin_sizes.numpy()[0]
-        # resized_ratio = np.array([256., 256]) / b_origin_sizes
-        # filp_imgs = tf.image.flip_left_right(b_images)
-        # b_coords = np.einsum('c d, d->c d ', b_coords, resized_ratio[::-1])
-        # np.save("kp.npy", b_coords)
-        # cv2.imwrite('test.jpg', img[..., ::-1])
-        # for kp in b_coords:
-        #     kp = kp.astype(int)
-        #     img = cv2.circle(img, tuple(kp), 3, (0, 255, 0), -1)
-        # cv2.imwrite('non-flip_img.jpg', img[..., ::-1])
         return b_coords, b_images, b_origin_sizes

@@ -16,7 +16,6 @@ from box import Box
 
 def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
     callbacks = []
-
     checkpoint = tf.train.Checkpoint(model=model, optimizer=optimizer)
     checkpoint_dir = config.model_path
     manager = tf.train.CheckpointManager(checkpoint,
@@ -37,7 +36,7 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
     embedding_map = EmbeddingMap(config=config,
                                  train_datasets=train_datasets,
                                  test_datasets=test_datasets,
-                                 update_freq=500)
+                                 update_freq=250)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
     callbacks.append([

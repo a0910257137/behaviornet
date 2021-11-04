@@ -17,27 +17,28 @@ class Head(tf.keras.Model):
         if self.task == 'landmarks':
             self.flatten_layer = tf.keras.layers.Flatten()
             self.d_model = self.head_cfg.d_model
+            # self.init_layer = tf.keras.initializers.HeNormal()
+            self.init_layer = tf.keras.initializers.HeUniform()
             self.conv_1x1 = ConvBlock(filters=self.d_model // 2,
                                       kernel_size=1,
                                       strides=1,
+                                      kernel_initializer=self.init_layer,
                                       norm_method="bn",
                                       activation="relu")
 
             self.num_lnmks = self.pred_config.num_landmarks
+
             # (x1, y1, x2, y2)
             self.lnmk_embed = tf.keras.models.Sequential([
-                tf.keras.layers.Dense(
-                    self.d_model // 2,
-                    activation='relu',
-                    kernel_initializer=tf.keras.initializers.HeUniform()),
-                tf.keras.layers.Dense(
-                    self.d_model // 2,
-                    activation='relu',
-                    kernel_initializer=tf.keras.initializers.HeUniform()),
-                tf.keras.layers.Dense(
-                    self.num_lnmks * 2,
-                    activation='sigmoid',
-                    kernel_initializer=tf.keras.initializers.HeUniform())
+                tf.keras.layers.Dense(self.d_model,
+                                      activation='relu',
+                                      kernel_initializer=self.init_layer),
+                tf.keras.layers.Dense(self.d_model,
+                                      activation='relu',
+                                      kernel_initializer=self.init_layer),
+                tf.keras.layers.Dense(self.num_lnmks * 2,
+                                      activation='sigmoid',
+                                      kernel_initializer=self.init_layer)
             ])
 
         elif self.task == 'heatmaps':

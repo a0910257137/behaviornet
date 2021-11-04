@@ -35,7 +35,7 @@ def build_keypoints(obj, obj_cates, img_info):
     num_kps = len(obj_kp)
     box2d = np.array([[0., 0.], [255., 255.]])
     obj_kp = np.asarray(obj_kp).astype(np.float32).reshape([num_kps, 2])
-    obj_kp = obj_kp[:, ::-1]
+
     obj_kp = np.where(obj_kp < 0., 0., obj_kp)
     obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_info['height'], obj_kp[:, 0],
                             img_info['height'] - 1)

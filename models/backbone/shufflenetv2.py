@@ -257,12 +257,12 @@ class ShuffleNetV2(tf.keras.Model):
     def call(self, x, training=None):
         skip_connections = {}
         x = self.init_conv(x)
-        skip_connections[self.skip_layers[0]] = x
+        # skip_connections[self.skip_layers[0]] = x
         for i, layer_ops in enumerate(self.base):
             for layer_op in layer_ops:
                 x = layer_op(x)
-            if i + 2 in self.out_stages:
-                skip_connections[self.skip_layers[i + 1]] = x
+            # if i + 2 in self.out_stages:
+            #     skip_connections[self.skip_layers[i + 1]] = x
         return x, skip_connections
 
 

@@ -43,20 +43,20 @@ class SelfAttention(tf.keras.layers.Layer):
             shape=(1, ),
             initializer=tf.keras.initializers.Constant(0.),
             trainable=True)
-        self.alpha = self.add_weight(
-            name='alpha_sp',
-            shape=(1, ),
-            initializer=tf.keras.initializers.Constant(1.),
-            trainable=True)
+        # self.alpha = self.add_weight(
+        #     name='alpha_sp',
+        #     shape=(1, ),
+        #     initializer=tf.keras.initializers.Constant(1.),
+        #     trainable=True)
         super(SelfAttention, self).build(input_shape)
 
     def hw_flatten(self, f_map):
         _, h, w, c = f_map.get_shape().as_list()
         return tf.reshape(f_map, shape=[-1, h * w, c])
 
-    def call(self, inputs, pos_encoding, **kwargs):
-        copied_inputs = inputs
-        inputs = copied_inputs + self.alpha * pos_encoding
+    def call(self, inputs, **kwargs):
+        # copied_inputs = inputs
+        # inputs = copied_inputs + self.alpha * pos_encoding
 
         query = self.qConv(inputs)
         key = self.kConv(inputs)
