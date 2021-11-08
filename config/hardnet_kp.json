@@ -3,12 +3,12 @@
     "test_batch_size": 96,
     "epochs": 200,
     "learn_rate": 0.00025,
-    "model_path": "/home/anders/Downloads/ffhq/archive_model/transfer",
+    "model_path": "/aidata/anders/objects/ffhq/archive_model_lnmk/spatial_channel",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/home/anders/Downloads/ffhq/archive_model/transfer/logs/"
+        "log_dir": "/aidata/anders/objects/ffhq/archive_model_lnmk/spatial_channel/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -25,11 +25,12 @@
         "tasks": [
             {
                 "preprocess": "keypoint",
+                "num_lnmks":27,// landmark keypoints + 2 for tl and br
                 "read_img": true,
                 "branches":["keypoint"],
                 "category_path": "./config/face.txt",
-                "train_folder": "/home/anders/Downloads/ffhq/tf_records/train",
-                "test_folder": "/home/anders/Downloads/ffhq/tf_records/test"
+                "train_folder": "/home/anders/Downloads/ffhq/tf_records_25_lnmks/train",
+                "test_folder": "/home/anders/Downloads/ffhq/tf_records_25_lnmks/test"
             }
         ],
         "augments": {
@@ -39,7 +40,7 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": [], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["WarpAffineTransform"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains": {
                 "cutout": {
                     "max_holes": 15,
@@ -52,8 +53,7 @@
                 }
             },
             "do_flip": true
-        },
-        "img_root": "/work/anders1234/fhhq/imgs"
+        }
     },
     "models": {
         "model_name": "obj_det",
@@ -82,7 +82,7 @@
             "lr": 1e-3,
             "d_model":512,
             "pred_layer": {
-                "num_landmarks": 68
+                "num_landmarks": 25
             }
         },
         "loss": { 

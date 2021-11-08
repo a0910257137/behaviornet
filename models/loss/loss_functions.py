@@ -522,7 +522,7 @@ def infonce(b_idxs, b_kp_hms, batch_size, max_obj_num, tau=0.2):
         return loss
 
 
-def lnmk_loss(pred, tars, batch_size, max_obj_num, w=10.0, epsilon=2.0):
+def lnmk_loss(pred, tars, batch_size, num_lnmk, max_obj_num, w=10.0, epsilon=2.0):
     """
     Arguments:
         landmarks, labels: float tensors with shape [batch_size, num_landmarks, 2].
@@ -532,8 +532,8 @@ def lnmk_loss(pred, tars, batch_size, max_obj_num, w=10.0, epsilon=2.0):
     """
     sigma = 1
     with tf.name_scope('wing_loss'):
-        pred = tf.reshape(pred, [-1, 68, 2])
-        tars = tf.reshape(tars, [batch_size, max_obj_num, 68, 2])
+        pred = tf.reshape(pred, [-1, num_lnmk, 2])
+        tars = tf.reshape(tars, [batch_size, max_obj_num, num_lnmk, 2])
         valid_mask = tf.math.reduce_all(tf.math.is_finite(tars[..., 0]),
                                         axis=-1)
         tars = tars[valid_mask]

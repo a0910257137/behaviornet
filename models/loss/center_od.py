@@ -9,8 +9,10 @@ class CenterODLoss(LossBase):
     def __init__(self, config):
         self.config = config
         self.loss_cfg = self.config.loss
+        self.head_cfg = self.config.head
         if "landmarks" == self.loss_cfg.type:
             self.keys = ["landmarks"]
+            self.num_lnmk = self.head_cfg.pred_layer.num_landmarks
         elif "center_od" == self.loss_cfg.type:
             self.keys = ["size_loss", "obj_heat_map"]
             self.uncertainty_loss = UncertaintyLoss(self.keys)
@@ -23,7 +25,7 @@ class CenterODLoss(LossBase):
                 pred_landmarks = logits["landmarks"]
                 tar_landmarks = targets["landmarks"]
                 loss = lnmk_loss(pred_landmarks, tar_landmarks, batch,
-                                 self.config.max_obj_num)
+                                 self.num_lnmk, self.config.max_obj_num)
                 losses["landmarks"] = loss
                 losses["total"] = loss
 

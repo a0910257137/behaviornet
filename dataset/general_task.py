@@ -34,6 +34,8 @@ class GeneralTasks:
         targets = {}
         self.batch_size = batch_size
         for task_infos, infos in zip(self.task_configs, task_infos):
+            self.num_lnmks = task_infos.num_lnmks
+
             task, branch_names, m_cates = task_infos['preprocess'], task_infos[
                 'branches'], len(task_infos['cates'])
             b_coords, b_imgs, b_origin_sizes = self._parse_TFrecord(
@@ -44,8 +46,8 @@ class GeneralTasks:
                                                        self.coors_down_ratio,
                                                        task)
             _multi_aug_funcs = Augmentation(self.config, self.img_resize_size,
-                                            self.batch_size, task)
-
+                                            self.num_lnmks, self.batch_size,
+                                            task)
             b_imgs, b_coords, self.flip_probs = _multi_aug_funcs(
                 b_imgs, b_coords, b_origin_sizes)
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
@@ -74,7 +76,6 @@ class GeneralTasks:
                     [self.map_height[None], self.map_width[None]], axis=-1)
                 b_coors = tf.einsum('b n c d, d-> b n c d', b_coors,
                                     1 / feat_map_shape)
-
                 targets['landmarks'] = b_coors
 
         return tf.cast(b_imgs, dtype=tf.float32), targets
@@ -193,7 +194,7 @@ class GeneralTasks:
 
     def _parse_TFrecord(self, task, infos):
         if task == "keypoint":
-            anno_shape = [-1, self.max_obj_num, 70, 3]
+            anno_shape = [-1, self.max_obj_num, self.num_lnmks, 3]
         elif task == "obj_det":
             anno_shape = [-1, self.max_obj_num, 2, 3]
         elif task == "humankeypoint":

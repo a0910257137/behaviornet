@@ -5,7 +5,7 @@ from .base import Base
 
 
 class Augmentation(Base):
-    def __init__(self, config, img_resize_size, batch_size, task):
+    def __init__(self, config, img_resize_size, num_lnmks, batch_size, task):
         super(Augmentation, self).__init__(task)
         self.config = config
         self.max_obj_num = self.config.max_obj_num
@@ -14,6 +14,7 @@ class Augmentation(Base):
         self.img_resize_size = img_resize_size
         self.batch_size = batch_size
         self.task = task
+        self.num_lnmks = num_lnmks
 
     def __call__(self, b_imgs, b_coors, b_origin_sizes):
         b_coors = tf.cast(b_coors, tf.float32)
@@ -49,7 +50,7 @@ class Augmentation(Base):
         if self.task == "obj_det":
             anno_shape = [self.batch_size, self.max_obj_num, 2, 3]
         elif self.task == "keypoint":
-            anno_shape = [self.batch_size, self.max_obj_num, 70, 3]
+            anno_shape = [self.batch_size, self.max_obj_num, self.num_lnmks, 3]
         b_coors = tf.reshape(b_coors, shape=anno_shape)
         b_imgs = tf.reshape(b_imgs, [
             self.batch_size, self.img_resize_size[0], self.img_resize_size[1],

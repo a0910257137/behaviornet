@@ -227,18 +227,6 @@ class Eval:
             if self.config['eval_method'] == 'IoU':
                 iou = ComputeIOU(gt_bdd_annos, eval_bdd_annos)
                 self.iou_report(iou, self.cates)
-            elif self.config['eval_method'] == 'keypoint':
-                __Condistions = self._get_conditions(self.cates,
-                                                     self.config['task'])
-                evaluator = BDDMetricEvaluator(
-                    frame_matcher=dict(name='BDDFrameToFrameMatcher'),
-                    conditions=__Condistions)
-                evaluator(dict(gt=gt_bdd_annos, eval=eval_bdd_annos))
-                # report from linker metrics
-                reports = evaluator.report
-                # list of dictionary, each dictionary save one category
-                tot_dict = self.transform_pd_data(reports)
-                pprint(tot_dict)
         print('Finish evaluating')
         print(
             'Totoal speding %5fs, avg %5fs per batch with %i batch size, %i imgs'

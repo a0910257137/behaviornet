@@ -245,7 +245,8 @@ class HardNet(tf.keras.Model):
         # self.merge_layers = [1, 3, 6, 9]
         # self.merge_stride = [16, 8, 4, 2]
         # self.merge_convs = []
-        # # TODO: experiments merge skill
+
+
         # for i in range(len(self.merge_layers)):
         #     self.merge_convs.append(
         #         ConvBlock(filters=128,
