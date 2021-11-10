@@ -2,7 +2,7 @@ import dataclasses
 from typing import Union
 
 import numpy as np
-from linker_logger import logger
+from monitor import logger
 from .base import Metric
 
 

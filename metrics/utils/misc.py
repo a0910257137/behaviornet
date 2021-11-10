@@ -2,11 +2,8 @@ from collections import Counter
 from functools import reduce
 from typing import Any, Dict, List, Union
 
-from bddhelper.objects import BaseLabelObject
 
-
-def get_value_by_key(item: Union[dict, BaseLabelObject],
-                     key: Union[dict, str]) -> Any:
+def get_value_by_key(item, key: Union[dict, str]) -> Any:
     """get value of bdd object or dict by given key or nested key
 
     Args:
@@ -16,9 +13,7 @@ def get_value_by_key(item: Union[dict, BaseLabelObject],
     Returns:
         str: [description]
     """
-    assert isinstance(item, (
-        dict,
-        BaseLabelObject)), f'Expected dict or BaseLabelObject, got {type(item)}'
+
     assert isinstance(key,
                       (str, dict)), f'Expected str or dict, got {type(key)}'
     if isinstance(key, dict):
@@ -29,36 +24,6 @@ def get_value_by_key(item: Union[dict, BaseLabelObject],
             next_item, v)
     else:
         return item[key] if isinstance(item, dict) else getattr(item, key)
-
-
-def set_value_by_key(item: Union[dict, BaseLabelObject], key: dict):
-    """set value by given key (only one key allowed)
-
-    target = {'a': 1, 'b':{'b1':1, 'b2':2}}
-    key = {'b':{'b1':2}}
-    set_value_by_key(target, key)
-    
-    target: {'a': 1, 'b': {'b1': 2, 'b2': 2}} 
-    """
-
-    assert isinstance(item, (dict, BaseLabelObject)) and isinstance(key, dict)
-    assert len(key) == 1, 'Only one key is allowed'
-    k = next(iter(key))
-    v = key[k]
-    if isinstance(item, BaseLabelObject):
-        if k == 'attributes':
-            item.update_attributes(v)
-        elif k == 'shape':
-            item.set_shape(v)
-        else:
-            raise KeyError(
-                f'If there is a bdd object, the valid key should be one of ["attributes", "shape"]. Got {k}'
-            )
-    else:
-        if isinstance(v, dict):
-            set_value_by_key(item[k], v)
-        else:
-            item[k] = v
 
 
 def set_last_value(data: dict, value: Any):

@@ -1,8 +1,8 @@
 {
     "predictor": {
         "visible_gpu": "0",
-        "pb_path": "/home/anders/Downloads/ffhq/archive_model/transfer",
-        "eval_method":"IoU",
+        "pb_path": "/aidata/anders/objects/ffhq/archive_model_lnmk/base",
+        "eval_method":"keypoint",
         "mode": "landmark",
         "gpu_fraction":1.0, 
         "top_k_n": 100,
@@ -15,7 +15,19 @@
             256,
             256
         ],
-        "n_landmarks": 68,
+        "n_landmarks": 25,
         "cat_path": "./config/face.txt"
+    },
+    "metric":{
+        "metric_type":"NLE",
+        "conditions":
+            {
+                "transformer_method":"LandMarks",
+                "object_matcher_method":"NLE",
+                "calculator_method" : "PRFCalculator",
+                "reporter_method" :"EdgePRFReporter",
+                "matcher_threshold" :1000,
+                "reporter_threshold" :10
+            }
     }
 }

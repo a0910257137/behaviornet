@@ -30,12 +30,12 @@ class PointShift(Metric):
         }
 
         result = self.calculate(gt_pts, eval_pts)
+
         result = {
             k: v[0][0].item()
             if single_item_flag and isinstance(v, np.ndarray) else v
             for k, v in result.items()
         }
-
         return result
 
     @staticmethod
@@ -145,3 +145,54 @@ class PointDistance(PointShift):
                                                eval_value[None, ...],
                                                axis=-1)
         return distance
+
+
+@dataclasses.dataclass
+class NLE(PointShift):
+    '''
+    point distance directly
+    e.g.
+    gt_pts = {'head':np.array([[1, 2]]), 'eye':np.array([[2, 3]]), 'nose':np.array([])}
+    eval_pts = {'head':np.array([[4, 6]]), 'eye':np.array([[6, 6]])}
+    metric = PointDistance()
+    shift = metric(gt_pts, eval_pts)
+    shift: {'head': 5.0, 'eye': 5.0}
+    '''
+    @staticmethod
+    def calculate(gt_pts: dict, eval_pts: dict) -> dict:
+        # pts in gt_pts and eval_pts must be (Batch, n_dim)
+        assert isinstance(gt_pts, dict) and isinstance(eval_pts, dict)
+        assert all(
+            isinstance(coord, np.ndarray) and coord.ndim == 2
+            for coord in gt_pts.values())
+        assert all(
+            isinstance(coord, np.ndarray) and coord.ndim == 2
+            for coord in eval_pts.values())
+        interocular_keys = ('left_eye_lnmk_36', 'right_eye_lnmk_45')
+        interocular = []
+        all_keys = set(gt_pts.keys()).union(set(eval_pts.keys()))
+        all_keys = sorted(all_keys)
+        nle = dict()
+        gt_lnmks, eval_lnmks = [], []
+        for key in all_keys:
+            gt_value = gt_pts.get(key, 'redundant')
+            eval_value = eval_pts.get(key, 'missing')
+            assert gt_value.shape[1:] == eval_value.shape[
+                1:], f'got invalid shape: {gt_value.shape} and {eval_value.shape}. The shape after first dimension should be the same'
+            if key in interocular_keys:
+                interocular.append(gt_value)
+            gt_lnmks.append(gt_value)
+            eval_lnmks.append(eval_value)
+        gt_lnmks = np.squeeze(np.stack(gt_lnmks), axis=-2)
+        eval_lnmks = np.squeeze(np.stack(eval_lnmks), axis=-2)
+        interocular = np.squeeze(np.stack(interocular), axis=-2)
+        # frobenius norm
+        interocular = np.linalg.norm(interocular[0] - interocular[1])
+        localization_error = np.sum(
+            np.linalg.norm(eval_lnmks - gt_lnmks, axis=0))
+
+        nle.update({
+            'nle': [float(localization_error / (interocular * len(all_keys)))],
+            'interocular': [float(interocular)]
+        })
+        return nle

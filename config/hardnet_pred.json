@@ -1,7 +1,7 @@
 {
     "predictor": {
-        "visible_gpu": "-1",
-        "pb_path": "/work/anders1234/fhhq/archive_model/10_27_model",
+        "visible_gpu": "0",
+        "pb_path": "/aidata/anders/objects/demo/archive_model/10_27_model",
         "top_k_n": 100,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,

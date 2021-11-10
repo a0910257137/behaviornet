@@ -4,7 +4,7 @@ import numpy as np
 from monitor import logger
 from tqdm import tqdm
 from pprint import pprint
-
+from box import Box
 import os
 import sys
 import cv2
@@ -14,91 +14,26 @@ from pathlib import Path
 from utils.io import *
 from utils.bdd_process import *
 from metrics.compute import ComputeIOU
+from metrics.metric_evaluator import BDDMetricEvaluator
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-sys.path.insert(0, './utils/linker-metrics/linkermetrics')
-# from linkermetrics.evaluator.bdd_metric_evaluator import BDDMetricEvaluator
+
 from behavior_predictor.inference import BehaviorPredictor
 
 
 class Eval:
     def __init__(self, model, config, eval_path, img_root, save_path,
                  batch_size):
-        self.config = config
+        self.pred_config = config['predictor']
+        self.metric_config = config['metric']
         self.eval_path = eval_path
         self.img_root = img_root
         self.save_path = save_path
         self.batch_size = batch_size
-        self.mode = self.config['mode']
-        self.predictor = model(self.config)
-
-    def _get_conditions(self, cates, task):
-        if task == 'TAIPOWER':
-            tp_od_condition = dict(
-                name='BDDConditionedContainer',
-                category='HUMAN',
-                frame=lambda frame: True,
-                object_matcher=dict(
-                    name='PointDistanceMatcher',
-                    threshold=1000,
-                    transform=[
-                        dict(name='Box2DToKeyPointsWithCenter'),
-                        dict(name='Numpify', target_key='shape'),
-                        dict(name='GetShape')
-                    ],
-                ),
-                object_calculator=[{
-                    'name':
-                    'PRFCalculator',
-                    'metric': {
-                        'name': 'PointDistance'
-                    },
-                    'transform': [
-                        dict(name='Box2DToKeyPointsWithCenter'),
-                        dict(name='Numpify', target_key='shape'),
-                        dict(name='GetShape')
-                    ],
-                    'reporter': {
-                        'name': 'EdgePRFReporter',
-                        'threshold': 5
-                    }
-                }])
-            __Conditions = []
-            for cate in cates:
-                eval_condition = copy.deepcopy(tp_od_condition)
-                eval_condition['category'] = cate.upper()
-                __Conditions.append(eval_condition)
-        elif task == 'SAMSUNG':
-            __Conditions = dict(
-                name='BDDConditionedContainer',
-                category='VEHICLE',
-                object_matcher=dict(
-                    name='IoU2DMatcher',
-                    threshold=0.5,
-                    transform=[
-                        dict(name='PointArrangementSamsungCuboidShape'),
-                        dict(name='MinimalBox2D'),
-                        dict(name='Numpify', target_key='shape'),
-                        dict(name='GetShape')
-                    ]),
-                object_calculator=[{
-                    'name':
-                    'PRFCalculator',
-                    'metric': {
-                        'name': 'PointAxialShift'
-                    },
-                    'transform': [
-                        dict(name='PointArrangementSamsungCuboidShape'),
-                        dict(name='Numpify', target_key='shape'),
-                        dict(name='GetShape')
-                    ],
-                    'reporter': {
-                        'name': 'EdgePRFReporter',
-                        'threshold': 5
-                    }
-                }])
-
-        return __Conditions
+        self.mode = self.pred_config['mode']
+        self.metric_type = self.metric_config['metric_type']
+        # self.predictor = model(self.pred_config)
+        self.predictor = None
 
     def split_batchs(self, elems, n):
         for idx in range(0, len(elems), n):
@@ -115,29 +50,6 @@ class Eval:
         # psudo_bdd['frame_list'] = input_json_path['frame_list']
         psudo_bdd['frame_list'] = input_json_path
         return psudo_bdd
-
-    def transform_pd_data(self, reports):
-        tot_dict = {}
-        pd_columns = ['precision', 'recall', 'accuracy']
-        pd_rows = ['center_point', 'top_left', 'bottom_right']
-
-        for report in reports:
-            results = report['results']
-            for res in results:
-                obj_level = res['obj_level']
-                if len(dict(obj_level).keys()) == 0:
-                    df = pd.DataFrame({})
-                    continue
-                trans_dict = {}
-                for pd_col in pd_columns:
-                    trans_dict[pd_col] = {}
-                    for pd_row in pd_rows:
-                        if pd_row not in obj_level[pd_col].keys():
-                            continue
-                        trans_dict[pd_col][pd_row] = obj_level[pd_col][pd_row]
-                df = pd.DataFrame(trans_dict)
-            tot_dict[report['category']] = df
-        return tot_dict
 
     def get_eval_path(self):
         eval_files = []
@@ -178,7 +90,7 @@ class Eval:
 
         df = pd.DataFrame(dict)
         pprint(df)
-        df.to_csv('infer_test_iou.csv', float_format='%.3f')
+        # df.to_csv('infer_test_iou.csv', float_format='%.3f')
 
     def run(self):
         eval_files = self.get_eval_path()
@@ -195,6 +107,7 @@ class Eval:
                                                   self.batch_size))
             batch_results = []
             for batch_frame in tqdm(batch_frames):
+                break
                 path_batch = [
                     os.path.join(self.img_root, x['name']) for x in batch_frame
                 ]
@@ -218,20 +131,37 @@ class Eval:
                 #             "/aidata/anders/objects/WF/model_imgs/train",
                 #             frame["name"]), img)
                 batch_results.append(preds)
-            # to bdd annos by task
-            eval_bdd_annos = to_tp_od_bdd(batch_results, batch_frames,
-                                          self.cates)
+            # batch_results = np.save('pred_results.npy',
+            #                         np.asarray(batch_results))
+            batch_results = np.load('pred_results.npy')
+            if self.mode == 'centernet':
+                eval_bdd_annos = to_tp_od_bdd(batch_results, batch_frames,
+                                              self.cates)
+            elif self.mode == 'landmark':
+                eval_bdd_annos = to_lnmk_bdd(batch_results, batch_frames,
+                                             self.cates)
             gt_bdd_annos, eval_bdd_annos = self.with_bddversion(
                 gt_bdd_list), self.with_bddversion(
                     eval_bdd_annos['frame_list'])
-            if self.config['eval_method'] == 'IoU':
+            if self.metric_config['metric_type'] == 'IoU':
+                # old version could parse all frame and calculate FP FN
                 iou = ComputeIOU(gt_bdd_annos, eval_bdd_annos)
                 self.iou_report(iou, self.cates)
+            elif self.metric_type.lower() in ['keypoints', 'landmark', 'nle']:
+                evaluator = BDDMetricEvaluator(self.metric_config)
+            report_results = evaluator(gt_bdd_annos, eval_bdd_annos)
+            if self.metric_type == 'NLE':
+                dump_json(
+                    path='/aidata/anders/objects/landmarks/metrics/nle.json',
+                    data=report_results)
+            else:
+                obj_level_results = dict(report_results['obj_level'])
+                df, mean_df = transform_pd_data(obj_level_results, True,
+                                                self.metric_type)
+                pprint(mean_df)
         print('Finish evaluating')
-        print(
-            'Totoal speding %5fs, avg %5fs per batch with %i batch size, %i imgs'
-            % (sum(batch_times), sum(batch_times) / len(batch_times),
-               self.batch_size, total_imgs))
+        print('Totoal speding %5fs, With %i batch size, %i imgs' %
+              (sum(batch_times), self.batch_size, total_imgs))
 
 
 def parse_args():
@@ -263,6 +193,6 @@ if __name__ == "__main__":
     if not os.path.isfile(args.config):
         raise FileNotFoundError('File %s does not exist.' % args.config)
     config = load_json(args.config)
-    eval = Eval(BehaviorPredictor, config['predictor'], args.eval_path,
-                args.img_root, args.save_path, args.batch_size)
+    eval = Eval(BehaviorPredictor, Box(config), args.eval_path, args.img_root,
+                args.save_path, args.batch_size)
     eval.run()

@@ -1,5 +1,3 @@
-import os
-import math
 import tensorflow as tf
 import argparse
 from box import Box

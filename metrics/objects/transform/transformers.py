@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Dict, List
+from .base import Base
 
 
 class Numpify:
@@ -19,6 +20,15 @@ class MinimalBox2D:
                                                     axis=0), np.max(coords,
                                                                     axis=0)
         return dict(top_left=top_left_coord, bottom_right=bottom_right_coord)
+
+
+class LandMarks(Base):
+    """Support transform keypoints:{each of facial landmarks}[y1, x1] to
+       serial landmark number {top_left, bottom_right }
+    """
+    def __call__(self, item):
+        item = item['keypoints']
+        return self.parse_lnmk(item)
 
 
 class Box2DToKeyPoints:

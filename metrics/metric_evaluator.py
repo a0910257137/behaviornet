@@ -22,21 +22,28 @@ class BDDMetricEvaluator(Base):
                                    ['raw_data', 'matched', 'unmatched'])
         self.paired_lbs: list = []
         self.cfg = cfg
-        self.matcher_threshold = self.cfg.matcher_threshold
-        self.reporter_threshold = self.cfg.reporter_threshold
+        self.condition_cfg = self.cfg.conditions
 
-        self._transorm_func = TRANSORM_FACTORY.get(self.cfg.transformer_method)
-        self.metric = MATCHER_FACTORY.get(self.cfg.object_matcher_method)
-        self.calculator = CALCULATOR_FACTORY.get(self.cfg.calculator_method)
-        self.reporter = REPORTER_FACTORY.get(self.cfg.reporter_method)
+        self.metric_type = self.cfg.metric_type
+        self.matcher_threshold = self.condition_cfg.matcher_threshold
+        self.reporter_threshold = self.condition_cfg.reporter_threshold
+
+        self._transorm_func = TRANSORM_FACTORY.get(
+            self.condition_cfg.transformer_method)
+        self.metric = MATCHER_FACTORY.get(
+            self.condition_cfg.object_matcher_method)
+        self.calculator = CALCULATOR_FACTORY.get(
+            self.condition_cfg.calculator_method)
+        self.reporter = REPORTER_FACTORY.get(
+            self.condition_cfg.reporter_method)
 
     def __call__(self, bdd_gt_annos, bdd_eval_annos):
         bdd_gt_annos, bdd_eval_annos = bdd_gt_annos[
             'frame_list'], bdd_eval_annos['frame_list']
-        users = {'gt', 'eval'}
+        # users = {'gt', 'eval'}
+        users = sorted(set(('gt', 'eval')), reverse=True)
         matched_gt_frames_objects, matched_eval_frames_objects = self._matched_frame(
             bdd_gt_annos, bdd_eval_annos)
-
         users_matched_dc = {user: [] for user in users}
         users_unmatched_dc = {user: [] for user in users}
         raw_data = []
@@ -44,28 +51,24 @@ class BDDMetricEvaluator(Base):
         # call object matcher and need unders conditions
         gt_frames, eval_frames = matched_gt_frames_objects, matched_eval_frames_objects
         # frame-wise iterable
-        for gt_frame, eval_frame in zip(gt_frames, eval_frames):
+        if self.metric_type == 'NLE':
+            return self.cal_nle(gt_frames, eval_frames)
 
+        for gt_frame, eval_frame in zip(gt_frames, eval_frames):
             users_object_iterable_uc = (gt_frame, eval_frame)
 
             users_object_iterable_uc = dict(
                 zip(users, users_object_iterable_uc))
-
             gt_frame, eval_frame = self.preprocess(users_object_iterable_uc)
-            gt_shapes, eval_shapes = [], []
-            raw_gt_data, raw_eval_data = [], []
-            for lb in gt_frame:
-                gt_shapes.append(self._transorm_func(*lb))
-                raw_gt_data.append(*lb)
-            for lb in eval_frame:
-                eval_shapes.append(self._transorm_func(*lb))
-                raw_eval_data.append(*lb)
+            gt_shapes, eval_shapes, raw_gt_data, raw_eval_data, ret_metric = self.cal_matched_metric(
+                gt_frame, eval_frame)
+            # if metric type is norm localization error, we can not run mach object
+            # because one frame with one face
 
             raw_data.append(dict(zip(users, (raw_gt_data, raw_eval_data))))
-            ret_metric = self.metric(gt_shapes, eval_shapes)
-
             cost_matrix = sum(ret_metric.values(), 0) if isinstance(
                 ret_metric, dict) else ret_metric  # sum over all mutual metric
+
             assert isinstance(cost_matrix, np.ndarray)
             self._cost_matrix = cost_matrix
 
@@ -116,6 +119,42 @@ class BDDMetricEvaluator(Base):
     def data(self):
         return self._data
 
+    def cal_nle(self, gt_frames, eval_frames):
+        tmp_nle, tmp_interocular = [], []
+        for i, (gt_frame, eval_frame) in enumerate(zip(gt_frames,
+                                                       eval_frames)):
+            _, _, _, _, ret_metric = self.cal_matched_metric(
+                gt_frame, eval_frame)
+            if i > 0:
+                tmp_nle += ret_metric['nle']
+                tmp_interocular += ret_metric['interocular']
+
+        num_samples = len(tmp_nle)
+        ret_metric['nle'] = tmp_nle
+        ret_metric['interocular'] = tmp_interocular
+        ret_metric['num_samples'] = num_samples
+
+        return ret_metric
+
+    def cal_matched_metric(self, gt_lbs, eval_lbs):
+        gt_shapes, eval_shapes = [], []
+        raw_gt_data, raw_eval_data = [], []
+        if not len(gt_lbs) or not len(eval_lbs):
+            ret_metric = np.zeros(shape=(len(gt_lbs), len(eval_lbs)))
+            for lb in gt_lbs:
+                raw_gt_data.append(*lb)
+            for lb in eval_lbs:
+                raw_eval_data.append(*lb)
+        else:
+            for lb in gt_lbs:
+                gt_shapes.append(self._transorm_func(*lb))
+                raw_gt_data.append(*lb)
+            for lb in eval_lbs:
+                eval_shapes.append(self._transorm_func(*lb))
+                raw_eval_data.append(*lb)
+            ret_metric = self.metric(gt_shapes, eval_shapes)
+        return gt_shapes, eval_shapes, raw_gt_data, raw_eval_data, ret_metric
+
     def preprocess(self, user_data_dict):
         """check and parser user-data-dict
 
@@ -138,12 +177,25 @@ class BDDMetricEvaluator(Base):
     def _matched_frame(self, gt_annos, eval_annos):
         def iter_lb(frame, lb):
             outputs = []
-            base_frame = {
-                'frame_id':
-                (frame['dataset'], frame['sequence'], frame['name']),
-                'box2d': lb['box2d'],
-                'category': lb['category']
-            }
+
+            if self.metric_type.lower() == 'box2d':
+                base_frame = {
+                    'frame_id':
+                    (frame['dataset'], frame['sequence'], frame['name']),
+                    'box2d':
+                    lb['box2d'],
+                    'category':
+                    lb['category']
+                }
+            elif self.metric_type.lower() in ['keypoints', 'landmarks', 'nle']:
+                base_frame = {
+                    'frame_id':
+                    (frame['dataset'], frame['sequence'], frame['name']),
+                    'keypoints':
+                    lb['keypoints'],
+                    'category':
+                    lb['category']
+                }
             outputs.append(base_frame)
             return outputs
 
@@ -154,9 +206,7 @@ class BDDMetricEvaluator(Base):
             eval_lbs = list(
                 map(lambda lb: iter_lb(eval_frame, lb), eval_frame['labels']))
             matched_gt_frames_objects.append(gt_lbs)
-
             matched_eval_frames_objects.append(eval_lbs)
-
         return matched_gt_frames_objects, matched_eval_frames_objects
 
     @staticmethod
