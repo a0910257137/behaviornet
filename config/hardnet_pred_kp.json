@@ -1,7 +1,7 @@
 {
     "predictor": {
         "visible_gpu": "0",
-        "pb_path": "/aidata/anders/objects/ffhq/archive_model_lnmk/base",
+        "pb_path": "/aidata/anders/objects/ffhq/archive_model_lnmk/spatial_channel",
         "eval_method":"keypoint",
         "mode": "landmark",
         "gpu_fraction":1.0, 

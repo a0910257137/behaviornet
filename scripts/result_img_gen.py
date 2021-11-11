@@ -1,7 +1,4 @@
 import sys
-
-import json
-import time
 import cv2
 import os
 import argparse
@@ -10,8 +7,6 @@ import numpy as np
 from pprint import pprint
 from pathlib import Path
 from draw import *
-import tensorflow as tf
-
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.io import load_text
 from behavior_predictor.inference import BehaviorPredictor

@@ -41,9 +41,9 @@ def gen_landmark(anno_path, save_path):
     keep_lnmk_schema = dict(countour_face=[0, 8, 16],
                             left_eyebrow=[],
                             right_eyebrow=[],
+                            nose=[0, 3],
                             left_eye=[0, 1, 2, 3, 4, 5],
                             right_eye=[0, 1, 2, 3, 4, 5],
-                            nose=[0, 3],
                             outer_lip=[0, 2, 3, 4, 6, 8, 9, 10],
                             inner_lip=[])
 

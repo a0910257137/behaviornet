@@ -7,7 +7,7 @@
         "kp_thres": 0.5,
         "n_objs": 30,
         "k_pairings": 7,
-        "gpu_fraction":1.0, 
+        "gpu_fraction":0.5, 
         "eval_method":"IoU",
         "mode": "centernet",
         "img_input_size": [

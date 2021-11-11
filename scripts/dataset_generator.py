@@ -1,6 +1,3 @@
-from pprint import pprint
-from tqdm import tqdm
-from box import Box
 import numpy as np
 import sys
 import argparse
@@ -9,6 +6,9 @@ import os
 import json
 import tensorflow as tf
 import math
+from pprint import pprint
+from tqdm import tqdm
+from box import Box
 
 
 def _bytes_feature(value):
