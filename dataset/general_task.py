@@ -52,9 +52,8 @@ class GeneralTasks:
                 b_imgs, b_coords, b_origin_sizes)
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_objs_kps, b_cates = b_coords[..., :-1], b_coords[..., -1][..., 0]
-
             b_obj_sizes = self._obj_sizes(b_objs_kps, task)
-            b_round_kp_idxs, b_kp_idxs, b_coors, offset_vals = offer_kps_func(
+            b_round_kp_idxs, b_kp_idxs, b_coords, offset_vals = offer_kps_func(
                 self.batch_size, b_objs_kps, self.map_height, self.map_width,
                 b_obj_sizes, self.flip_probs, self.is_do_filp, branch_names)
             if task == "obj_det":
@@ -74,9 +73,9 @@ class GeneralTasks:
                 # normalize keypoints the shape is B, N, C, D, where C are each facial landmarks and D are x, y
                 feat_map_shape = tf.concat(
                     [self.map_height[None], self.map_width[None]], axis=-1)
-                b_coors = tf.einsum('b n c d, d-> b n c d', b_coors,
-                                    1 / feat_map_shape)
-                targets['landmarks'] = b_coors
+                b_coords = tf.einsum('b n c d, d-> b n c d', b_coords,
+                                     1 / feat_map_shape)
+                targets['landmarks'] = b_coords
 
         return tf.cast(b_imgs, dtype=tf.float32), targets
 
@@ -203,9 +202,11 @@ class GeneralTasks:
         parse_vals = tf.io.parse_example(infos, self.features)
         b_images = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)
         b_coords = tf.io.decode_raw(parse_vals['b_coords'], tf.float32)
+
         b_images = tf.reshape(b_images,
                               [-1, self.map_height, self.map_width, 3])
         b_coords = tf.reshape(b_coords, anno_shape)
+
         origin_height = tf.reshape(parse_vals['origin_height'], (-1, 1))
         origin_width = tf.reshape(parse_vals['origin_width'], (-1, 1))
         b_origin_sizes = tf.concat([origin_height, origin_width], axis=-1)

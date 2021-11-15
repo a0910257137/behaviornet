@@ -193,7 +193,7 @@ class Base:
     def warp_affine_transform(self, img, coors, h, w):
         annos, cates = coors[..., :-1], coors[..., -1:]
         img_center = (w / 2, h / 2)
-        rotation_angle = np.random.randint(low=-8, high=8)
+        rotation_angle = np.random.randint(low=-15, high=15)
         mat = cv2.getRotationMatrix2D(img_center, rotation_angle, 1)
         affine = WarpAffineTransform(mat, (w, h))
         img_out = affine.apply_image(img)

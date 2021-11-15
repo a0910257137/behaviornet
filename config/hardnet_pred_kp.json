@@ -1,10 +1,10 @@
 {
     "predictor": {
         "visible_gpu": "0",
-        "pb_path": "/aidata/anders/objects/ffhq/archive_model_lnmk/spatial_channel",
+        "pb_path": "/aidata/anders/objects/landmarks/LS3D-W/archive_model/LS3D-W_68",
         "eval_method":"keypoint",
         "mode": "landmark",
-        "gpu_fraction":1.0, 
+        "gpu_fraction":0.5, 
         "top_k_n": 100,
         "nms_iou_thres": 0.5,
         "img_input_size": [
@@ -15,7 +15,7 @@
             256,
             256
         ],
-        "n_landmarks": 25,
+        "n_landmarks": 68,
         "cat_path": "./config/face.txt"
     },
     "metric":{

@@ -41,6 +41,7 @@ def build_keypoints(obj, obj_cates, img_info):
                             img_info['height'] - 1)
     obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_info['width'], obj_kp[:, 1],
                             img_info['width'] - 1)
+
     obj_kp = np.concatenate([box2d, obj_kp], axis=0)
     bool_mask = np.isinf(obj_kp).astype(np.float)
     obj_kp = np.where(bool_mask, np.inf, obj_kp)
@@ -191,8 +192,8 @@ def get_coors(img_root,
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
-    save_root = os.path.abspath(os.path.join(img_root, os.pardir,
-                                             'tf_records'))
+    save_root = os.path.abspath(
+        os.path.join(img_root, os.pardir, 'tf_records_68'))
     # gen btach frame list
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
@@ -200,10 +201,11 @@ def get_coors(img_root,
         img_name = frame['name']
         img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
-        img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
+
         if not img_info or len(frame['labels']) == 0:
             discard_imgs.invalid += 1
             continue
+        img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
         for obj in frame['labels']:
             if exclude_cates and obj['category'].lower() in exclude_cates:
                 continue

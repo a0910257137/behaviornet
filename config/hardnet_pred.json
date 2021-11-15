@@ -1,7 +1,7 @@
 {
     "predictor": {
         "visible_gpu": "0",
-        "pb_path": "/aidata/anders/objects/demo/archive_model/10_27_model",
+        "pb_path": "/aidata/anders/objects/box2d/demo/archive_model/10_27_model",
         "top_k_n": 100,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,

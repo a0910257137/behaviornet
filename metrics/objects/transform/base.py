@@ -20,7 +20,7 @@ class Base:
             'countour_lnmk_0',
             'countour_lnmk_8',
             'countour_lnmk_16',
-            'nose_lnmk_28',
+            'nose_lnmk_27',
             'nose_lnmk_33',
             'left_eye_lnmk_36',
             'left_eye_lnmk_37',

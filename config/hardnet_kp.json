@@ -3,12 +3,12 @@
     "test_batch_size": 96,
     "epochs": 200,
     "learn_rate": 0.00025,
-    "model_path": "/aidata/anders/objects/ffhq/archive_model_lnmk/spatial_channel",
+    "model_path": "/aidata/anders/objects/landmarks/LS3D-W/archive_model/LS3D-W_68",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/objects/ffhq/archive_model_lnmk/spatial_channel/logs/"
+        "log_dir": "/aidata/anders/objects/landmarks/LS3D-W/archive_model/LS3D-W_68/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -25,12 +25,12 @@
         "tasks": [
             {
                 "preprocess": "keypoint",
-                "num_lnmks":27,// landmark keypoints + 2 for tl and br
+                "num_lnmks":70,// landmark keypoints + 2 for tl and br
                 "read_img": true,
                 "branches":["keypoint"],
                 "category_path": "./config/face.txt",
-                "train_folder": "/home/anders/Downloads/ffhq/tf_records_25_lnmks/train",
-                "test_folder": "/home/anders/Downloads/ffhq/tf_records_25_lnmks/test"
+                "train_folder": "/home/anders/Downloads/LS3D-W/tf_records_68/train",
+                "test_folder": "/home/anders/Downloads/LS3D-W/tf_records_68/test"
             }
         ],
         "augments": {
@@ -52,7 +52,7 @@
                     "fill_value": 0
                 }
             },
-            "do_flip": true
+            "do_flip": false
         }
     },
     "models": {
@@ -82,7 +82,7 @@
             "lr": 1e-3,
             "d_model":512,
             "pred_layer": {
-                "num_landmarks": 25
+                "num_landmarks": 68
             }
         },
         "loss": { 
