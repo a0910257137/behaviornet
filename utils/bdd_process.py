@@ -4,8 +4,7 @@ import pandas as pd
 from pprint import pprint
 
 
-def to_tp_od_bdd(batches_preds, batches_frames, cates):
-    bdd_results = {"frame_list": []}
+def to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
     for batch_preds, batch_frames in zip(batches_preds, batches_frames):
         for preds, frames in zip(batch_preds, batch_frames):
             pred_frame = {
@@ -31,8 +30,8 @@ def to_tp_od_bdd(batches_preds, batches_frames, cates):
     return bdd_results
 
 
-def to_lnmk_bdd(batches_preds, batches_frames, cates):
-    bdd_results = {"frame_list": []}
+def to_lnmk_bdd(bdd_results, batches_preds, batches_frames, cates):
+
     lnmk_keys = {
         "countour_face": 17,
         "left_eyebrow": 5,
@@ -43,29 +42,28 @@ def to_lnmk_bdd(batches_preds, batches_frames, cates):
         "outer_lip": 12,
         "inner_lip": 8
     }
-    for batch_preds, batch_frames in zip(batches_preds, batches_frames):
-        for preds, frames in zip(batch_preds, batch_frames):
-            pred_frame = {
-                'dataset': frames['dataset'],
-                'sequence': frames['sequence'],
-                'name': frames['name'],
-                'labels': []
-            }
-            valid_mask = np.all(~np.isinf(preds), axis=-1)
-            preds = preds[valid_mask]
-            preds = preds.reshape([-1, 25, 2]).astype(np.float16)
-            preds = preds.tolist()
-            for pred_lnmks, gt_lnmks in zip(preds, frames['labels']):
-                keypoints = gt_lnmks['keypoints']
-                lnmk_keys = list(keypoints.keys())
-                pred_lb = {'keypoints': {}, 'category': gt_lnmks['category']}
-                for k in lnmk_keys:
-                    lnmks = keypoints[k]
-                    gt_length = len(lnmks)
-                    pred_lb['keypoints'][k] = pred_lnmks[:gt_length]
-                    del pred_lnmks[:gt_length]
-                pred_frame['labels'].append(pred_lb)
-            bdd_results['frame_list'].append(pred_frame)
+    batches_preds = batches_preds.numpy()
+    for preds, frame in zip(batches_preds, batches_frames):
+        pred_frame = {
+            'dataset': frame['dataset'],
+            'sequence': frame['sequence'],
+            'name': frame['name'],
+            'labels': []
+        }
+        preds = preds.astype(np.float16)
+        preds = preds.tolist()
+
+        for gt_lnmks in frame['labels']:
+            keypoints = gt_lnmks['keypoints']
+            lnmk_keys = list(keypoints.keys())
+            pred_lb = {'keypoints': {}, 'category': gt_lnmks['category']}
+            for k in lnmk_keys:
+                lnmks = keypoints[k]
+                gt_length = len(lnmks)
+                pred_lb['keypoints'][k] = preds[:gt_length]
+                del preds[:gt_length]
+            pred_frame['labels'].append(pred_lb)
+        bdd_results['frame_list'].append(pred_frame)
     return bdd_results
 
 
@@ -81,7 +79,7 @@ def transform_pd_data(report_results,
             'countour_lnmk_0': [],
             'countour_lnmk_8': [],
             'countour_lnmk_16': [],
-            'nose_lnmk_28': [],
+            'nose_lnmk_27': [],
             'nose_lnmk_33': [],
             'left_eye_lnmk_36': [],
             'left_eye_lnmk_37': [],

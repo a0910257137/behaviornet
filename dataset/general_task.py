@@ -202,7 +202,6 @@ class GeneralTasks:
         parse_vals = tf.io.parse_example(infos, self.features)
         b_images = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)
         b_coords = tf.io.decode_raw(parse_vals['b_coords'], tf.float32)
-
         b_images = tf.reshape(b_images,
                               [-1, self.map_height, self.map_width, 3])
         b_coords = tf.reshape(b_coords, anno_shape)

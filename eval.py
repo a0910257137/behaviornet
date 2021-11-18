@@ -8,7 +8,6 @@ from box import Box
 import os
 import sys
 import cv2
-import copy
 import pandas as pd
 from pathlib import Path
 from utils.io import *
@@ -32,12 +31,8 @@ class Eval:
         self.batch_size = batch_size
         self.mode = self.pred_config['mode']
         self.metric_type = self.metric_config['metric_type']
-        # self.predictor = model(self.pred_config)
-        self.predictor = None
-
-    def split_batchs(self, elems, n):
-        for idx in range(0, len(elems), n):
-            yield elems[idx:idx + n]
+        self.predictor = model(self.pred_config)
+        # self.predictor = None
 
     def with_bddversion(self, input_json_path):
         psudo_bdd = {
@@ -47,7 +42,6 @@ class Eval:
             "model_id": "",
             "frame_list": []
         }
-        # psudo_bdd['frame_list'] = input_json_path['frame_list']
         psudo_bdd['frame_list'] = input_json_path
         return psudo_bdd
 
@@ -91,6 +85,22 @@ class Eval:
         df = pd.DataFrame(dict)
         pprint(df)
         # df.to_csv('infer_test_iou.csv', float_format='%.3f')
+    def split_batchs(self, elems, n):
+        for idx in range(0, len(elems), n):
+
+            yield elems[idx:idx + n]
+
+    def split_batchs(self, elems, idx):
+        imgs, origin_shapes = [], []
+        batch_frames = []
+        batch_frames = elems[idx:idx + self.batch_size]
+        for elem in batch_frames:
+            img_path = os.path.join(self.img_root, elem['name'])
+            img = cv2.imread(img_path)
+            h, w, _ = img.shape
+            origin_shapes.append((h, w))
+            imgs.append(img)
+        yield (imgs, origin_shapes, batch_frames)
 
     def run(self):
         eval_files = self.get_eval_path()
@@ -103,43 +113,28 @@ class Eval:
             print('Evaluating with %s' % eval_file)
             gt_bdd_annos = load_json(eval_file)
             gt_bdd_list = gt_bdd_annos['frame_list']
-            batch_frames = list(self.split_batchs(gt_bdd_list,
-                                                  self.batch_size))
-            batch_results = []
-            for batch_frame in tqdm(batch_frames):
-                break
-                path_batch = [
-                    os.path.join(self.img_root, x['name']) for x in batch_frame
-                ]
-                imgs = [cv2.imread(x) for x in path_batch]
-                img_origin_sizes = [img.shape[:2] for img in imgs]
-                total_imgs += len(imgs)
-                preds = self.predictor.pred(imgs, img_origin_sizes)
-                # preds = preds.numpy()
-                # for pred, img, frame in zip(preds, imgs, batch_frame):
-                #     valid_mask = np.all(~np.isinf(pred), axis=-1)
-                #     pred = pred[valid_mask]
-                #     for p in pred:
-                #         tl = p[:2].astype(int)
-                #         tl = tl[::-1]
-                #         br = p[2:4].astype(int)
-                #         br = br[::-1]
-                #         img = cv2.rectangle(img, tuple(tl), tuple(br),
-                #                             (0, 255, 0), 3)
-                #     cv2.imwrite(
-                #         os.path.join(
-                #             "/aidata/anders/objects/WF/model_imgs/train",
-                #             frame["name"]), img)
-                batch_results.append(preds)
-            # batch_results = np.save('pred_results.npy',
-            #                         np.asarray(batch_results))
-            batch_results = np.load('pred_results.npy')
-            if self.mode == 'centernet':
-                eval_bdd_annos = to_tp_od_bdd(batch_results, batch_frames,
-                                              self.cates)
-            elif self.mode == 'landmark':
-                eval_bdd_annos = to_lnmk_bdd(batch_results, batch_frames,
-                                             self.cates)
+            batch_objects = list(
+                map(lambda x: self.split_batchs(gt_bdd_list, x),
+                    range(0, len(gt_bdd_list), self.batch_size)))
+            progress = tqdm(total=len(batch_objects))
+            bdd_results = {"frame_list": []}
+            for batch_imgs_shapes in batch_objects:
+                progress.update(1)
+                batch_imgs_shapes = list(batch_imgs_shapes)
+                total_imgs += len(batch_imgs_shapes)
+                for imgs_shapes in batch_imgs_shapes:
+                    imgs, shapes, batch_frames = imgs_shapes
+                    batch_results = self.predictor.pred(imgs, shapes)
+                    # print("%.3f" % (time.time() - star_time))
+                    if self.mode == 'centernet':
+                        eval_bdd_annos = to_tp_od_bdd(bdd_results,
+                                                      batch_results,
+                                                      batch_frames, self.cates)
+                    elif self.mode == 'landmark':
+                        eval_bdd_annos = to_lnmk_bdd(bdd_results,
+                                                     batch_results,
+                                                     batch_frames, self.cates)
+
             gt_bdd_annos, eval_bdd_annos = self.with_bddversion(
                 gt_bdd_list), self.with_bddversion(
                     eval_bdd_annos['frame_list'])
@@ -152,7 +147,8 @@ class Eval:
             report_results = evaluator(gt_bdd_annos, eval_bdd_annos)
             if self.metric_type == 'NLE':
                 dump_json(
-                    path='/aidata/anders/objects/landmarks/metrics/nle.json',
+                    path=
+                    '/aidata/anders/objects/landmarks/metrics/nle_FFHQ_LS3D_W.json',
                     data=report_results)
             else:
                 obj_level_results = dict(report_results['obj_level'])
@@ -178,10 +174,6 @@ def parse_args():
 
     parser.add_argument('--img_root', help='eval images folder path')
     parser.add_argument('--save_path', help='save results in folder')
-    parser.add_argument('--threshold',
-                        type=int,
-                        default=5,
-                        help='edge metric threshold')
 
     parser.add_argument('--category', help='evaluate category')
     return parser.parse_args()
