@@ -73,6 +73,7 @@ def set_data_config(config):
     config.data_reader.train_batch_size = config.train_batch_size
     config.data_reader.test_batch_size = config.test_batch_size
     config.data_reader.model_name = config.models.model_name
+    config.data_reader.num_landmarks = config.models.head.pred_layer.num_landmarks
     return config
 
 

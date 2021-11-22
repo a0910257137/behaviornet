@@ -58,8 +58,8 @@ class Base:
         b_imgs = tf.numpy_function(func=album_aug, inp=[b_imgs], Tout=tf.uint8)
         return b_imgs
 
-    def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, max_obj_num,
-                        do_ten_pack, tensorpack_chains):
+    def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, b_theta,
+                        max_obj_num, do_ten_pack, tensorpack_chains):
         f'''
             Do random ratation, crop and resize by using "tensorpack" augmentation class.
                 https://github.com/tensorpack/tensorpack
@@ -76,11 +76,13 @@ class Base:
         b_coors = np.asarray(b_coors).astype(np.float32)
         b_img_sizes = np.asarray(b_img_sizes).astype(np.int32)
         b_imgs = np.asarray(b_imgs).astype(np.uint8)
+        b_theta = b_theta.numpy()
         _, h, w, c = b_imgs.shape
         aug_prob = .5
         tmp_coors = []
         tmp_imgs = []
-        for img, coors, is_do in zip(b_imgs, b_coors, do_ten_pack):
+        for img, coors, theta, is_do in zip(b_imgs, b_coors, b_theta,
+                                            do_ten_pack):
             if not is_do:
                 tmp_imgs.append(img)
                 tmp_coors.append(coors)
@@ -109,6 +111,10 @@ class Base:
                         img, coors, cates = self.warp_affine_transform(
                             img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
+                elif tensorpack_aug == "Overlaying":
+                    if random.random() < aug_prob:
+                        img, coors = self.overlaying_mask(img, coors, theta)
+
             tmp_imgs.append(img)
             # coors = coors[..., :2]
             # for coor in coors:
@@ -154,13 +160,6 @@ class Base:
         img_out = resize_transform.apply_image(img_out)
         annos_out = resize_transform.apply_coords(annos_out)
         annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
-        # coors = annos_out[..., :2]
-        # for coor in coors:
-        #     # coor = coor[:, :2]
-        #     tl = coor[0].astype(int)
-        #     br = coor[1].astype(int)
-        #     cv2.rectangle(img_out, tuple(tl), tuple(br), (0, 255, 0), 1)
-        # cv2.imwrite('output.jpg', img_out[..., ::-1])
         if annos_out.any():
             return img_out, annos_out[..., :-1], annos_out[..., -1:]
         else:
@@ -214,6 +213,65 @@ class Base:
             return img_out, annos_out[..., :2], annos_out[..., -1:]
         else:
             return img, annos, cates
+
+    def overlaying_mask(self, img, coors, thetas):
+        r = random.randint(0, 224)
+        g = random.randint(0, 224)
+        b = random.randint(0, 224)
+        rgb = [r, g, b]
+        prob_0 = random.random()
+        prob_1 = random.random()
+        for kps, theta in zip(coors, thetas):
+            if -20. > theta or theta > 20.:
+                continue
+            # return img, coors
+            kps = kps[2:, :-1]
+            points = kps[1:16].tolist()
+            if 0 < prob_0 < 0.5:
+                if 0 < prob_1 < 0.33:
+                    mask = [(kps[33][0], kps[15][1]),
+                            ((kps[39][0], kps[0][1])), (kps[30][0], kps[1][1])]
+                elif 0.33 < prob_1 < 0.66:
+                    mask = [tuple(kps[41])]
+                elif 0.66 < prob_1 < 1.:
+                    mask = kps[43:48][::-1].tolist()
+                fmask = np.array(points + mask, dtype=np.int32)
+
+                img = cv2.fillPoly(img, [fmask],
+                                   color=rgb,
+                                   lineType=cv2.LINE_AA)
+            # elif prob_0 > 0.5:
+            #     if 0 < prob_1 < 0.33:
+            #         top_ellipse = kps[39][1] + (kps[40][1] - kps[39][1]) / 2
+            #     elif 0.33 < prob_1 < 0.66:
+            #         top_ellipse = kps[40][1]
+            #     elif 0.66 < prob_1 < 1.:
+            #         top_ellipse = kps[41][1] + 0.33 * (kps[37][0] - kps[31][0])
+
+            #     centre_x = kps[39][0]
+            #     centre_y = kps[8][1] - (kps[8][1] - top_ellipse) / 2
+
+            #     axis_major = (kps[8][1] - top_ellipse) / 2
+
+            #     axis_minor = ((kps[13][0] - kps[3][0]) * 0.8) / 2
+
+            #     centre_x = int(round(centre_x))
+            #     centre_y = int(round(centre_y))
+            #     axis_major = int(round(axis_major))
+            #     axis_minor = int(round(axis_minor))
+
+            #     centre = (centre_x, centre_y)
+            #     axes = (axis_major, axis_minor)
+
+            #     img = cv2.ellipse(img,
+            #                       centre,
+            #                       axes,
+            #                       0,
+            #                       0,
+            #                       360,
+            #                       rgb,
+            #                       thickness=-1)
+        return img, coors
 
     def correct_out_point(self, annos, cates, h1, w1, h2, w2):
         def gen_boolean_mask(check):

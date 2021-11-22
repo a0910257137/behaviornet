@@ -23,6 +23,38 @@ def _float32_feature(value):
     return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 
+def transformation_from_points(points1, points2):
+    '''0 - 先確定是float資料型別 '''
+    points1 = points1.astype(np.float64)
+    points2 = points2.astype(np.float64)
+    '''1 - 消除平移的影響 '''
+    c1 = np.mean(points1, axis=0)
+    c2 = np.mean(points2, axis=0)
+    points1 -= c1
+    points2 -= c2
+    '''2 - 消除縮放的影響 '''
+    s1 = np.std(points1)
+    s2 = np.std(points2)
+    points1 /= s1
+    points2 /= s2
+    '''3 - 計算矩陣M=BA^T；對矩陣M進行SVD分解；計算得到R '''
+    # ||RA-B||; M=BA^T
+    A = points1.T  # 2xN
+    B = points2.T  # 2xN
+    M = np.dot(B, A.T)
+    U, S, Vt = np.linalg.svd(M)
+    R = np.dot(U, Vt)
+
+    s = s2 / s1
+    sR = s * R
+    c1 = c1.reshape(2, 1)
+    c2 = c2.reshape(2, 1)
+    T = c2 - np.dot(sR, c1)  # 模板人臉的中心位置減去 需要對齊的中心位置（經過旋轉和縮放之後）
+    trans_mat = np.hstack([sR, T])  # 2x3
+
+    return trans_mat, s
+
+
 def build_keypoints(obj, obj_cates, img_info):
     kps = obj["keypoints"]
     keys = [
@@ -132,7 +164,6 @@ def build_human_keypoint(obj, kp_cates, img_info):
 
 
 def complement(annos, max_num):
-
     n, c, d = annos.shape
     # assign numpy array to avoid > max_num case
     annos = np.asarray([x for x in annos if x.size != 0])
@@ -180,8 +211,6 @@ def get_coors(img_root,
             return json.loads(f.read())
 
     anno = load_json(anno_path)
-    batch_kps = []
-    img_paths = []
     discard_imgs = Box({
         'invalid': 0,
         'less_than': 0,
@@ -195,13 +224,16 @@ def get_coors(img_root,
     save_root = os.path.abspath(
         os.path.join(img_root, os.pardir, 'tf_records_68'))
     # gen btach frame list
+    frame_count = 0
+    mean_face = None
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
         frame_kps = []
+        frame_theta = []
         img_name = frame['name']
+
         img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
-
         if not img_info or len(frame['labels']) == 0:
             discard_imgs.invalid += 1
             continue
@@ -216,8 +248,16 @@ def get_coors(img_root,
                 if min_num > len(frame_kps):
                     discard_imgs.less_than += 1
                     continue
-            elif obj_classes is not None and task == 'keypoint':
+            elif obj_classes is not None and task == 'keypoints':
                 obj_kp = build_keypoints(obj, obj_cates, img_info)
+                if frame_count == 0 and mean_face is None:
+                    mean_face = obj_kp[:, :2]
+                trans_mat, scale = transformation_from_points(
+                    obj_kp[:, :2][:, ::-1], mean_face[:, ::-1])
+                rotate_matrix = trans_mat[:, :2] / scale
+                theta = math.asin(rotate_matrix[0][1]) * 57.3
+                theta = np.round(theta, 3)
+                frame_theta.append(theta)
                 frame_kps.append(obj_kp)
                 obj_counts.total_kps += 1
                 if min_num > len(frame_kps):
@@ -226,16 +266,20 @@ def get_coors(img_root,
         if obj_classes is not None:
             frame_kps = np.asarray(frame_kps, dtype=np.float32)
             frame_kps = complement(frame_kps, max_obj)
-            batch_kps.append(frame_kps)
+
         frame_kps = frame_kps.tostring()
         img = img[..., ::-1]
         img = img.tostring()
-        filename = img_path.split('/')[-1].replace('jpg', 'tfrecords')
-
+        frame_theta = np.asarray(frame_theta).astype(np.float32)
+        if img_path.split('/')[-1].split('.')[-1] == 'png':
+            filename = img_path.split('/')[-1].replace('png', 'tfrecords')
+        else:
+            filename = img_path.split('/')[-1].replace('jpg', 'tfrecords')
         example = tf.train.Example(features=tf.train.Features(
             feature={
                 'origin_height': _int64_feature(img_info['height']),
                 'origin_width': _int64_feature(img_info['width']),
+                'b_theta': _float32_feature(frame_theta),
                 'b_images': _bytes_feature(img),
                 'b_coords': _bytes_feature(frame_kps)
             }))
@@ -250,7 +294,7 @@ def get_coors(img_root,
             writer = tf.io.TFRecordWriter(os.path.join(save_dir, filename))
             writer.write(example.SerializeToString())
         writer.close()
-        img_paths.append(img_path)
+        frame_count += 1
     output = {
         'total_2d': obj_counts.total_2d,
         'total_kps': obj_counts.total_kps,

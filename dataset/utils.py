@@ -129,3 +129,27 @@ def gen_bboxes(batch_size, b_coors, b_cates, max_obj_num, image_input_sizes):
     b_bboxes = tf.where(tf.math.is_inf(b_bboxes), -1., b_bboxes)
     b_bboxes = tf.where(b_bboxes == -1., np.inf, b_bboxes)
     return b_bboxes, b_cates, num_bbox
+
+
+def gen_landmarks(batch_size, max_obj_num, b_coords, schema_type):
+    """
+        landmarks link[https://www.pyimagesearch.com/wp-content/uploads/2017/04/facial_landmarks_68markup-768x619.jpg]
+        profile face: 0 ~ 16
+        eye_brows: 17 ~ 26
+        eyes: 27 ~ 38
+        nose: 39 ~ 47
+        outer mouth: 48 ~ 59
+        inner mouth: 60 ~ 68 
+    """
+    if schema_type == 25:
+        lnmk_25_schema = tf.constant([
+            0, 8, 16, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 42,
+            48, 50, 51, 52, 54, 56, 57, 58
+        ],
+                                     shape=(25, 1),
+                                     dtype=tf.int32)
+        # (96, 15, 25, 2)
+        b_coords = tf.transpose(b_coords, [2, 0, 1, 3])
+        b_coords = tf.gather_nd(b_coords, lnmk_25_schema)
+        b_coords = tf.transpose(b_coords, [1, 2, 0, 3])
+    return b_coords

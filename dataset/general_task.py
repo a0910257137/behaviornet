@@ -1,9 +1,6 @@
-import os
 import tensorflow as tf
 import numpy as np
 import time
-import cv2
-from functools import partial
 
 from .utils import *
 from pprint import pprint
@@ -26,6 +23,7 @@ class GeneralTasks:
         self.features = {
             "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
             "origin_width": tf.io.FixedLenFeature([], dtype=tf.int64),
+            "b_theta": tf.io.FixedLenFeature([], dtype=tf.float32),
             "b_images": tf.io.FixedLenFeature([], dtype=tf.string),
             "b_coords": tf.io.FixedLenFeature([], dtype=tf.string)
         }
@@ -38,7 +36,7 @@ class GeneralTasks:
 
             task, branch_names, m_cates = task_infos['preprocess'], task_infos[
                 'branches'], len(task_infos['cates'])
-            b_coords, b_imgs, b_origin_sizes = self._parse_TFrecord(
+            b_coords, b_imgs, b_origin_sizes, b_theta = self._parse_TFrecord(
                 task, infos)
             b_coords, down_ratios = self._resize_coors(b_coords,
                                                        b_origin_sizes,
@@ -49,7 +47,7 @@ class GeneralTasks:
                                             self.num_lnmks, self.batch_size,
                                             task)
             b_imgs, b_coords, self.flip_probs = _multi_aug_funcs(
-                b_imgs, b_coords, b_origin_sizes)
+                b_imgs, b_coords, b_origin_sizes, b_theta)
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_objs_kps, b_cates = b_coords[..., :-1], b_coords[..., -1][..., 0]
             b_obj_sizes = self._obj_sizes(b_objs_kps, task)
@@ -75,6 +73,9 @@ class GeneralTasks:
                     [self.map_height[None], self.map_width[None]], axis=-1)
                 b_coords = tf.einsum('b n c d, d-> b n c d', b_coords,
                                      1 / feat_map_shape)
+                b_coords = gen_landmarks(self.batch_size, self.max_obj_num,
+                                         b_coords, self.config.num_landmarks)
+
                 targets['landmarks'] = b_coords
 
         return tf.cast(b_imgs, dtype=tf.float32), targets
@@ -202,12 +203,15 @@ class GeneralTasks:
         parse_vals = tf.io.parse_example(infos, self.features)
         b_images = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)
         b_coords = tf.io.decode_raw(parse_vals['b_coords'], tf.float32)
+
         b_images = tf.reshape(b_images,
                               [-1, self.map_height, self.map_width, 3])
         b_coords = tf.reshape(b_coords, anno_shape)
-
         origin_height = tf.reshape(parse_vals['origin_height'], (-1, 1))
         origin_width = tf.reshape(parse_vals['origin_width'], (-1, 1))
         b_origin_sizes = tf.concat([origin_height, origin_width], axis=-1)
         b_origin_sizes = tf.cast(b_origin_sizes, tf.int32)
-        return b_coords, b_images, b_origin_sizes
+        b_theta = None
+        if task == "keypoint":
+            b_theta = tf.reshape(parse_vals['b_theta'], (-1, 1))
+        return b_coords, b_images, b_origin_sizes, b_theta
