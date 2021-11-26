@@ -212,6 +212,6 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                     batch_images = batch_images.numpy() * 255
                     batch_gt_lnmks = gt_lnmks
                     batch_pred_lnmks = pred_lnmks
-                    self._summary_lnmks(self.train_writer, batch_images,
+                    self._summary_lnmks(self.eval_writer, batch_images,
                                         batch_gt_lnmks, batch_pred_lnmks,
                                         self.train_seen)

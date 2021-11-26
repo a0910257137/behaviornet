@@ -19,7 +19,7 @@ class ModelFactory:
         #                                  self.config.resize_size[1], 3),
         #                     pooling='avg_pool',
         #                     kernel_initializer='he_uniform')
-        self.backbone = HardNet39(input_shape=(self.config.resize_size[0],
+        self.backbone = HardNet85(input_shape=(self.config.resize_size[0],
                                                self.config.resize_size[1], 3),
                                   pooling='avg_pool',
                                   kernel_initializer='he_uniform')
@@ -30,7 +30,6 @@ class ModelFactory:
         if self.config.neck.module_name is not None:
             self.neck = NECK_FACTORY.get(self.config.neck.module_name)(
                 self.config, name='neck')
-
         self.head = HEAD_FACTORY.get(self.config.head.module_name)(self.config,
                                                                    name='head')
         self.loss = LOSS_FACTORY.get(self.config.loss.type)(

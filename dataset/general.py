@@ -68,7 +68,6 @@ class GeneralDataset:
         #         for kp in kps:
         #             img = cv2.circle(img, tuple(kp), 3, (0, 255, 0), -1)
         #         cv2.imwrite("./output.jpg", img[..., ::-1])
-        #         xxx
         datasets = datasets.map(
             lambda *x: self.gener_task.build_maps(batch_size, x),
             num_parallel_calls=tf.data.experimental.AUTOTUNE)

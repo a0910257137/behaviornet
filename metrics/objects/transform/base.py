@@ -43,6 +43,32 @@ class Base:
             'lip_lnmk_57',
             'lip_lnmk_58',
         ]
+        self.lnmk_14 = [
+            'countour_lnmk_8',
+            'countour_lnmk_16',
+            'nose_lnmk_27',
+            'nose_lnmk_33',
+            'left_eye_lnmk_36',
+            'left_eye_lnmk_37',
+            'left_eye_lnmk_38',
+            'left_eye_lnmk_39',
+            'left_eye_lnmk_40',
+            'left_eye_lnmk_41',
+            'right_eye_lnmk_42',
+            'right_eye_lnmk_43',
+            'right_eye_lnmk_44',
+            'right_eye_lnmk_45',
+            'right_eye_lnmk_46',
+            'right_eye_lnmk_47',
+            'lip_lnmk_48',
+            'lip_lnmk_50',
+            'lip_lnmk_51',
+            'lip_lnmk_52',
+            'lip_lnmk_54',
+            'lip_lnmk_56',
+            'lip_lnmk_57',
+            'lip_lnmk_58',
+        ]
 
     def parse_lnmk(self, item):
         output = dict()

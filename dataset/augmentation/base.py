@@ -1,3 +1,4 @@
+from numpy.lib.twodim_base import eye
 import tensorflow as tf
 import numpy as np
 import cv2
@@ -7,6 +8,7 @@ from functools import partial
 from tensorpack.dataflow import *
 from albumentations import Compose, CoarseDropout, GridDropout
 from pprint import pprint
+import os
 
 
 class Base:
@@ -21,6 +23,11 @@ class Base:
                                 upper=1.4),
         }
         self.task = task
+        frontal_eye_lib_path = os.path.join(cv2.haarcascades,
+                                            'haarcascade_eye.xml')
+        self.aug_img = cv2.imread(
+            "/aidata/anders/objects/landmarks/aug_imgs/eye_glasses/h.png")
+        self.eye_cascade = cv2.CascadeClassifier(frontal_eye_lib_path)
 
     def color_aug(self, b_imgs, aug_chains):
         if not aug_chains or len(aug_chains) == 0:
@@ -106,14 +113,14 @@ class Base:
                     if random.random() < aug_prob:
                         img, coors, cates = self.random_paste(img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
+                elif tensorpack_aug == "OverlayingMask":
+                    if random.random() < aug_prob:
+                        img, coors = self.overlaying_mask(img, coors, theta)
                 elif tensorpack_aug == "WarpAffineTransform":
                     if random.random() < aug_prob:
                         img, coors, cates = self.warp_affine_transform(
                             img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
-                elif tensorpack_aug == "Overlaying":
-                    if random.random() < aug_prob:
-                        img, coors = self.overlaying_mask(img, coors, theta)
 
             tmp_imgs.append(img)
             # coors = coors[..., :2]
@@ -222,7 +229,7 @@ class Base:
         prob_0 = random.random()
         prob_1 = random.random()
         for kps, theta in zip(coors, thetas):
-            if -20. > theta or theta > 20.:
+            if -5. > theta or theta > 5.:
                 continue
             # return img, coors
             kps = kps[2:, :-1]
@@ -259,7 +266,6 @@ class Base:
             #     centre_y = int(round(centre_y))
             #     axis_major = int(round(axis_major))
             #     axis_minor = int(round(axis_minor))
-
             #     centre = (centre_x, centre_y)
             #     axes = (axis_major, axis_minor)
 

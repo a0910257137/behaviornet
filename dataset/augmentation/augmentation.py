@@ -27,18 +27,8 @@ class Augmentation(Base):
                 [1, self.img_resize_size[0], self.img_resize_size[1], 3])
             b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs,
                               filp_imgs)
-        if len(self.augments.color_chains) != 0:
-            aug_imgs = self.color_aug(b_imgs, self.augments.color_chains)
-            tmp_logic = tf.tile(
-                do_clc[:, None, None, None],
-                [1, self.img_resize_size[0], self.img_resize_size[1], 3])
-            b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, aug_imgs)
-
-        if len(self.augments.album_chains.keys()) != 0:
-            b_imgs = self.album_augs(self.augments.album_chains, b_imgs)
         #----------------------b_ccords will be changed in augmentations---------------------
         if len(self.augments.tensorpack_chains) != 0:
-
             b_imgs, b_coors = tf.py_function(
                 self.tensorpack_augs,
                 inp=[
@@ -46,6 +36,15 @@ class Augmentation(Base):
                     do_ten_pack, self.augments.tensorpack_chains
                 ],
                 Tout=[tf.uint8, tf.float32])
+        #----------------------b_ccords will be changed in augmentations---------------------
+        if len(self.augments.album_chains.keys()) != 0:
+            b_imgs = self.album_augs(self.augments.album_chains, b_imgs)
+        if len(self.augments.color_chains) != 0:
+            aug_imgs = self.color_aug(b_imgs, self.augments.color_chains)
+            tmp_logic = tf.tile(
+                do_clc[:, None, None, None],
+                [1, self.img_resize_size[0], self.img_resize_size[1], 3])
+            b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, aug_imgs)
         b_imgs = b_imgs / 255
         # for obj det
         if self.task == "obj_det":

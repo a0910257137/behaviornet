@@ -151,7 +151,7 @@ class HardNet(tf.keras.Model):
             first_ch = [48, 96]
             ch_list = [192, 256, 320, 480, 720, 1280]
             gr = [24, 24, 28, 36, 48, 256]
-            n_layers = [8, 16, 16, 16, 16, 4]
+            n_layers = [8, 16, 16, 16, 16, 8]
             downSamp = [1, 0, 1, 0, 1, 0]
             last_proj_ch = 256
 
@@ -232,21 +232,19 @@ class HardNet(tf.keras.Model):
                 ch = blk.get_out_ch
                 self._base.append(blk)
 
-        # self.spat_atten = SelfAttention(128, name='spatial')
-        # self.channel_atten = ChannelAttention(name='channel')
-        # self.conv_1x1 = ConvBlock(filters=128,
-        #                           kernel_size=1,
-        #                           strides=1,
-        #                           activation="relu",
-        #                           norm_method="bn")
+        self.spat_atten = SelfAttention(320, name='spatial')
+        self.channel_atten = ChannelAttention(name='channel')
+        self.conv_1x1 = ConvBlock(filters=320,
+                                  kernel_size=1,
+                                  strides=1,
+                                  activation="relu",
+                                  norm_method="bn")
         # hard code architecture 39/68 for skip connections
         # hardblk output will be the next fpn
         self.skip_layers = ["stage_4", "stage_3", "stage_2", "stage_1"]
         # self.merge_layers = [1, 3, 6, 9]
         # self.merge_stride = [16, 8, 4, 2]
         # self.merge_convs = []
-
-
         # for i in range(len(self.merge_layers)):
         #     self.merge_convs.append(
         #         ConvBlock(filters=128,
@@ -282,12 +280,13 @@ class HardNet(tf.keras.Model):
             #     z = self.merge_convs[k](x)
             #     merge_lists.append(z)
             #     k += 1
-            # if i == 10:
+            if i == 10:
+                spatial = self.spat_atten(inputs=x)
+                chenn = self.channel_atten(inputs=x)
+                x = self.conv_1x1(spatial + chenn)
             # mask = tf.ones_like(x[..., 0])
             # pos_encoding = self.pos_emb(mask)
-            # spatial = self.spat_atten(inputs=x)
-            # chenn = self.channel_atten(inputs=x)
-            # x = self.conv_1x1(spatial + chenn)
+
             if i in self._shortcut_layers:
                 skip_connections[self.skip_layers[j]] = x
                 j += 1

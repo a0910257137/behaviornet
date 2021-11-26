@@ -71,8 +71,8 @@ class Base:
             user_data_dict['eval'][idx] for idx in eval_non_match_idx
         ]
         self._extra_info = dict()
-        self._extra_info.update(
-            cost=self.cost_matrix[gt_match_idx, eval_match_idx])
+        self._extra_info.update(cost=self.cost_matrix[gt_match_idx,
+                                                      eval_match_idx])
 
     @property
     def matched(self):

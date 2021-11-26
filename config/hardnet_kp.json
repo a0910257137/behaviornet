@@ -1,14 +1,14 @@
 {
-    "train_batch_size": 96,
-    "test_batch_size": 96,
-    "epochs": 100,
+    "train_batch_size": 48,
+    "test_batch_size": 48,
+    "epochs": 500,
     "learn_rate": 0.00025,
-    "model_path": "/aidata/anders/objects/landmarks/LS3D-W/archive_model/FFHQ_LS3D-W",
+    "model_path": "/aidata/anders/objects/landmarks/300W/archive_model/exp_scratch_85",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/objects/landmarks/LS3D-W/archive_model/FFHQ_LS3D-W/logs/"
+        "log_dir": "/aidata/anders/objects/landmarks/300W/archive_model/exp_scratch_85/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -25,12 +25,12 @@
         "tasks": [
             {
                 "preprocess": "keypoint",
-                "num_lnmks":27,// landmark keypoints + 2 for tl and br
+                "num_lnmks":70,// landmark keypoints + 2 for tl and br
                 "read_img": true,
                 "branches":["keypoint"],
                 "category_path": "./config/face.txt",
-                "train_folder": "/home/anders/Downloads/LS3D-W/tf_records/train",
-                "test_folder": "/home/anders/Downloads/LS3D-W/tf_records/test"
+                "train_folder": "/home/anders/Downloads/300_W/tf_records_68/train",
+                "test_folder": "/home/anders/Downloads/300_W/tf_records_68/test"
             }
         ],
         "augments": {
@@ -40,7 +40,7 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": ["WarpAffineTransform"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["WarpAffineTransform", "OverlayingMask"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains": {
                 "cutout": {
                     "max_holes": 15,
@@ -80,7 +80,7 @@
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,
-            "d_model":512,
+            "d_model":2048,
             "pred_layer": {
                 "num_landmarks": 25
             }
