@@ -2,6 +2,8 @@ import tensorflow as tf
 import numpy as np
 import time
 
+from tensorflow.python.ops.gen_array_ops import shape
+
 from .utils import *
 from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
@@ -23,7 +25,7 @@ class GeneralTasks:
         self.features = {
             "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
             "origin_width": tf.io.FixedLenFeature([], dtype=tf.int64),
-            "b_theta": tf.io.FixedLenFeature([], dtype=tf.float32),
+            "b_theta": tf.io.FixedLenFeature([], dtype=tf.string),
             "b_images": tf.io.FixedLenFeature([], dtype=tf.string),
             "b_coords": tf.io.FixedLenFeature([], dtype=tf.string)
         }
@@ -46,8 +48,8 @@ class GeneralTasks:
             _multi_aug_funcs = Augmentation(self.config, self.img_resize_size,
                                             self.num_lnmks, self.batch_size,
                                             task)
-            b_imgs, b_coords, self.flip_probs = _multi_aug_funcs(
-                b_imgs, b_coords, b_origin_sizes, b_theta)
+            b_imgs, b_coords, b_thetas, self.flip_probs = _multi_aug_funcs(
+                b_imgs, b_coords, b_origin_sizes, down_ratios, b_theta)
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_objs_kps, b_cates = b_coords[..., :-1], b_coords[..., -1][..., 0]
             b_obj_sizes = self._obj_sizes(b_objs_kps, task)
@@ -77,6 +79,7 @@ class GeneralTasks:
                                          b_coords, self.config.num_landmarks)
 
                 targets['landmarks'] = b_coords
+                targets['euler_angles'] = b_thetas
 
         return tf.cast(b_imgs, dtype=tf.float32), targets
 
@@ -91,7 +94,6 @@ class GeneralTasks:
         elif task == "keypoint":
             #normalizer via image high and width for each y x
             down_ratios = img_down_ratio
-
         annos = tf.einsum('b n c d, b  d ->b n c d', annos, down_ratios)
         annos = tf.concat([annos, cates], axis=-1)
         return annos, down_ratios
@@ -213,5 +215,5 @@ class GeneralTasks:
         b_origin_sizes = tf.cast(b_origin_sizes, tf.int32)
         b_theta = None
         if task == "keypoint":
-            b_theta = tf.reshape(parse_vals['b_theta'], (-1, 1))
+            b_theta = tf.io.decode_raw(parse_vals['b_theta'], tf.float32)
         return b_coords, b_images, b_origin_sizes, b_theta

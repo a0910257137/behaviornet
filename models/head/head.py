@@ -19,16 +19,33 @@ class Head(tf.keras.Model):
             self.d_model = self.head_cfg.d_model
             # self.init_layer = tf.keras.initializers.HeNormal()
             self.init_layer = tf.keras.initializers.HeUniform()
-            self.conv_1x1 = ConvBlock(filters=self.d_model // 2,
-                                      kernel_size=1,
-                                      strides=1,
-                                      kernel_initializer=self.init_layer,
-                                      norm_method="bn",
-                                      activation="relu")
-
             self.num_lnmks = self.pred_config.num_landmarks
-
+            # self.euler_conv3x3 = ConvBlock(filters=self.d_model // 2,
+            #                                kernel_size=3,
+            #                                strides=1,
+            #                                conv_mode=conv_mode,
+            #                                kernel_initializer=self.init_layer,
+            #                                norm_method="bn",
+            #                                activation="relu")
+            # self.euler_angle_embed = tf.keras.models.Sequential([
+            #     tf.keras.layers.Dense(self.d_model,
+            #                           activation='relu',
+            #                           kernel_initializer=self.init_layer),
+            #     tf.keras.layers.Dense(self.d_model,
+            #                           activation='relu',
+            #                           kernel_initializer=self.init_layer),
+            #     tf.keras.layers.Dense(3,
+            #                           activation=None,
+            #                           kernel_initializer=self.init_layer)
+            # ])
             # (x1, y1, x2, y2)
+            self.lnmk_conv3x3 = ConvBlock(filters=self.d_model // 2,
+                                          kernel_size=3,
+                                          strides=1,
+                                          conv_mode=conv_mode,
+                                          kernel_initializer=self.init_layer,
+                                          norm_method="bn",
+                                          activation="relu")
             self.lnmk_embed = tf.keras.models.Sequential([
                 tf.keras.layers.Dense(self.d_model,
                                       activation='relu',
@@ -113,10 +130,15 @@ class Head(tf.keras.Model):
     def call(self, x):
         pred_branches = {}
         if self.task == "landmarks":
-            x = self.conv_1x1(x)
-            x = self.flatten_layer(x)
-            x = self.lnmk_embed(x)
-            pred_branches = {"landmarks": x}
+            lnmk_embeddings = self.lnmk_embed(
+                self.flatten_layer(self.lnmk_conv3x3(x)))
+            # euler_angle_embeddings = self.euler_angle_embed(
+            #     self.flatten_layer(self.euler_conv3x3(x)))
+            # pred_branches = {
+            #     "landmarks": lnmk_embeddings,
+            #     'euler_angles': euler_angle_embeddings
+            # }
+            pred_branches = {"landmarks": lnmk_embeddings}
 
         elif self.task == "heatmaps":
             embedding_tmp = []

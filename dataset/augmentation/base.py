@@ -65,8 +65,8 @@ class Base:
         b_imgs = tf.numpy_function(func=album_aug, inp=[b_imgs], Tout=tf.uint8)
         return b_imgs
 
-    def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, b_theta,
-                        max_obj_num, do_ten_pack, tensorpack_chains):
+    def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, down_ratios,
+                        b_theta, max_obj_num, do_ten_pack, tensorpack_chains):
         f'''
             Do random ratation, crop and resize by using "tensorpack" augmentation class.
                 https://github.com/tensorpack/tensorpack
@@ -76,21 +76,31 @@ class Base:
             4. cropping ratio is 0.8.
             5. resize back.
             return :  B, N, [tl, br], [y, x, c] [B, N, C, D]
-
-
         '''
         # preprocess for different task annos
         b_coors = np.asarray(b_coors).astype(np.float32)
         b_img_sizes = np.asarray(b_img_sizes).astype(np.int32)
         b_imgs = np.asarray(b_imgs).astype(np.uint8)
         b_theta = b_theta.numpy()
+        down_ratios = 1 / down_ratios.numpy()
         _, h, w, c = b_imgs.shape
         aug_prob = .5
         tmp_coors = []
         tmp_imgs = []
-        for img, coors, theta, is_do in zip(b_imgs, b_coors, b_theta,
-                                            do_ten_pack):
+        tmp_thetas = []
+        TRACKED_POINTS = [
+            19, 23, 24, 28, 29, 32, 35, 38, 45, 49, 50, 56, 59, 10
+        ]
+        for img, coors, theta, down_ratio, img_size, is_do in zip(
+                b_imgs, b_coors, b_theta, down_ratios, b_img_sizes,
+                do_ten_pack):
             if not is_do:
+
+                norm_annos = (coors[:1, TRACKED_POINTS, :2] *
+                              down_ratio) / img_size
+                norm_annos = np.reshape(norm_annos, (28))
+                pitch, yaw, roll = calculate_pitch_yaw_roll(norm_annos)
+                tmp_thetas.append([pitch, yaw, roll])
                 tmp_imgs.append(img)
                 tmp_coors.append(coors)
                 continue
@@ -122,6 +132,10 @@ class Base:
                             img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
 
+            norm_annos = (coors[:, TRACKED_POINTS, :2] * down_ratio) / img_size
+            norm_annos = np.reshape(norm_annos, (28))
+            pitch, yaw, roll = calculate_pitch_yaw_roll(norm_annos)
+            tmp_thetas.append([pitch, yaw, roll])
             tmp_imgs.append(img)
             # coors = coors[..., :2]
             # for coor in coors:
@@ -135,17 +149,16 @@ class Base:
             annos = coors[..., :2]
             annos = annos[..., ::-1]
             coors = np.concatenate([annos, coors[..., -1:]], axis=-1)
-
             n, c, d = coors.shape
             complement = np.empty([max_obj_num - n, c, d])
             complement.fill(np.inf)
             complement = complement.astype(np.float32)
             coors = np.concatenate([coors, complement], axis=0)
             tmp_coors.append(coors)
-        b_coors = np.stack(tmp_coors)
-
+        b_coors = np.stack(tmp_coors).astype(np.float32)
+        b_thetas = np.stack(tmp_thetas).astype(np.float32)
         b_imgs = np.stack(tmp_imgs)
-        return b_imgs, b_coors
+        return b_imgs, b_coors, b_thetas
 
     def crop_transform(self, img, coors, h, w):
         base_ratio = 0.7
@@ -222,15 +235,17 @@ class Base:
             return img, annos, cates
 
     def overlaying_mask(self, img, coors, thetas):
+
         r = random.randint(0, 224)
         g = random.randint(0, 224)
         b = random.randint(0, 224)
         rgb = [r, g, b]
         prob_0 = random.random()
         prob_1 = random.random()
-        for kps, theta in zip(coors, thetas):
-            if -5. > theta or theta > 5.:
-                continue
+        theta = thetas[0]
+        if -5. > theta or theta > 5.:
+            return img, coors
+        for kps in coors:
             # return img, coors
             kps = kps[2:, :-1]
             points = kps[1:16].tolist()
@@ -268,7 +283,6 @@ class Base:
             #     axis_minor = int(round(axis_minor))
             #     centre = (centre_x, centre_y)
             #     axes = (axis_major, axis_minor)
-
             #     img = cv2.ellipse(img,
             #                       centre,
             #                       axes,
@@ -419,6 +433,72 @@ class ResizeTransform(imgaug.Transform):
         coords[..., 0] = coords[..., 0] * (self.new_w * 1.0 / self.w)
         coords[..., 1] = coords[..., 1] * (self.new_h * 1.0 / self.h)
         return coords
+
+
+def calculate_pitch_yaw_roll(landmarks_2D,
+                             cam_w=256,
+                             cam_h=256,
+                             radians=False):
+    """ Return the the pitch  yaw and roll angles associated with the input image.
+    @param radians When True it returns the angle in radians, otherwise in degrees.
+    """
+
+    assert landmarks_2D is not None, 'landmarks_2D is None'
+
+    # Estimated camera matrix values.
+    c_x = cam_w / 2
+    c_y = cam_h / 2
+    f_x = c_x / np.tan(60 / 2 * np.pi / 180)
+    f_y = f_x
+    camera_matrix = np.float32([[f_x, 0.0, c_x], [0.0, f_y, c_y],
+                                [0.0, 0.0, 1.0]])
+    camera_distortion = np.float32([0.0, 0.0, 0.0, 0.0, 0.0])
+
+    # dlib (68 landmark) trached points
+    # TRACKED_POINTS = [17, 21, 22, 26, 36, 39, 42, 45, 31, 35, 48, 54, 57, 8]
+    # wflw(98 landmark) trached points
+    # TRACKED_POINTS = [33, 38, 50, 46, 60, 64, 68, 72, 55, 59, 76, 82, 85, 16]
+    # X-Y-Z with X pointing forward and Y on the left and Z up.
+    # The X-Y-Z coordinates used are like the standard coordinates of ROS (robotic operative system)
+    # OpenCV uses the reference usually used in computer vision:
+    # X points to the right, Y down, Z to the front
+    landmarks_3D = np.float32([
+        [6.825897, 6.760612, 4.402142],  # LEFT_EYEBROW_LEFT, 
+        [1.330353, 7.122144, 6.903745],  # LEFT_EYEBROW_RIGHT, 
+        [-1.330353, 7.122144, 6.903745],  # RIGHT_EYEBROW_LEFT,
+        [-6.825897, 6.760612, 4.402142],  # RIGHT_EYEBROW_RIGHT,
+        [5.311432, 5.485328, 3.987654],  # LEFT_EYE_LEFT,
+        [1.789930, 5.393625, 4.413414],  # LEFT_EYE_RIGHT,
+        [-1.789930, 5.393625, 4.413414],  # RIGHT_EYE_LEFT,
+        [-5.311432, 5.485328, 3.987654],  # RIGHT_EYE_RIGHT,
+        [-2.005628, 1.409845, 6.165652],  # NOSE_LEFT,
+        [-2.005628, 1.409845, 6.165652],  # NOSE_RIGHT,
+        [2.774015, -2.080775, 5.048531],  # MOUTH_LEFT,
+        [-2.774015, -2.080775, 5.048531],  # MOUTH_RIGHT,
+        [0.000000, -3.116408, 6.097667],  # LOWER_LIP,
+        [0.000000, -7.415691, 4.070434],  # CHIN
+    ])
+    landmarks_2D = np.asarray(landmarks_2D, dtype=np.float32).reshape(-1, 2)
+
+    # Applying the PnP solver to find the 3D pose of the head from the 2D position of the landmarks.
+    # retval - bool
+    # rvec - Output rotation vector that, together with tvec, brings points from the world coordinate system to the camera coordinate system.
+    # tvec - Output translation vector. It is the position of the world origin (SELLION) in camera co-ords
+
+    _, rvec, tvec = cv2.solvePnP(landmarks_3D, landmarks_2D, camera_matrix,
+                                 camera_distortion)
+    # Get as input the rotational vector, Return a rotational matrix
+
+    # const double PI = 3.141592653;
+    # double thetaz = atan2(r21, r11) / PI * 180;
+    # double thetay = atan2(-1 * r31, sqrt(r32*r32 + r33*r33)) / PI * 180;
+    # double thetax = atan2(r32, r33) / PI * 180;
+
+    rmat, _ = cv2.Rodrigues(rvec)
+    pose_mat = cv2.hconcat((rmat, tvec))
+    _, _, _, _, _, _, euler_angles = cv2.decomposeProjectionMatrix(pose_mat)
+    return map(lambda k: k[0],
+               euler_angles)  # euler_angles contain (pitch, yaw, roll)
 
 
 #TODO: add features: mosaic

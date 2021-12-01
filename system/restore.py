@@ -29,15 +29,24 @@ class Restore:
         logger.info(f'Train from restoration')
         logger.info(f'Initialize for building')
         model.model(tf.constant(0., shape=(1, 256, 256, 3)), training=False)
+
         logger.info(f'Excluded {excluded_layers}'.format(
             excluded_layers=excluded_layers))
         for key in restore_keys:
             try:
                 if key == 'backbone':
-                    load_weights = restored_model.backbone.get_layer(
-                        'hard_net').get_weights()
-                    model.model.backbone.get_layer('hard_net').set_weights(
-                        load_weights)
+                    # load_weights = restored_model.backbone.get_layer(
+                    #     'hard_net').get_weights()
+                    # model.model.backbone.get_layer('hard_net').set_weights(
+                    #     load_weights)
+                    backbone = model.model.backbone.get_layer('hard_net')
+                    backbone_layers = self.flatten_model(backbone)[:-3]
+                    res_backbone = restored_model.backbone.get_layer(
+                        'hard_net')
+                    res_backbone_layers = self.flatten_model(res_backbone)
+                    for backbone, res_backbone in zip(backbone_layers,
+                                                      res_backbone_layers):
+                        backbone.set_weights(res_backbone.get_weights())
                 elif excluded_layers is not None and key in excluded_layers:
                     continue
                 else:

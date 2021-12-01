@@ -36,6 +36,7 @@ class Network(tf.keras.Model):
         else:
             trainable_vars = self.model.trainable_variables
             grads = tape.gradient(loss['total'], trainable_vars)
+
             self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         return loss

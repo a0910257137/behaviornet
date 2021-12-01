@@ -21,12 +21,21 @@ class CenterODLoss(LossBase):
 
         with tf.name_scope("losses_collections"):
             if "landmarks" == self.loss_cfg.type:
-                losses = {k: None for k in self.keys}
+                # losses = {k: None for k in self.keys}
+                losses = {}
                 pred_landmarks = logits["landmarks"]
+                # pred_euler_angles = logits['euler_angles']
                 tar_landmarks = targets["landmarks"]
+                # tar_euler_angles = targets["euler_angles"]
                 loss = lnmk_loss(pred_landmarks, tar_landmarks, batch,
                                  self.num_lnmk, self.config.max_obj_num)
-                losses["landmarks"] = loss
+                # weighted_loss, loss = PDFL_loss(pred_landmarks, tar_landmarks,
+                #                                 pred_euler_angles,
+                #                                 tar_euler_angles, batch,
+                #                                 self.num_lnmk,
+                #                                 self.config.max_obj_num)
+                # losses["weighted_lnmks"] = weighted_loss
+                losses["lnmks"] = loss
                 losses["total"] = loss
 
             elif "center_od" == self.loss_cfg.type:

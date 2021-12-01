@@ -522,7 +522,13 @@ def infonce(b_idxs, b_kp_hms, batch_size, max_obj_num, tau=0.2):
         return loss
 
 
-def lnmk_loss(pred, tars, batch_size, num_lnmk, max_obj_num, w=10.0, epsilon=2.0):
+def lnmk_loss(pred,
+              tars,
+              batch_size,
+              num_lnmk,
+              max_obj_num,
+              w=10.0,
+              epsilon=2.0):
     """
     Arguments:
         landmarks, labels: float tensors with shape [batch_size, num_landmarks, 2].
@@ -530,7 +536,6 @@ def lnmk_loss(pred, tars, batch_size, num_lnmk, max_obj_num, w=10.0, epsilon=2.0
     Returns:
         a float tensor with shape [].
     """
-    sigma = 1
     with tf.name_scope('wing_loss'):
         pred = tf.reshape(pred, [-1, num_lnmk, 2])
         tars = tf.reshape(tars, [batch_size, max_obj_num, num_lnmk, 2])
@@ -544,4 +549,30 @@ def lnmk_loss(pred, tars, batch_size, num_lnmk, max_obj_num, w=10.0, epsilon=2.0
                           w * tf.math.log(1.0 + absolute_x / epsilon),
                           absolute_x - c)
         loss = tf.reduce_mean(tf.reduce_sum(losses, axis=[1, 2]), axis=0)
+        return loss
+
+
+def PDFL_loss(
+    pred_lnmks,
+    tar_lnmks,
+    pred_euler_amgles,
+    tar_euler_angles,
+    batch_size,
+    num_lnmk,
+    max_obj_num,
+):
+    with tf.name_scope('PDFL_loss'):
+        weight_angle = tf.math.reduce_sum(
+            1 - tf.math.cos(pred_euler_amgles - tar_euler_angles), axis=1)
+
+        pred_lnmks = tf.reshape(pred_lnmks, [-1, num_lnmk, 2])
+        tar_lnmks = tf.reshape(tar_lnmks,
+                               [batch_size, max_obj_num, num_lnmk, 2])
+        valid_mask = tf.math.reduce_all(tf.math.is_finite(tar_lnmks[..., 0]),
+                                        axis=-1)
+        tar_lnmks = tar_lnmks[valid_mask]
+        l2_distant = tf.math.reduce_sum(
+            (tar_lnmks - pred_lnmks) * (tar_lnmks - pred_lnmks), axis=[1, 2])
+        loss = tf.math.reduce_mean(weight_angle *
+                                   l2_distant), tf.math.reduce_mean(l2_distant)
         return loss

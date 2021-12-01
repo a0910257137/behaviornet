@@ -16,7 +16,7 @@ class Augmentation(Base):
         self.task = task
         self.num_lnmks = num_lnmks
 
-    def __call__(self, b_imgs, b_coors, b_origin_sizes, b_theta):
+    def __call__(self, b_imgs, b_coors, b_origin_sizes, down_ratios, b_theta):
         b_coors = tf.cast(b_coors, tf.float32)
         #----------------------augmentations only influce image---------------------
         do_clc, flip_probs, do_ten_pack = self.random_param()
@@ -29,13 +29,14 @@ class Augmentation(Base):
                               filp_imgs)
         #----------------------b_ccords will be changed in augmentations---------------------
         if len(self.augments.tensorpack_chains) != 0:
-            b_imgs, b_coors = tf.py_function(
+            b_imgs, b_coors, b_thetas = tf.py_function(
                 self.tensorpack_augs,
                 inp=[
-                    b_coors, b_imgs, b_origin_sizes, b_theta, self.max_obj_num,
-                    do_ten_pack, self.augments.tensorpack_chains
+                    b_coors, b_imgs, b_origin_sizes, down_ratios, b_theta,
+                    self.max_obj_num, do_ten_pack,
+                    self.augments.tensorpack_chains
                 ],
-                Tout=[tf.uint8, tf.float32])
+                Tout=[tf.uint8, tf.float32, tf.float32])
         #----------------------b_ccords will be changed in augmentations---------------------
         if len(self.augments.album_chains.keys()) != 0:
             b_imgs = self.album_augs(self.augments.album_chains, b_imgs)
@@ -56,7 +57,7 @@ class Augmentation(Base):
             self.batch_size, self.img_resize_size[0], self.img_resize_size[1],
             3
         ])
-        return b_imgs, b_coors, flip_probs
+        return b_imgs, b_coors, b_thetas, flip_probs
 
     def random_param(self):
         col_thre = 0.5 if len(self.augments.color_chains) else 0.0

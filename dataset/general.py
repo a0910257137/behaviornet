@@ -49,7 +49,7 @@ class GeneralDataset:
             datasets.append(ds)
         datasets = tf.data.TFRecordDataset.zip(tuple(datasets))
         if self.config.shuffle:
-            datasets = datasets.shuffle(buffer_size=10000)
+            datasets = datasets.shuffle(buffer_size=2000)
         options = tf.data.Options()
         options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
         datasets = datasets.with_options(options)
@@ -68,6 +68,7 @@ class GeneralDataset:
         #         for kp in kps:
         #             img = cv2.circle(img, tuple(kp), 3, (0, 255, 0), -1)
         #         cv2.imwrite("./output.jpg", img[..., ::-1])
+        #         xxxx
         datasets = datasets.map(
             lambda *x: self.gener_task.build_maps(batch_size, x),
             num_parallel_calls=tf.data.experimental.AUTOTUNE)
