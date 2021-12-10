@@ -1,17 +1,26 @@
+from numpy.core.fromnumeric import shape
 import tensorflow as tf
 import numpy as np
 import time
-
-from tensorflow.python.ops.gen_array_ops import shape
-
 from .utils import *
 from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
 from .augmentation.augmentation import Augmentation
+from glob import glob
+import os
+import random
 
 
 class GeneralTasks:
     def __init__(self, config):
+        # def _parse_video_pool(x):
+        #     parse_vals = tf.io.parse_example(x, video_features)
+        #     b_imgs = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)
+        #     b_imgs = tf.reshape(b_imgs,
+        #                         [-1, self.map_height, self.map_width, 3])
+
+        #     return b_imgs
+
         self.config = config
         self.task_configs = config['tasks']
         self.model_name = self.config.model_name
@@ -22,6 +31,17 @@ class GeneralTasks:
         self.coors_down_ratio = tf.cast(self.config.coors_down_ratio,
                                         dtype=tf.float32)
         self.max_obj_num = self.config.max_obj_num
+
+        # video_pool = glob(os.path.join(self.config.video_folder,
+        #                                '*.tfrecords'))
+        # video_pool = tf.data.TFRecordDataset(video_pool)
+        # video_pool = video_pool.batch(3, drop_remainder=True)
+        # video_features = {
+        #     "b_images": tf.io.FixedLenFeature([], dtype=tf.string)
+        # }
+        # b_videos = map(lambda x: _parse_video_pool(x), video_pool)
+        # b_videos = np.asarray(list(b_videos))
+        # self.b_videos = tf.cast(b_videos / 255, tf.float32)
         self.features = {
             "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
             "origin_width": tf.io.FixedLenFeature([], dtype=tf.int64),
@@ -78,9 +98,16 @@ class GeneralTasks:
                 b_coords = gen_landmarks(self.batch_size, self.max_obj_num,
                                          b_coords, self.config.num_landmarks)
 
-                targets['landmarks'] = b_coords
-                targets['euler_angles'] = b_thetas
+                # idx = random.randint(0, 4)
+                # idx = tf.random.uniform((idx, 1),
+                #                         minval=0,
+                #                         maxval=156,
+                #                         dtype=tf.dtypes.int32)
+                # b_videos = tf.gather_nd(self.b_videos, idx)
 
+                targets['landmarks'] = b_coords
+                # targets["b_videos"] = b_videos
+                targets['euler_angles'] = b_thetas
         return tf.cast(b_imgs, dtype=tf.float32), targets
 
     def _resize_coors(self, annos, original_sizes, resize_size,
@@ -93,7 +120,8 @@ class GeneralTasks:
                                   tf.float32)
         elif task == "keypoint":
             #normalizer via image high and width for each y x
-            down_ratios = img_down_ratio
+            down_ratios = tf.constant(1., shape=(self.batch_size, 2))
+
         annos = tf.einsum('b n c d, b  d ->b n c d', annos, down_ratios)
         annos = tf.concat([annos, cates], axis=-1)
         return annos, down_ratios
@@ -204,8 +232,8 @@ class GeneralTasks:
 
         parse_vals = tf.io.parse_example(infos, self.features)
         b_images = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)
-        b_coords = tf.io.decode_raw(parse_vals['b_coords'], tf.float32)
 
+        b_coords = tf.io.decode_raw(parse_vals['b_coords'], tf.float32)
         b_images = tf.reshape(b_images,
                               [-1, self.map_height, self.map_width, 3])
         b_coords = tf.reshape(b_coords, anno_shape)

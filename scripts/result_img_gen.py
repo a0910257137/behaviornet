@@ -7,6 +7,7 @@ import numpy as np
 from pprint import pprint
 from pathlib import Path
 from draw import *
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.io import load_text
 from behavior_predictor.inference import BehaviorPredictor

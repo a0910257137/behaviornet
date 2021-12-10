@@ -1,14 +1,14 @@
 {
-    "train_batch_size": 160,
-    "test_batch_size": 160,
-    "epochs": 200,
-    "learn_rate": 0.00025,
-    "model_path": "/aidata/anders/objects/landmarks/WFLW/archive_model/attention_modules",
+    "train_batch_size": 128,
+    "test_batch_size": 128,
+    "epochs": 150,
+    "learn_rate": 0.0001,
+    "model_path": "/aidata/anders/objects/landmarks/FFHQ/archive_model/padding_train",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/objects/landmarks/WFLW/archive_model/attention_modules/logs/"
+        "log_dir": "/aidata/anders/objects/landmarks/FFHQ/archive_model/padding_train/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -22,6 +22,7 @@
             1.0
         ], //[height, width]
         "shuffle": true,
+        "video_folder":"/aidata/anders/objects/landmarks/demo_video/test/video_pool",
         "tasks": [
             {
                 "preprocess": "keypoint",
@@ -29,8 +30,9 @@
                 "read_img": true,
                 "branches":["keypoint"],
                 "category_path": "./config/face.txt",
-                "train_folder": "/home/anders/Downloads/WFLW/tf_records_68/train",
-                "test_folder": "/home/anders/Downloads/WFLW/tf_records_68/test"
+                
+                "train_folder": "/home/anders/Downloads/ffhq/tf_records_68/train",
+                "test_folder": "/home/anders/Downloads/ffhq/tf_records_68/test"
             }
         ],
         "augments": {
@@ -40,7 +42,7 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": ["OverlayingMask", "WarpAffineTransform"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["OverlayingMask",  "CropTransform", "RandomPaste", "WarpAffineTransform"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains": {
                 "cutout": {
                     "max_holes": 15,
@@ -59,7 +61,7 @@
         "model_name": "obj_det",
         "frozen_backbone": false,
         "multi_optimizer": false,
-        "optimizer": "adam",
+        "optimizer": "sgd",
         "backbone": {
             "module_name": "hardnet",
             "optimizer": "sgd",

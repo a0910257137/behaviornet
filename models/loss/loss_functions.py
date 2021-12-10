@@ -552,15 +552,8 @@ def lnmk_loss(pred,
         return loss
 
 
-def PDFL_loss(
-    pred_lnmks,
-    tar_lnmks,
-    pred_euler_amgles,
-    tar_euler_angles,
-    batch_size,
-    num_lnmk,
-    max_obj_num,
-):
+def PDFL_loss(pred_lnmks, tar_lnmks, pred_euler_amgles, tar_euler_angles,
+              batch_size, num_lnmk, max_obj_num):
     with tf.name_scope('PDFL_loss'):
         weight_angle = tf.math.reduce_sum(
             1 - tf.math.cos(pred_euler_amgles - tar_euler_angles), axis=1)
@@ -571,8 +564,40 @@ def PDFL_loss(
         valid_mask = tf.math.reduce_all(tf.math.is_finite(tar_lnmks[..., 0]),
                                         axis=-1)
         tar_lnmks = tar_lnmks[valid_mask]
+
         l2_distant = tf.math.reduce_sum(
             (tar_lnmks - pred_lnmks) * (tar_lnmks - pred_lnmks), axis=[1, 2])
         loss = tf.math.reduce_mean(weight_angle *
                                    l2_distant), tf.math.reduce_mean(l2_distant)
+        return loss
+
+
+def PDFL_wing_loss(pred_lnmks, tar_lnmks, pred_euler_amgles, tar_euler_angles,
+                   batch_size, num_lnmk, max_obj_num):
+    with tf.name_scope('PDFL_wing_loss'):
+        w = 10.0
+        epsilon = 2.0
+        weight_angle = tf.math.reduce_sum(
+            1 - tf.math.cos(pred_euler_amgles - tar_euler_angles), axis=1)
+
+        pred_lnmks = tf.reshape(pred_lnmks, [-1, num_lnmk, 2])
+        tar_lnmks = tf.reshape(tar_lnmks,
+                               [batch_size, max_obj_num, num_lnmk, 2])
+        valid_mask = tf.math.reduce_all(tf.math.is_finite(tar_lnmks[..., 0]),
+                                        axis=-1)
+        tar_lnmks = tar_lnmks[valid_mask]
+        x = pred_lnmks - tar_lnmks
+        c = w * (1.0 - tf.math.log(1.0 + w / epsilon))
+        absolute_x = tf.math.abs(x)
+        wing_distance = tf.where(tf.greater(w, absolute_x),
+                                 w * tf.math.log(1.0 + absolute_x / epsilon),
+                                 absolute_x - c)
+
+        # l2_distant = tf.math.reduce_sum(
+        #     (tar_lnmks - pred_lnmks) * (tar_lnmks - pred_lnmks), axis=[1, 2])
+        wing_distance = tf.reduce_sum(wing_distance, axis=[1, 2])
+
+        loss = tf.math.reduce_mean(
+            weight_angle * wing_distance), tf.math.reduce_mean(wing_distance)
+
         return loss

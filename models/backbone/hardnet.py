@@ -1,8 +1,8 @@
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock
 import tensorflow as tf
-from ..utils import ChannelAttention, SelfAttention, PositionEmbeddingSine
-from pprint import PrettyPrinter, pprint
+from ..utils import ChannelAttention, SelfAttention, PositionEmbeddingSine, ASPP
+from pprint import pprint
 
 conv_mode = 'sp_conv2d'
 
@@ -231,32 +231,14 @@ class HardNet(tf.keras.Model):
                                 name='down_last_hard_blk{}'.format(i + 1))
                 ch = blk.get_out_ch
                 self._base.append(blk)
-
-        self.spat_atten = SelfAttention(128, name='spatial')
-        self.channel_atten = ChannelAttention(name='channel')
-        self.conv_1x1 = ConvBlock(filters=128,
-                                  kernel_size=1,
-                                  strides=1,
-                                  activation="relu",
-                                  norm_method="bn")
         # hard code architecture 39/68 for skip connections
         # hardblk output will be the next fpn
         self.skip_layers = ["stage_4", "stage_3", "stage_2", "stage_1"]
+
         if arch == 39:
             self._shortcut_layers[1:3] = [3, 6]
         elif arch == 68:
             self._shortcut_layers[1:3] = [3, 8]
-
-    # as public function
-    def channel_shuffle(self, x, groups):
-        _, height, width, num_channels = x.get_shape().as_list()
-        channels_per_group = num_channels // groups
-        # reshape
-        x = tf.reshape(x, [-1, height, width, groups, channels_per_group])
-        x = tf.transpose(x, [0, 1, 2, 4, 3])
-        # flatten
-        x = tf.reshape(x, [-1, height, width, num_channels])
-        return x
 
     def call(self, x):
         skip_connections = {}
@@ -264,12 +246,7 @@ class HardNet(tf.keras.Model):
         for i in range(len(self._base)):
             x = self._base[i](x)
             if i == 10:
-                spatial = self.spat_atten(inputs=x)
-                chenn = self.channel_atten(inputs=x)
-                x = self.conv_1x1(spatial + chenn)
-            # mask = tf.ones_like(x[..., 0])
-            # pos_encoding = self.pos_emb(mask)
-
+                skip_connections["auxiliary"] = x
             if i in self._shortcut_layers:
                 skip_connections[self.skip_layers[j]] = x
                 j += 1

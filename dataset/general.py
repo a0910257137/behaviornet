@@ -34,22 +34,16 @@ class GeneralDataset:
             if is_train:
                 filenames = glob(os.path.join(task.train_folder,
                                               '*.tfrecords'))
-                step_per_epoch = math.ceil(
-                    len(filenames)) / (mirrored_strategy.num_replicas_in_sync *
-                                       self.train_batch_size)
                 ds = tf.data.TFRecordDataset(filenames,
                                              num_parallel_reads=threads)
             else:
                 filenames = glob(os.path.join(task.test_folder, '*.tfrecords'))
-                step_per_epoch = math.ceil(
-                    len(filenames) / mirrored_strategy.num_replicas_in_sync *
-                    self.test_batch_size)
                 ds = tf.data.TFRecordDataset(filenames,
                                              num_parallel_reads=threads)
             datasets.append(ds)
         datasets = tf.data.TFRecordDataset.zip(tuple(datasets))
         if self.config.shuffle:
-            datasets = datasets.shuffle(buffer_size=2000)
+            datasets = datasets.shuffle(buffer_size=10000)
         options = tf.data.Options()
         options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
         datasets = datasets.with_options(options)
@@ -59,6 +53,10 @@ class GeneralDataset:
         datasets = datasets.batch(batch_size, drop_remainder=True)
         # for ds in datasets:
         #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
+        #     # b_videos = np.asarray(targets["b_videos"].numpy()) * 255
+        #     # for i, img in enumerate(b_videos):
+        #     #     print(img.shape)
+        #     #     cv2.imwrite("image_{}.jpg".format(str(i)), img)
         #     landmarks = targets["landmarks"]
         #     b_img = b_img.numpy() * 255.
         #     landmarks = landmarks.numpy()
@@ -73,7 +71,7 @@ class GeneralDataset:
             lambda *x: self.gener_task.build_maps(batch_size, x),
             num_parallel_calls=tf.data.experimental.AUTOTUNE)
         datasets = datasets.prefetch(tf.data.experimental.AUTOTUNE)
-        return datasets, step_per_epoch
+        return datasets
 
     def get_datasets(self, mirrored_strategy):
         return {

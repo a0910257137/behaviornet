@@ -34,8 +34,8 @@ class Demo:
         self.obj_pred = BehaviorPredictor(self.obj_cfg['predictor'])
         self.lnmk_pred = BehaviorPredictor(self.lnmk_cfg['predictor'])
         fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-        self.video_maker = cv2.VideoWriter('demo.avi', fourcc, 5.0,
-                                           (1280, 720))
+        self.video_maker = cv2.VideoWriter('demo.avi', fourcc, 10.0,
+                                           (1920, 1080))
 
     def __call__(self):
         img_path_list = sorted(list(glob(os.path.join(self.img_root,
@@ -54,14 +54,20 @@ class Demo:
     def crop_face(self, imgs, rets):
         tmp_imgs, tmp_origin_shape = [], []
         tmp_tls = []
-        for img, ret in zip(imgs, rets):
-            valid_mask = tf.math.reduce_all(tf.math.is_finite(ret), axis=-1)
-            ret = ret[valid_mask]
-            ret = ret.numpy()
-            for obj_pred in ret:
-                tl = obj_pred[:2].astype(int)
-                br = obj_pred[2:4].astype(int)
+        box2ds = rets[:, 0, :4]
+        box2d_std = tf.math.reduce_std(box2ds, axis=0)
+        valid_std = tf.math.reduce_all(box2d_std < 10).numpy()
+        # for stabal bounding boxes
+        if valid_std:
+            box2d_mean = tf.math.reduce_mean(box2ds, axis=0)
+            box2ds = box2ds.numpy()
+            box2d_mean = box2d_mean.numpy()
+            box2ds = (box2ds + box2d_mean) / 2
+            for img, box2d in zip(imgs, box2ds):
+                tl = box2d[:2].astype(np.int32)
+                br = box2d[2:4].astype(np.int32)
                 crop_img = copy.deepcopy(img[tl[0]:br[0], tl[1]:br[1], :])
+                lnmk_tl = tl
                 h, w, _ = crop_img.shape
                 if h == 0 or w == 0:
                     continue
@@ -69,20 +75,57 @@ class Demo:
                                     (0, 255, 0), 3)
                 tmp_origin_shape.append((h, w))
                 tmp_imgs.append(crop_img)
-                tmp_tls.append(tl)
+                tmp_tls.append(lnmk_tl)
+        else:
+            for img, ret in zip(imgs, rets):
+                valid_mask = tf.math.reduce_all(tf.math.is_finite(ret),
+                                                axis=-1)
+                ret = ret[valid_mask]
+                ret = ret.numpy()
+                for obj_pred in ret:
+                    tl = obj_pred[:2]
+                    br = obj_pred[2:4]
+                    crop_img = copy.deepcopy(img[int(tl[0]):int(br[0]),
+                                                 int(tl[1]):int(br[1]), :])
+                    lnmk_tl = tl
+                    h, w, _ = crop_img.shape
+                    if h == 0 or w == 0:
+                        continue
+
+                    tl = tl.astype(int)
+                    br = br.astype(int)
+                    img = cv2.rectangle(img, tuple(tl[::-1]), tuple(br[::-1]),
+                                        (0, 255, 0), 3)
+                    tmp_origin_shape.append((h, w))
+
+                    tmp_imgs.append(crop_img)
+                    tmp_tls.append(lnmk_tl)
         if len(tmp_imgs) != 0:
             pred_lnmks = self.lnmk_pred.pred(tmp_imgs, tmp_origin_shape)
-            tmp_origin_shape = np.asarray(tmp_origin_shape)
-            pred_lnmks = pred_lnmks.numpy()
-            # pred_lnmks = np.einsum('b d c, b c ->b d c', pred_lnmks,
-            #                        tmp_origin_shape)
-            pred_lnmks = pred_lnmks.astype(int)
-            for img, tls, lnmks in zip(imgs, tmp_tls, pred_lnmks):
-                shift_lnmks = lnmks + tls
-                for shift_lnmk in shift_lnmks:
-                    lnmk = shift_lnmk[::-1]
-                    img = cv2.circle(img, tuple(lnmk), 3, (0, 255, 0), -1)
-                self.video_maker.write(img)
+            lnmk_std = tf.math.reduce_std(pred_lnmks, axis=0)
+            valid_std = tf.math.reduce_all(lnmk_std < 10).numpy()
+            if valid_std:
+                lnmk_mean = tf.math.reduce_mean(pred_lnmks, axis=0)
+                lnmks = (lnmk_mean + pred_lnmks) / 2
+                lnmks = lnmks.numpy()
+                # lnmk_mean = lnmk_mean.astype(int)
+                for img, tls, lnmk in zip(imgs, tmp_tls, lnmks):
+                    shift_lnmks = lnmk + tls
+                    shift_lnmks = shift_lnmks.astype(int)
+                    for shift_lnmk in shift_lnmks:
+                        lnmk = shift_lnmk[::-1]
+                        img = cv2.circle(img, tuple(lnmk), 10, (0, 255, 0), -1)
+                    self.video_maker.write(img)
+
+            else:
+                pred_lnmks = pred_lnmks.numpy()
+                for img, tls, lnmks in zip(imgs, tmp_tls, pred_lnmks):
+                    shift_lnmks = lnmks + tls
+                    shift_lnmks = shift_lnmks.astype(int)
+                    for shift_lnmk in shift_lnmks:
+                        lnmk = shift_lnmk[::-1]
+                        img = cv2.circle(img, tuple(lnmk), 10, (0, 255, 0), -1)
+                    self.video_maker.write(img)
 
     def split_batchs(self, elems, idx):
         imgs = []
@@ -99,6 +142,6 @@ path = './config/hardnet_pred.json'
 obj_config = load_config(path)
 path = './config/hardnet_pred_kp.json'
 lnmk_config = load_config(path)
-img_root = '/aidata/anders/objects/labels/images'
-demo = Demo(obj_config, lnmk_config, img_root, 1)
+img_root = '/aidata/anders/objects/landmarks/demo_video/office3'
+demo = Demo(obj_config, lnmk_config, img_root, 5)
 demo()

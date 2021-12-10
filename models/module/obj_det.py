@@ -18,5 +18,5 @@ class ObjDet(tf.keras.Model):
             pass
         else:
             x = self.neck([x, skip_connections])
-        preds = self.head(x)
+        preds = self.head([x, skip_connections])
         return preds

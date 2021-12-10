@@ -270,51 +270,84 @@ class FusedMBConvBlock(MBConvBlock):
         return x
 
 
-def aspp_layer(data_in, out_dims, is_train):
-    with tf.variable_scope('aspp_layer'):
-        # conv1
-
-        out_1 = conv_1(data_in, filters=out_dims, name='conv1')
-        out_1 = tf.layers.batch_normalization(out_1, training=is_train)
+class ASPP(tf.keras.layers.Layer):
+    def __init__(self, out_dims, **kwargs):
+        super().__init__(**kwargs)
+        conv_mode = 'sp_conv2d'
+        self.conv_1 = ConvBlock(out_dims,
+                                kernel_size=1,
+                                strides=1,
+                                use_bias=False,
+                                norm_method="bn",
+                                activation=None,
+                                name="aspp_conv_1",
+                                conv_mode=conv_mode)
         # dilate conv6
-        aout_6 = tf.layers.conv2d(data_in,
-                                  filters=out_dims,
-                                  kernel_size=3,
-                                  dilation_rate=6,
-                                  activation=tf.nn.relu6,
-                                  padding='same')
-        aout_6 = tf.layers.batch_normalization(aout_6, training=is_train)
-
+        self.aout_6 = ConvBlock(out_dims,
+                                kernel_size=3,
+                                strides=1,
+                                dilation_rate=2,
+                                use_bias=False,
+                                norm_method="bn",
+                                activation="relu",
+                                name="aspp_aout_6",
+                                conv_mode=conv_mode)
         # dilate conv12
-        aout_12 = tf.layers.conv2d(data_in,
-                                   filters=out_dims,
-                                   kernel_size=3,
-                                   dilation_rate=12,
-                                   activation=tf.nn.relu6,
-                                   padding='same')
-        aout_12 = tf.layers.batch_normalization(aout_12, training=is_train)
-
+        self.aout_12 = ConvBlock(out_dims,
+                                 kernel_size=3,
+                                 strides=1,
+                                 dilation_rate=4,
+                                 use_bias=False,
+                                 norm_method="bn",
+                                 activation="relu",
+                                 name="aspp_aout_12",
+                                 conv_mode=conv_mode)
         # dilate conv18
-        aout_18 = tf.layers.conv2d(data_in,
-                                   filters=out_dims,
-                                   kernel_size=3,
-                                   dilation_rate=18,
-                                   activation=tf.nn.relu6,
-                                   padding='same')
-        aout_18 = tf.layers.batch_normalization(aout_18, training=is_train)
+        self.aout_18 = ConvBlock(out_dims,
+                                 kernel_size=3,
+                                 strides=1,
+                                 dilation_rate=8,
+                                 use_bias=False,
+                                 norm_method="bn",
+                                 activation="relu",
+                                 name="aspp_aout_18",
+                                 conv_mode=conv_mode)
 
-        # img pooling
-        img_pool = tf.reduce_mean(data_in, [1, 2],
-                                  name='global_average_pooling',
-                                  keepdims=True)
-        img_pool = conv_1(img_pool, filters=out_dims, name='gap_conv_1')
-        img_pool = tf.image.resize_bilinear(img_pool,
-                                            tf.shape(data_in)[1:3],
-                                            name='up_sampling')
-        img_pool = tf.layers.batch_normalization(img_pool, training=is_train)
-        concat_list = [out_1, aout_6, aout_12, aout_18, img_pool]
+        self.img_pool_conv = ConvBlock(filters=out_dims,
+                                       kernel_size=1,
+                                       strides=1,
+                                       use_bias=False,
+                                       name='gap_conv_1')
+        self.out_conv = ConvBlock(filters=out_dims,
+                                  kernel_size=1,
+                                  strides=1,
+                                  use_bias=False,
+                                  name='out_conv1')
+        self.bn = tf.keras.layers.BatchNormalization()
 
-        aout = tf.concat(concat_list, axis=-1)
-        out = conv_1(aout, filters=out_dims, name='out_conv1')
-        out = tf.layers.batch_normalization(out, training=is_train)
-        return out
+    def call(self, x):
+        with tf.name_scope('aspp_layer'):
+            _, h, w, _ = x.get_shape().as_list()
+            out_1 = self.conv_1(x)
+            # dilate conv6
+            aout_6 = self.aout_6(x)
+            # dilate conv12
+            aout_12 = self.aout_12(x)
+            # dilate conv18
+            aout_18 = self.aout_18(x)
+
+            # img pooling
+            img_pool = tf.math.reduce_mean(x, [1, 2],
+                                           name='global_average_pooling',
+                                           keepdims=True)
+            img_pool = self.img_pool_conv(img_pool)
+            img_pool = tf.image.resize(images=img_pool,
+                                       size=(h, w),
+                                       preserve_aspect_ratio=False,
+                                       antialias=False,
+                                       method="bilinear")
+            img_pool = self.bn(img_pool)
+            concat_list = [out_1, aout_6, aout_12, aout_18, img_pool]
+            aout = tf.concat(concat_list, axis=-1)
+            out = self.out_conv(aout)
+            return out

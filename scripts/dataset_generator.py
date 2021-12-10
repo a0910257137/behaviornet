@@ -4,9 +4,10 @@ import argparse
 import cv2
 import os
 import json
-from numpy.lib.type_check import asfarray
 import tensorflow as tf
 import math
+import copy
+from numpy.lib.type_check import asfarray
 from pprint import pprint
 from tqdm import tqdm
 from box import Box
@@ -122,23 +123,51 @@ def transformation_from_points(points1, points2):
     return trans_mat, s
 
 
-def build_keypoints(obj, obj_cates, img_info):
+def build_keypoints(obj, obj_cates, img, img_info, img_size):
     kps = obj["keypoints"]
     keys = list(kps.keys())
     obj_kp = []
     for k in keys:
         obj_kp.append(kps[k])
 
-    box2d = np.array([[0., 0.], [255., 255.]])
     obj_kp = np.asarray(obj_kp).astype(np.float32).reshape([-1, 2])
+    tl = np.min(obj_kp, axis=0)
+    br = np.max(obj_kp, axis=0)
+    tl[0], tl[1] = tl[0] - 100, tl[1] - 1
+    br = br + 1
+    box_size = br - tl
+    max_side = np.max(box_size)
+    max_side = max_side + 0.2 * max_side
+    paddings = (max_side - box_size) / 2
+    tl_paddings = (tl - paddings)
+    tl_paddings = np.where(tl_paddings < 0, 0, tl_paddings)
+    br_paddings = (br + paddings)
+    br_paddings[0] = np.where(br_paddings[0] < img_info['height'],
+                              br_paddings[0], img_info['height'] - 1)
+    br_paddings[1] = np.where(br_paddings[1] < img_info['width'],
+                              br_paddings[1], img_info['width'] - 1)
+    #cropped_kps for mean face
+    obj_kp = np.concatenate([tl[None, :], br[None, :], obj_kp], axis=0)
+    tl_paddings = tl_paddings.astype(np.int32)
+    br_paddings = br_paddings.astype(np.int32)
+    y1, x1 = tl_paddings
+    y2, x2 = br_paddings
+    obj_kp = obj_kp - tl_paddings
+    imgT = copy.deepcopy(img[y1:y2, x1:x2, :])
+    h, w, _ = imgT.shape
+
+    img_info['height'] = h
+    img_info['width'] = w
+    resized_shape = np.array(img_size) / np.array([h, w])
+
+    imgT = cv2.resize(imgT, img_size, interpolation=cv2.INTER_NEAREST)
+
+    obj_kp = np.einsum('c d, d -> c d', obj_kp, resized_shape)
+    fit_kps = (obj_kp - tl_paddings)[2:, :]
 
     obj_kp = np.where(obj_kp < 0., 0., obj_kp)
-    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_info['height'], obj_kp[:, 0],
-                            img_info['height'] - 1)
-    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_info['width'], obj_kp[:, 1],
-                            img_info['width'] - 1)
-
-    obj_kp = np.concatenate([box2d, obj_kp], axis=0)
+    obj_kp[:, 0] = np.where(obj_kp[:, 0] < h, obj_kp[:, 0], h - 1)
+    obj_kp[:, 1] = np.where(obj_kp[:, 1] < w, obj_kp[:, 1], w - 1)
     bool_mask = np.isinf(obj_kp).astype(np.float)
     obj_kp = np.where(bool_mask, np.inf, obj_kp)
     cat_lb = obj_cates[obj['category']]
@@ -146,7 +175,7 @@ def build_keypoints(obj, obj_cates, img_info):
     cat_lb = np.tile(cat_lb, [obj_kp.shape[0], 1])
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
 
-    return obj_kp
+    return imgT, obj_kp, fit_kps
 
 
 def get_2d(box):
@@ -285,25 +314,29 @@ def get_coors(img_root,
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
+    # save_root = os.path.abspath(
+    #     os.path.join(img_root, os.pardir, 'tf_records_68'))
     save_root = os.path.abspath(
-        os.path.join(img_root, os.pardir, 'tf_records_68'))
+        os.path.join('/aidata/anders/objects/landmarks/FFHQ', 'tf_records_68'))
     # gen btach frame list
     frame_count = 0
     mean_face = None
-    TRACKED_POINTS = [17, 21, 22, 26, 27, 30, 33, 36, 43, 47, 48, 54, 57, 8]
-    TRACKED_POINTS = np.asarray(TRACKED_POINTS) + 2
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
         frame_kps = []
         frame_theta = []
         img_name = frame['name']
-
         img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
-        if not img_info or len(frame['labels']) == 0:
+        if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
-        img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
+        if task == "obj_det":
+            img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
+        elif task == "keypoints":
+            assert len(
+                frame['labels']
+            ) == 1, "Oh no! annotation error, please check one image one label!"
         for obj in frame['labels']:
             if exclude_cates and obj['category'].lower() in exclude_cates:
                 continue
@@ -315,30 +348,16 @@ def get_coors(img_root,
                     discard_imgs.less_than += 1
                     continue
             elif obj_classes is not None and task == 'keypoints':
-                obj_kp = build_keypoints(obj, obj_cates, img_info)
+                imgT, obj_kp, fit_kps = build_keypoints(
+                    obj, obj_cates, img, img_info, img_size)
                 if frame_count == 0 and mean_face is None:
-                    mean_face = obj_kp[:, :2]
+                    mean_face = fit_kps[:, :2]
                 trans_mat, scale = transformation_from_points(
-                    obj_kp[:, :2][:, ::-1], mean_face[:, ::-1])
+                    fit_kps[:, ::-1], mean_face[:, ::-1])
                 rotate_matrix = trans_mat[:, :2] / scale
                 theta = math.asin(rotate_matrix[0][1]) * 57.3
                 theta = np.round(theta, 3)
-
-                euler_angles_landmark = []
-                #TODO:check list order
-                for index in TRACKED_POINTS:
-                    kp = obj_kp[index, :2] / img_info["width"]
-                    kp = kp[::-1]
-                    euler_angles_landmark.append(kp)
-
-                euler_angles_landmark = np.asarray(
-                    euler_angles_landmark).reshape((-1, 28))
-
-                pitch, yaw, roll = calculate_pitch_yaw_roll(
-                    euler_angles_landmark[0])
-
-                frame_theta.append([theta, pitch, yaw, roll])
-
+                frame_theta.append([theta])
                 frame_kps.append(obj_kp)
                 obj_counts.total_kps += 1
                 if min_num > len(frame_kps):
@@ -347,10 +366,14 @@ def get_coors(img_root,
         if obj_classes is not None:
             frame_kps = np.asarray(frame_kps, dtype=np.float32)
             frame_kps = complement(frame_kps, max_obj)
-
+        if task == "keypoints":
+            # because i bound the crop function in this script
+            # one frame with one facial landmark label , so I change the image
+            imgT = imgT[..., ::-1]
+        else:
+            imgT = img[..., ::-1]
         frame_kps = frame_kps.tostring()
-        img = img[..., ::-1]
-        img = img.tostring()
+        imgT = imgT.tostring()
         frame_theta = np.asarray(frame_theta).astype(np.float32).tostring()
         if img_path.split('/')[-1].split('.')[-1] == 'png':
             filename = img_path.split('/')[-1].replace('png', 'tfrecords')
@@ -361,7 +384,7 @@ def get_coors(img_root,
                 'origin_height': _int64_feature(img_info['height']),
                 'origin_width': _int64_feature(img_info['width']),
                 'b_theta': _bytes_feature(frame_theta),
-                'b_images': _bytes_feature(img),
+                'b_images': _bytes_feature(imgT),
                 'b_coords': _bytes_feature(frame_kps)
             }))
         if num_train_files > 0:

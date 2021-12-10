@@ -16,10 +16,9 @@ from utils.io import *
 def train(config, is_restore, excluded_layers):
     mirrored_strategy = tf.distribute.MirroredStrategy()
     general_dataset = GeneralDataset(config.data_reader)
-    # Read in Training Data
     datasets = general_dataset.get_datasets(mirrored_strategy)
-    train_datasets, step_per_epoch = datasets['train']
-    test_datasets, _ = datasets['test']
+    train_datasets = datasets['train']
+    test_datasets = datasets['test']
     with mirrored_strategy.scope():
         model, optimizer = ModelFactory(config.models, config.model_path,
                                         config.learn_rate).build_model()

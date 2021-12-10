@@ -74,6 +74,7 @@ class ModelFactory:
             elif optimizer_key == 'sgd':
                 return tf.keras.optimizers.SGD(learning_rate=lr,
                                                momentum=0.9,
+                                               decay=1e-6,
                                                nesterov=True)
             elif optimizer_key == 'nesterov_mom':
                 return tf.train.MomentumOptimizer(learning_rate=lr,

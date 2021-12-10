@@ -1,9 +1,8 @@
-from numpy.lib.twodim_base import eye
 import tensorflow as tf
 import numpy as np
 import cv2
 import random
-
+import copy
 from functools import partial
 from tensorpack.dataflow import *
 from albumentations import Compose, CoarseDropout, GridDropout
@@ -95,7 +94,6 @@ class Base:
                 b_imgs, b_coors, b_theta, down_ratios, b_img_sizes,
                 do_ten_pack):
             if not is_do:
-
                 norm_annos = (coors[:1, TRACKED_POINTS, :2] *
                               down_ratio) / img_size
                 norm_annos = np.reshape(norm_annos, (28))
@@ -114,10 +112,13 @@ class Base:
             for tensorpack_aug in tensorpack_chains:
                 if tensorpack_aug == "CropTransform":
                     # do crop transform
-                    if random.random() < aug_prob:
+                    crop_param = random.random(
+                    ) if self.task != "keypoint" else 0.
+                    if crop_param < aug_prob:
                         img, coors, cates = self.crop_transform(
                             img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
+
                 elif tensorpack_aug == "RandomPaste":
                     # do random paste
                     if random.random() < aug_prob:
@@ -127,10 +128,10 @@ class Base:
                     if random.random() < aug_prob:
                         img, coors = self.overlaying_mask(img, coors, theta)
                 elif tensorpack_aug == "WarpAffineTransform":
-                    if random.random() < aug_prob:
-                        img, coors, cates = self.warp_affine_transform(
-                            img, coors, h, w)
-                        coors = np.concatenate([coors, cates], axis=-1)
+                    # if random.random() < aug_prob:
+                    img, coors, cates = self.warp_affine_transform(
+                        img, coors, h, w)
+                    coors = np.concatenate([coors, cates], axis=-1)
 
             norm_annos = (coors[:, TRACKED_POINTS, :2] * down_ratio) / img_size
             norm_annos = np.reshape(norm_annos, (28))
@@ -161,29 +162,54 @@ class Base:
         return b_imgs, b_coors, b_thetas
 
     def crop_transform(self, img, coors, h, w):
-        base_ratio = 0.7
-        crop_ratio = np.random.randint(low=1, high=20) / 100.0
-        crop_ratio = base_ratio + crop_ratio
-        h_crop, w_crop = int(round(h * crop_ratio)), int(round(w * crop_ratio))
-
+        annos, cates = coors[..., :-1], coors[..., -1:]
+        if self.task == "keypoint" and random.random() < 0.5:
+            cropped_tl, cropped_br = annos[0, 0, :].astype(
+                np.int32), annos[0, 1, :].astype(np.int32)
+            ori_shape = np.asarray(img.shape[:2])
+            img = img[cropped_tl[1]:cropped_br[1],
+                      cropped_tl[0]:cropped_br[0], :]
+            annos = annos - cropped_tl
+            h, w, _ = img.shape
+            annos = np.einsum('n c d, d -> n c d', annos,
+                              ori_shape / np.array([w, h]))
+            img = cv2.resize(img, tuple(ori_shape))
+            return img, annos, cates
+        base_ratio = 0.8
+        # crop_ratio = np.random.randint(low=5, high=20) / 100.0
+        x_crop_ratio = base_ratio + np.random.randint(low=5, high=20) / 100.0
+        y_crop_ratio = base_ratio + np.random.randint(low=5, high=20) / 100.0
+        h_crop, w_crop = int(round(h * y_crop_ratio)), int(
+            round(w * x_crop_ratio))
         h1, w1 = np.random.randint(low=0, high=h - h_crop +
                                    1), np.random.randint(low=0,
                                                          high=w - w_crop + 1)
         crop_transform = CropTransform(h1, w1, h_crop, w_crop)
         img_out = crop_transform.apply_image(img)
-        annos, cates = coors[..., :-1], coors[..., -1:]
         # N, C, D
+        origin_annos = copy.deepcopy(annos)
+        origin_cates = copy.deepcopy(cates)
         annos_out = crop_transform.apply_coords(annos)
-
         resize_transform = ResizeTransform(h_crop, w_crop, h, w,
                                            cv2.INTER_CUBIC)
         img_out = resize_transform.apply_image(img_out)
         annos_out = resize_transform.apply_coords(annos_out)
         annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
         if annos_out.any():
+            if self.task == "keypoint":
+                min_kps = np.min(annos_out[:, 2:, :-1], axis=1)
+                max_kps = np.max(annos_out[:, 2:, :-1], axis=1)
+                min_cropped_kps = coors[:, :2, :2]
+                min_cropped_tl_kps = min_cropped_kps[:, 0, :]
+                max_cropped_br_kps = min_cropped_kps[:, 1, :]
+                valid_tl_mask = min_kps > min_cropped_tl_kps
+                valid_br_mask = max_kps < max_cropped_br_kps
+                valid = np.all(valid_tl_mask) & np.all(valid_br_mask)
+                if not valid:
+                    return img, origin_annos, origin_cates
             return img_out, annos_out[..., :-1], annos_out[..., -1:]
         else:
-            return img, annos, cates
+            return img, origin_annos, origin_cates
 
     def random_paste(self, img, coors, h, w):
         annos, cates = coors[..., :-1], coors[..., -1:]
@@ -212,7 +238,7 @@ class Base:
     def warp_affine_transform(self, img, coors, h, w):
         annos, cates = coors[..., :-1], coors[..., -1:]
         img_center = (w / 2, h / 2)
-        rotation_angle = np.random.randint(low=-15, high=15)
+        rotation_angle = np.random.randint(low=-30, high=30)
         mat = cv2.getRotationMatrix2D(img_center, rotation_angle, 1)
         affine = WarpAffineTransform(mat, (w, h))
         img_out = affine.apply_image(img)
@@ -304,8 +330,8 @@ class Base:
         annos[:, :, 1][valid_indice_y] = h1
         valid_indice_x = np.where(annos[..., 0] > w2)
         valid_indice_y = np.where(annos[..., 1] > h2)
-        annos[:, :, 0][valid_indice_x] = w2
-        annos[:, :, 1][valid_indice_y] = h2
+        annos[:, :, 0][valid_indice_x] = w2 - 1
+        annos[:, :, 1][valid_indice_y] = h2 - 1
         annos = np.concatenate([annos, cates], axis=-1)
         if self.task == "keypoint" or self.task == "landmark":
             return annos
