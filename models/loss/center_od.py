@@ -23,28 +23,27 @@ class CenterODLoss(LossBase):
             if "landmarks" == self.loss_cfg.type:
                 # losses = {k: None for k in self.keys}
                 losses = {}
-                pred_landmarks, pred_euler_angles = logits[
-                    "landmarks"], logits['euler_angles']
+                pred_landmarks = logits["landmarks"]
                 tar_landmarks, tar_euler_angles = targets[
                     "landmarks"], targets["euler_angles"]
 
                 # b_videos = targets["b_videos"]
-                # loss = lnmk_loss(pred_landmarks, tar_landmarks, batch,
-                #                  self.num_lnmk, self.config.max_obj_num)
+                loss = lnmk_loss(pred_landmarks, tar_landmarks, batch,
+                                 self.num_lnmk, self.config.max_obj_num)
                 # weighted_loss, loss = PDFL_loss(pred_landmarks, tar_landmarks,
                 #                                 pred_euler_angles,
                 #                                 tar_euler_angles, batch,
                 #                                 self.num_lnmk,
                 #                                 self.config.max_obj_num)
-                weighted_loss, loss = PDFL_wing_loss(pred_landmarks,
-                                                     tar_landmarks,
-                                                     pred_euler_angles,
-                                                     tar_euler_angles, batch,
-                                                     self.num_lnmk,
-                                                     self.config.max_obj_num)
-                losses["weighted_lnmks"] = weighted_loss
+                # weighted_loss, loss = PDFL_wing_loss(pred_landmarks,
+                #                                      tar_landmarks,
+                #                                      pred_euler_angles,
+                #                                      tar_euler_angles, batch,
+                #                                      self.num_lnmk,
+                #                                      self.config.max_obj_num)
+                # losses["weighted_lnmks"] = loss
                 losses["lnmks"] = loss
-                losses["total"] = weighted_loss
+                losses["total"] = loss
 
             elif "center_od" == self.loss_cfg.type:
                 losses = {k: None for k in self.keys}

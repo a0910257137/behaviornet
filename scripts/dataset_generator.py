@@ -135,46 +135,54 @@ def build_keypoints(obj, obj_cates, img, img_info, img_size):
     br = np.max(obj_kp, axis=0)
     tl[0], tl[1] = tl[0] - 100, tl[1] - 1
     br = br + 1
-    box_size = br - tl
-    max_side = np.max(box_size)
-    max_side = max_side + 0.2 * max_side
-    paddings = (max_side - box_size) / 2
-    tl_paddings = (tl - paddings)
-    tl_paddings = np.where(tl_paddings < 0, 0, tl_paddings)
-    br_paddings = (br + paddings)
-    br_paddings[0] = np.where(br_paddings[0] < img_info['height'],
-                              br_paddings[0], img_info['height'] - 1)
-    br_paddings[1] = np.where(br_paddings[1] < img_info['width'],
-                              br_paddings[1], img_info['width'] - 1)
+    # box_size = br - tl
+    # max_side = np.max(box_size)
+    # max_side = max_side + 0.2 * max_side
+    # paddings = (max_side - box_size) / 2
+    # paddings = 0
+    # tl_paddings = (tl - paddings)
+    # tl_paddings = np.where(tl_paddings < 0, 0, tl_paddings)
+    # br_paddings = (br + paddings)
+    # br_paddings[0] = np.where(br_paddings[0] < img_info['height'],
+    #                           br_paddings[0], img_info['height'] - 1)
+    # br_paddings[1] = np.where(br_paddings[1] < img_info['width'],
+    #                           br_paddings[1], img_info['width'] - 1)
     #cropped_kps for mean face
+    tl = np.where(tl < 0, 0, tl)
+    br[0] = np.where(br[0] < img_info['height'], br[0], img_info['height'] - 1)
+    br[1] = np.where(br[1] < img_info['width'], br[1], img_info['width'] - 1)
     obj_kp = np.concatenate([tl[None, :], br[None, :], obj_kp], axis=0)
-    tl_paddings = tl_paddings.astype(np.int32)
-    br_paddings = br_paddings.astype(np.int32)
-    y1, x1 = tl_paddings
-    y2, x2 = br_paddings
-    obj_kp = obj_kp - tl_paddings
-    imgT = copy.deepcopy(img[y1:y2, x1:x2, :])
+
+    y1, x1 = tl
+    y2, x2 = br
+    obj_kp = obj_kp - tl
+
+    imgT = copy.deepcopy(img[int(y1):int(y2), int(x1):int(x2), :])
     h, w, _ = imgT.shape
 
     img_info['height'] = h
     img_info['width'] = w
+
     resized_shape = np.array(img_size) / np.array([h, w])
 
     imgT = cv2.resize(imgT, img_size, interpolation=cv2.INTER_NEAREST)
 
     obj_kp = np.einsum('c d, d -> c d', obj_kp, resized_shape)
-    fit_kps = (obj_kp - tl_paddings)[2:, :]
+
+    fit_kps = (obj_kp)[2:, :]
+    obj_kp[1, :] = np.array([255, 255])
 
     obj_kp = np.where(obj_kp < 0., 0., obj_kp)
-    obj_kp[:, 0] = np.where(obj_kp[:, 0] < h, obj_kp[:, 0], h - 1)
-    obj_kp[:, 1] = np.where(obj_kp[:, 1] < w, obj_kp[:, 1], w - 1)
+    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_size[0], obj_kp[:, 0],
+                            img_size[0] - 1)
+    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_size[1], obj_kp[:, 1],
+                            img_size[1] - 1)
     bool_mask = np.isinf(obj_kp).astype(np.float)
     obj_kp = np.where(bool_mask, np.inf, obj_kp)
     cat_lb = obj_cates[obj['category']]
     cat_lb = np.expand_dims(np.asarray([cat_lb]), axis=-1)
     cat_lb = np.tile(cat_lb, [obj_kp.shape[0], 1])
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
-
     return imgT, obj_kp, fit_kps
 
 
@@ -314,10 +322,10 @@ def get_coors(img_root,
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
-    # save_root = os.path.abspath(
-    #     os.path.join(img_root, os.pardir, 'tf_records_68'))
     save_root = os.path.abspath(
-        os.path.join('/aidata/anders/objects/landmarks/FFHQ', 'tf_records_68'))
+        os.path.join(img_root, os.pardir, 'tf_records_68'))
+    # save_root = os.path.abspath(
+    #     os.path.join('/home/anders/Downloads/Blur_300VW', 'tf_records_68'))
     # gen btach frame list
     frame_count = 0
     mean_face = None
@@ -328,6 +336,7 @@ def get_coors(img_root,
         img_name = frame['name']
         img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
+
         if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
@@ -348,6 +357,7 @@ def get_coors(img_root,
                     discard_imgs.less_than += 1
                     continue
             elif obj_classes is not None and task == 'keypoints':
+
                 imgT, obj_kp, fit_kps = build_keypoints(
                     obj, obj_cates, img, img_info, img_size)
                 if frame_count == 0 and mean_face is None:

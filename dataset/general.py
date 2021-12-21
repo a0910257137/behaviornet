@@ -43,7 +43,7 @@ class GeneralDataset:
             datasets.append(ds)
         datasets = tf.data.TFRecordDataset.zip(tuple(datasets))
         if self.config.shuffle:
-            datasets = datasets.shuffle(buffer_size=10000)
+            datasets = datasets.shuffle(buffer_size=5000)
         options = tf.data.Options()
         options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
         datasets = datasets.with_options(options)

@@ -138,15 +138,7 @@ class Base:
             pitch, yaw, roll = calculate_pitch_yaw_roll(norm_annos)
             tmp_thetas.append([pitch, yaw, roll])
             tmp_imgs.append(img)
-            # coors = coors[..., :2]
-            # for coor in coors:
-            #     # coor = coor[:, :2]
-            #     tl = coor[0].astype(int)
-            #     br = coor[1].astype(int)
-            #     cv2.rectangle(img, tuple(tl), tuple(br), (0, 255, 0), 1)
-            # cv2.imwrite('output.jpg', img[..., ::-1])
-            # flip to y, x coordinate
-            # coors = np.concatenate([coors[..., ::-1], cates], axis=-1)
+
             annos = coors[..., :2]
             annos = annos[..., ::-1]
             coors = np.concatenate([annos, coors[..., -1:]], axis=-1)
@@ -163,7 +155,7 @@ class Base:
 
     def crop_transform(self, img, coors, h, w):
         annos, cates = coors[..., :-1], coors[..., -1:]
-        if self.task == "keypoint" and random.random() < 0.5:
+        if self.task == "keypoint" and random.random() < 0.8:
             cropped_tl, cropped_br = annos[0, 0, :].astype(
                 np.int32), annos[0, 1, :].astype(np.int32)
             ori_shape = np.asarray(img.shape[:2])
@@ -238,7 +230,7 @@ class Base:
     def warp_affine_transform(self, img, coors, h, w):
         annos, cates = coors[..., :-1], coors[..., -1:]
         img_center = (w / 2, h / 2)
-        rotation_angle = np.random.randint(low=-30, high=30)
+        rotation_angle = np.random.randint(low=-15, high=15)
         mat = cv2.getRotationMatrix2D(img_center, rotation_angle, 1)
         affine = WarpAffineTransform(mat, (w, h))
         img_out = affine.apply_image(img)

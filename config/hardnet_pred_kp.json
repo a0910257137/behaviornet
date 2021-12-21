@@ -1,7 +1,7 @@
 {
     "predictor": {
         "visible_gpu": "0",
-        "pb_path": "/aidata/anders/objects/landmarks/LS3D-W/archive_model/FFHQ_LS3D-W",
+        "pb_path": "/aidata/anders/objects/landmarks/LS3D-W/archive_model/demo_base",
         "eval_method":"keypoint",
         "mode": "landmark",
         "gpu_fraction":1.0, 
