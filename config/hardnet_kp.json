@@ -61,7 +61,7 @@
         "model_name": "obj_det",
         "frozen_backbone": false,
         "multi_optimizer": false,
-        "optimizer": "sgd",
+        "optimizer": "adam",
         "backbone": {
             "module_name": "hardnet",
             "optimizer": "sgd",

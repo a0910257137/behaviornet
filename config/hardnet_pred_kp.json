@@ -1,7 +1,11 @@
 {
     "predictor": {
         "visible_gpu": "0",
+<<<<<<< HEAD
         "pb_path": "/aidata/anders/objects/landmarks/celeba/archive_model/12_27_wing_model",
+=======
+        "pb_path": "/aidata/anders/objects/landmarks/LS3D-W/archive_model/demo_base",
+>>>>>>> e02695c3e69fd36b86a6180e4cb6a5be3fba0c80
         "eval_method":"keypoint",
         "mode": "landmark",
         "gpu_fraction":1.0, 
