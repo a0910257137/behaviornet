@@ -38,12 +38,16 @@ def img_gen(config_path, img_path_root, save_root):
         img_names[idx:idx + BATCH_SIZE]
         for idx in range(0, len(img_names), BATCH_SIZE)
     ]
-    for img_paths, img_names in zip(img_path_batchs, img_name_batchs):
+    for i, (img_paths,
+            img_names) in enumerate(zip(img_path_batchs, img_name_batchs)):
         imgs, origin_shapes, orig_imgs = [], [], []
+        if i < 333:
+            continue
+
         for img_path in img_paths:
             print(img_path)
             img = cv2.imread(img_path)
-            h, w, _ = img.shape
+            h, w = img.shape[:2]
             origin_shapes.append((h, w))
             orig_imgs.append(img)
             imgs.append(img)
@@ -52,8 +56,9 @@ def img_gen(config_path, img_path_root, save_root):
         if config['predictor']['mode'] == "centernet":
             target_dict = _get_cates(config['predictor']['cat_path'])
             imgs = draw_box2d(orig_imgs, rets, target_dict)
-        elif config['predictor']['mode'] == "landmark":
-            imgs = draw_landmark(orig_imgs, rets)
+
+        # elif config['predictor']['mode'] == "landmark":
+        #     imgs = draw_landmark(orig_imgs, rets)
 
         for img_name, img in zip(img_names, imgs):
             name = img_name.split('_')[-1]
@@ -62,6 +67,7 @@ def img_gen(config_path, img_path_root, save_root):
                 os.mkdir(save_path)
             print('writing %s' % os.path.join(save_path, img_name))
             cv2.imwrite(os.path.join(save_path, img_name), img)
+            xxx
 
 
 def parse_config():

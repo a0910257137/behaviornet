@@ -1,7 +1,6 @@
 import tensorflow as tf
 from ..utils.conv_module import *
 from ..backbone.hardnet import *
-from ..utils import ChannelAttention, SelfAttention, PositionEmbeddingSine
 from pprint import pprint
 
 conv_mode = 'sp_conv2d'
@@ -53,4 +52,5 @@ class FPN(tf.keras.Model):
                                             skip=skip,
                                             concat=i < self.skip_lv)
         x = self.final_up(x)
+        # x = self.transitionUp(x, up_method='bilinear', skip=None, concat=False)
         return x

@@ -1,7 +1,7 @@
 {
     "predictor": {
         "visible_gpu": "0",
-        "pb_path": "/aidata/anders/objects/landmarks/LS3D-W/archive_model/FFHQ_LS3D-W",
+        "pb_path": "/aidata/anders/objects/landmarks/celeba/archive_model/12_27_wing_model",
         "eval_method":"keypoint",
         "mode": "landmark",
         "gpu_fraction":1.0, 
@@ -19,11 +19,13 @@
         "cat_path": "./config/face.txt"
     },
     "metric":{
-        "metric_type":"NLE",
+        "metric_type":"KeyPoints",
+        "lnmk_scheme":[0, 8, 16, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 
+            37, 38, 39, 42, 48, 50, 51, 52, 54, 56, 57, 58],
         "conditions":
             {
                 "transformer_method":"LandMarks",
-                "object_matcher_method":"NLE",
+                "object_matcher_method":"PointDistance",
                 "calculator_method" : "PRFCalculator",
                 "reporter_method" :"EdgePRFReporter",
                 "matcher_threshold" :1000,

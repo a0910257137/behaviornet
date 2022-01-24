@@ -22,11 +22,6 @@ class Base:
                                 upper=1.4),
         }
         self.task = task
-        frontal_eye_lib_path = os.path.join(cv2.haarcascades,
-                                            'haarcascade_eye.xml')
-        self.aug_img = cv2.imread(
-            "/aidata/anders/objects/landmarks/aug_imgs/eye_glasses/h.png")
-        self.eye_cascade = cv2.CascadeClassifier(frontal_eye_lib_path)
 
     def color_aug(self, b_imgs, aug_chains):
         if not aug_chains or len(aug_chains) == 0:
@@ -65,7 +60,7 @@ class Base:
         return b_imgs
 
     def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, down_ratios,
-                        b_theta, max_obj_num, do_ten_pack, tensorpack_chains):
+                        b_theta, flip_probs, max_obj_num, tensorpack_chains):
         f'''
             Do random ratation, crop and resize by using "tensorpack" augmentation class.
                 https://github.com/tensorpack/tensorpack
@@ -81,33 +76,26 @@ class Base:
         b_img_sizes = np.asarray(b_img_sizes).astype(np.int32)
         b_imgs = np.asarray(b_imgs).astype(np.uint8)
         b_theta = b_theta.numpy()
+        flip_probs = flip_probs.numpy()
         down_ratios = 1 / down_ratios.numpy()
         _, h, w, c = b_imgs.shape
-        aug_prob = .5
-        tmp_coors = []
-        tmp_imgs = []
-        tmp_thetas = []
+        aug_prob = .4
+        tmp_imgs, tmp_coors, tmp_thetas = [], [], []
         TRACKED_POINTS = [
             19, 23, 24, 28, 29, 32, 35, 38, 45, 49, 50, 56, 59, 10
         ]
-        for img, coors, theta, down_ratio, img_size, is_do in zip(
-                b_imgs, b_coors, b_theta, down_ratios, b_img_sizes,
-                do_ten_pack):
-            if not is_do:
-                norm_annos = (coors[:1, TRACKED_POINTS, :2] *
-                              down_ratio) / img_size
-                norm_annos = np.reshape(norm_annos, (28))
-                pitch, yaw, roll = calculate_pitch_yaw_roll(norm_annos)
-                tmp_thetas.append([pitch, yaw, roll])
-                tmp_imgs.append(img)
-                tmp_coors.append(coors)
-                continue
+        for img, coors, theta, flip_prob, down_ratio, img_size in zip(
+                b_imgs, b_coors, b_theta, flip_probs, down_ratios,
+                b_img_sizes):
             valid_mask = np.all(np.isfinite(coors), axis=-1)
             valid_mask = valid_mask[:, 0]
             coors = coors[valid_mask]
+            #flip the yx to xy
             annos = coors[..., :2]
             annos = annos[..., ::-1]
             cates = coors[..., -1:]
+            if flip_prob:
+                annos = self._flip(annos, w)
             coors = np.concatenate([annos, cates], axis=-1)
             for tensorpack_aug in tensorpack_chains:
                 if tensorpack_aug == "CropTransform":
@@ -127,29 +115,21 @@ class Base:
                 elif tensorpack_aug == "OverlayingMask":
                     if random.random() < aug_prob:
                         img, coors = self.overlaying_mask(img, coors, theta)
-                elif tensorpack_aug == "WarpAffineTransform":
-                    # if random.random() < aug_prob:
-                    img, coors, cates = self.warp_affine_transform(
-                        img, coors, h, w)
-                    coors = np.concatenate([coors, cates], axis=-1)
 
-            norm_annos = (coors[:, TRACKED_POINTS, :2] * down_ratio) / img_size
-            norm_annos = np.reshape(norm_annos, (28))
-            pitch, yaw, roll = calculate_pitch_yaw_roll(norm_annos)
-            tmp_thetas.append([pitch, yaw, roll])
+                elif tensorpack_aug == "WarpAffineTransform":
+                    if random.random() < aug_prob:
+                        img, coors, cates = self.warp_affine_transform(
+                            img, coors, h, w)
+                        coors = np.concatenate([coors, cates], axis=-1)
+            # norm_annos = (coors[:, TRACKED_POINTS, :2] * down_ratio) / img_size
+            # norm_annos = np.reshape(norm_annos, (28))
+            # pitch, yaw, roll = calculate_pitch_yaw_roll(norm_annos)
+            # tmp_thetas.append([pitch, yaw, roll])
             tmp_imgs.append(img)
-            # coors = coors[..., :2]
-            # for coor in coors:
-            #     # coor = coor[:, :2]
-            #     tl = coor[0].astype(int)
-            #     br = coor[1].astype(int)
-            #     cv2.rectangle(img, tuple(tl), tuple(br), (0, 255, 0), 1)
-            # cv2.imwrite('output.jpg', img[..., ::-1])
-            # flip to y, x coordinate
-            # coors = np.concatenate([coors[..., ::-1], cates], axis=-1)
             annos = coors[..., :2]
             annos = annos[..., ::-1]
             coors = np.concatenate([annos, coors[..., -1:]], axis=-1)
+
             n, c, d = coors.shape
             complement = np.empty([max_obj_num - n, c, d])
             complement.fill(np.inf)
@@ -157,13 +137,55 @@ class Base:
             coors = np.concatenate([coors, complement], axis=0)
             tmp_coors.append(coors)
         b_coors = np.stack(tmp_coors).astype(np.float32)
-        b_thetas = np.stack(tmp_thetas).astype(np.float32)
         b_imgs = np.stack(tmp_imgs)
-        return b_imgs, b_coors, b_thetas
+        return b_imgs, b_coors
+
+    def _flip(self, objs_kps, w):
+        objs_wilds = objs_kps[:, 1, 0] - objs_kps[:, 0, 0]
+        objs_kps_x = objs_kps[..., :1]
+        objs_kps_x = -objs_kps_x + w - 1
+        objs_kps_y = objs_kps[..., -1:]
+        objs_kps_x[:, 0, :] -= objs_wilds
+        objs_kps_x[:, 1, :] += objs_wilds
+        objs_kps = np.concatenate([objs_kps_x, objs_kps_y], axis=-1)
+        return objs_kps
+
+    def draw_mask(self, img, coors):
+        iris_mask = np.zeros(shape=img.shape, dtype=np.uint8)
+        eyelid_mask = np.zeros(shape=img.shape, dtype=np.uint8)
+
+        valid_mask = np.isfinite(coors)[:, 0, 0]
+        coors = (coors[valid_mask][..., :2]).astype(np.int32)
+        eyelid_coors = (coors[:, :-8, ::-1]).astype(np.int32)
+
+        eyelid_coors = np.concatenate(
+            [eyelid_coors[:, :17], eyelid_coors[:, 17:][:, ::-1, :]], axis=1)
+
+        iris_coors = coors[:, -8:, ::-1]
+        if np.all(iris_coors == 0.):
+            mask = np.asarray(cv2.fillPoly(eyelid_mask, eyelid_coors,
+                                           255)).astype(np.int32)
+        else:
+            mask = np.asarray(cv2.fillPoly(
+                eyelid_mask, eyelid_coors, 255)).astype(np.int32) + np.asarray(
+                    cv2.fillPoly(iris_mask, iris_coors, 255)).astype(np.int32)
+
+        mask[mask <= 255] = 0
+        mask = mask.astype(np.uint8)
+
+        if random.random() < 0.5:
+            rgb_gray_iris = np.random.randint(low=1,
+                                              high=70,
+                                              size=mask[mask > 128].shape)
+            img[mask > 128] = rgb_gray_iris
+
+        bg_mask = 255 * np.ones_like(mask) - mask
+        mask = np.concatenate([mask, bg_mask], axis=-1)
+        return img, mask
 
     def crop_transform(self, img, coors, h, w):
         annos, cates = coors[..., :-1], coors[..., -1:]
-        if self.task == "keypoint" and random.random() < 0.5:
+        if self.task == "keypoint" and random.random() < 0.8:
             cropped_tl, cropped_br = annos[0, 0, :].astype(
                 np.int32), annos[0, 1, :].astype(np.int32)
             ori_shape = np.asarray(img.shape[:2])
@@ -238,21 +260,13 @@ class Base:
     def warp_affine_transform(self, img, coors, h, w):
         annos, cates = coors[..., :-1], coors[..., -1:]
         img_center = (w / 2, h / 2)
-        rotation_angle = np.random.randint(low=-30, high=30)
+        rotation_angle = np.random.randint(low=-15, high=15)
         mat = cv2.getRotationMatrix2D(img_center, rotation_angle, 1)
         affine = WarpAffineTransform(mat, (w, h))
         img_out = affine.apply_image(img)
-        if self.task == "keypoint":
-            annos_out = affine.apply_coords(annos, self.task)
-            return img_out, annos_out, cates
-        else:
-            center_kps = (annos[:, 1, :] + annos[:, 0, :]) / 2
-            wh = annos[:, 1, :] - annos[:, 0, :]
-            center_kps = affine.apply_coords(center_kps)
-            tls = center_kps - wh / 2
-            brs = center_kps + wh / 2
-            annos_out = np.concatenate([tls[:, None, :], brs[:, None, :]],
-                                       axis=-2)
+
+        annos_out = affine.apply_coords(annos)
+
         annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
 
         if annos_out.any():
@@ -324,6 +338,11 @@ class Base:
             check = np.all(check, axis=-1)
             return check
 
+        if np.any(annos > 0.):
+            return annos
+        else:
+            return np.array([])
+
         valid_indice_x = np.where(annos[..., 0] < w1)
         valid_indice_y = np.where(annos[..., 1] < h1)
         annos[:, :, 0][valid_indice_x] = w1
@@ -333,6 +352,7 @@ class Base:
         annos[:, :, 0][valid_indice_x] = w2 - 1
         annos[:, :, 1][valid_indice_y] = h2 - 1
         annos = np.concatenate([annos, cates], axis=-1)
+
         if self.task == "keypoint" or self.task == "landmark":
             return annos
         _, _, c = annos.shape
@@ -399,19 +419,16 @@ class WarpAffineTransform:
             ret = ret[:, :, np.newaxis]
         return ret
 
-    def apply_coords(self, coords, task):
-        if task == "keypoint":
-            n, c, d = coords.shape
-            expand_ones = np.ones((n, c, 1), dtype='f4')
-            coords = np.concatenate((coords, expand_ones), axis=-1)
-            rotate_matrices = self.mat.T
-            # coords = np.dot(coords, rotate_matrices)
+    def apply_coords(self, coords):
 
-        else:
-            n, d = coords.shape
-            expand_ones = np.ones((n, 1), dtype='f4')
-            coords = np.concatenate((coords, expand_ones), axis=-1)
-            rotate_matrices = self.mat.T
+        n, c, d = coords.shape
+        expand_ones = np.ones((n, c, 1), dtype='f4')
+        coords = np.concatenate((coords, expand_ones), axis=-1)
+        rotate_matrices = self.mat.T
+        # n, d = coords.shape
+        # expand_ones = np.ones((n, 1), dtype='f4')
+        # coords = np.concatenate((coords, expand_ones), axis=-1)
+        # rotate_matrices = self.mat.T
         coords = np.dot(coords, rotate_matrices)
         return coords
 
@@ -525,6 +542,3 @@ def calculate_pitch_yaw_roll(landmarks_2D,
     _, _, _, _, _, _, euler_angles = cv2.decomposeProjectionMatrix(pose_mat)
     return map(lambda k: k[0],
                euler_angles)  # euler_angles contain (pitch, yaw, roll)
-
-
-#TODO: add features: mosaic

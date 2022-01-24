@@ -245,8 +245,8 @@ class HardNet(tf.keras.Model):
         j = 0
         for i in range(len(self._base)):
             x = self._base[i](x)
-            if i == 10:
-                skip_connections["auxiliary"] = x
+            # if i == 10:
+            #     skip_connections["auxiliary"] = x
             if i in self._shortcut_layers:
                 skip_connections[self.skip_layers[j]] = x
                 j += 1

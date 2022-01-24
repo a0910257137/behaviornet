@@ -4,7 +4,7 @@ from tensorpack.dataflow import *
 import tensorflow as tf
 
 
-@tf.function
+# @tf.function
 def _flip(b_objs_kps, b_obj_wid, w, channel_names, do_flip):
     if "kp" in channel_names or "keypoint" in channel_names:
         b_objs_x = b_objs_kps[..., 1:2]

@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 
-def gaussian_radius(det_size, min_overlap=0.5):
+def gaussian_radius(det_size, min_overlap=0.6):
     """
         The function of gaussian_radius is determined the gaussian radius. They set the target min_overlap = 0.7 and derive
         from the corner tl and br point. The radius r1, r2, and r3 describe how far the corners can be offset to still fulfill min_overlap.
@@ -141,6 +141,7 @@ def gen_landmarks(batch_size, max_obj_num, b_coords, schema_type):
         outer mouth: 48 ~ 59
         inner mouth: 60 ~ 68 
     """
+
     if schema_type == 25:
         lnmk_25_schema = tf.constant([
             0, 8, 16, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 42,
@@ -153,3 +154,10 @@ def gen_landmarks(batch_size, max_obj_num, b_coords, schema_type):
         b_coords = tf.gather_nd(b_coords, lnmk_25_schema)
         b_coords = tf.transpose(b_coords, [1, 2, 0, 3])
     return b_coords
+
+
+def xyxy2xywh(b_center, b_obj_sizes):
+    # Convert nx4 boxes from [x1, y1, x2, y2] to [x, y, w, h] where xy1=top-left, xy2=bottom-right
+    xywh = tf.concat([b_center[:, :, None, :], b_obj_sizes[:, :, None, :]],
+                     axis=-2)
+    return xywh

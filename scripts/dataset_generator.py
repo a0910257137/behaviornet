@@ -123,59 +123,43 @@ def transformation_from_points(points1, points2):
     return trans_mat, s
 
 
+def build_eye_cls(obj_lnmks, obj):
+    obj_lnmks[:2, 2] = -1
+
+    # if obj['attributes']['eye_status'] == 'open':
+    obj_lnmks[:2, 2] = True
+    return obj_lnmks
+
+
 def build_keypoints(obj, obj_cates, img, img_info, img_size):
     kps = obj["keypoints"]
     keys = list(kps.keys())
+
     obj_kp = []
-    for k in keys:
-        obj_kp.append(kps[k])
 
-    obj_kp = np.asarray(obj_kp).astype(np.float32).reshape([-1, 2])
-    tl = np.min(obj_kp, axis=0)
-    br = np.max(obj_kp, axis=0)
-    tl[0], tl[1] = tl[0] - 100, tl[1] - 1
-    br = br + 1
-    box_size = br - tl
-    max_side = np.max(box_size)
-    max_side = max_side + 0.2 * max_side
-    paddings = (max_side - box_size) / 2
-    tl_paddings = (tl - paddings)
-    tl_paddings = np.where(tl_paddings < 0, 0, tl_paddings)
-    br_paddings = (br + paddings)
-    br_paddings[0] = np.where(br_paddings[0] < img_info['height'],
-                              br_paddings[0], img_info['height'] - 1)
-    br_paddings[1] = np.where(br_paddings[1] < img_info['width'],
-                              br_paddings[1], img_info['width'] - 1)
-    #cropped_kps for mean face
-    obj_kp = np.concatenate([tl[None, :], br[None, :], obj_kp], axis=0)
-    tl_paddings = tl_paddings.astype(np.int32)
-    br_paddings = br_paddings.astype(np.int32)
-    y1, x1 = tl_paddings
-    y2, x2 = br_paddings
-    obj_kp = obj_kp - tl_paddings
-    imgT = copy.deepcopy(img[y1:y2, x1:x2, :])
-    h, w, _ = imgT.shape
+    obj_kp = np.asarray([kps[key]
+                         for key in keys]).astype(np.float32).reshape([-1, 2])
 
-    img_info['height'] = h
-    img_info['width'] = w
-    resized_shape = np.array(img_size) / np.array([h, w])
+    resized_shape = np.array(img_size) / np.array(
+        [img_info['width'], img_info['height']])
 
-    imgT = cv2.resize(imgT, img_size, interpolation=cv2.INTER_NEAREST)
-
-    obj_kp = np.einsum('c d, d -> c d', obj_kp, resized_shape)
-    fit_kps = (obj_kp - tl_paddings)[2:, :]
+    imgT = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
+    obj_kp = np.einsum('c d, d -> c d', obj_kp, resized_shape[::-1])
 
     obj_kp = np.where(obj_kp < 0., 0., obj_kp)
-    obj_kp[:, 0] = np.where(obj_kp[:, 0] < h, obj_kp[:, 0], h - 1)
-    obj_kp[:, 1] = np.where(obj_kp[:, 1] < w, obj_kp[:, 1], w - 1)
+
+    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_size[1], obj_kp[:, 0],
+                            img_size[1] - 1)
+
+    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_size[0], obj_kp[:, 1],
+                            img_size[0] - 1)
     bool_mask = np.isinf(obj_kp).astype(np.float)
     obj_kp = np.where(bool_mask, np.inf, obj_kp)
     cat_lb = obj_cates[obj['category']]
     cat_lb = np.expand_dims(np.asarray([cat_lb]), axis=-1)
     cat_lb = np.tile(cat_lb, [obj_kp.shape[0], 1])
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
-
-    return imgT, obj_kp, fit_kps
+    return imgT, obj_kp
 
 
 def get_2d(box):
@@ -188,7 +172,7 @@ def get_2d(box):
     return obj_kp
 
 
-def build_2d_obj(obj, obj_cates, img_info):
+def build_2d_obj(obj, obj_cates, img_size, img_info):
     obj_kp = get_2d(obj['box2d'])
     obj_name = obj['category'].split(' ')
     cat_key = str()
@@ -199,14 +183,19 @@ def build_2d_obj(obj, obj_cates, img_info):
             cat_key += '_' + l
     cat_lb = obj_cates[cat_key]
     cat_lb = np.expand_dims(np.asarray([cat_lb, cat_lb]), axis=-1)
+
+    resized_shape = np.array(img_size) / np.array(
+        [img_info['width'], img_info['height']])
+    obj_kp = np.einsum('c d, d -> c d', obj_kp, resized_shape[::-1])
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
     # obj_kp = obj_kp.astype(np.float)
+
     bool_mask = np.isinf(obj_kp).astype(np.float)
     obj_kp = np.where(obj_kp > 0., obj_kp, 0.)
-    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_info['height'], obj_kp[:, 0],
-                            img_info['height'] - 1)
-    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_info['width'], obj_kp[:, 1],
-                            img_info['width'] - 1)
+    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_size[1], obj_kp[:, 0],
+                            img_size[1] - 1)
+    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_size[0], obj_kp[:, 1],
+                            img_size[0] - 1)
     obj_kp = np.where(bool_mask, np.inf, obj_kp)
 
     return obj_kp
@@ -218,45 +207,8 @@ def make_dir(path):
         os.makedirs(path, mode=0o755)
 
 
-def build_human_keypoint(obj, kp_cates, img_info):
-    def get_human_keypoint(obj, kp_cates):
-        '''
-        generate humankeypoint
-        There are 13 joints:
-        "head","left_shoulder","right_shoulder","left_elbow","right_elbow","left_wrist","right_wrist",
-        "left_hip","right_hip","left_knee","right_knee","left_ankle","right_ankle"
-        for each joint has x, y, and v(visualization state)
-        [y, x, v]
-        '''
-        visiable = 2
-        obj_state = obj['attributes']['keypointState']
-        obj_kp = obj['humanKeypoint']
-        obj_state = np.asarray([obj_state[key] for key in obj_state])
-        obj_kp = [obj_kp[key][::-1] for key in obj_kp]
-        obj_kp = np.concatenate(obj_kp)
-        obj_kp = obj_kp.reshape(13, 2)
-
-        # number of keypoints
-        cat = np.asarray(list(kp_cates.values()))
-        cat = np.reshape(cat, [len(list(kp_cates.values())), 1])
-        cat = cat.astype(np.float32)
-
-        obj_kp = np.concatenate([obj_kp, cat], axis=-1)
-        obj_kp[np.where(obj_state != visiable)] = np.inf
-        return obj_kp
-
-    obj_kp = get_human_keypoint(obj, kp_cates)
-    bool_mask = np.isinf(obj_kp).astype(np.float)
-    obj_kp = np.where(obj_kp > 0., obj_kp, 0.)
-    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_info['height'], obj_kp[:, 0],
-                            img_info['height'] - 1)
-    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_info['width'], obj_kp[:, 1],
-                            img_info['width'] - 1)
-    obj_kp = np.where(bool_mask, np.inf, obj_kp)
-    return obj_kp
-
-
 def complement(annos, max_num):
+
     n, c, d = annos.shape
     # assign numpy array to avoid > max_num case
     annos = np.asarray([x for x in annos if x.size != 0])
@@ -314,20 +266,22 @@ def get_coors(img_root,
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
-    # save_root = os.path.abspath(
-    #     os.path.join(img_root, os.pardir, 'tf_records_68'))
     save_root = os.path.abspath(
-        os.path.join('/aidata/anders/objects/landmarks/FFHQ', 'tf_records_68'))
+        os.path.join(img_root, os.pardir, 'tf_records_68'))
+    # save_root = os.path.abspath(
+    #     os.path.join('/home/anders/Downloads/eye_kps', 'tf_records_68'))
     # gen btach frame list
     frame_count = 0
     mean_face = None
     for frame in tqdm(anno['frame_list']):
+
         num_train_files -= 1
         frame_kps = []
         frame_theta = []
         img_name = frame['name']
         img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
+
         if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
@@ -341,37 +295,24 @@ def get_coors(img_root,
             if exclude_cates and obj['category'].lower() in exclude_cates:
                 continue
             if obj_classes is not None and task == 'obj_det':
-                obj_kp = build_2d_obj(obj, obj_cates, img_info)
+                obj_kp = build_2d_obj(obj, obj_cates, img_size, img_info)
+                imgT, obj_lnmks = build_keypoints(obj, obj_cates, img,
+                                                  img_info, img_size)
+                obj_lnmks = build_eye_cls(obj_lnmks, obj)
+                obj_kp = np.concatenate([obj_kp, obj_lnmks], axis=0)
                 frame_kps.append(obj_kp)
                 obj_counts.total_2d += 1
-                if min_num > len(frame_kps):
-                    discard_imgs.less_than += 1
-                    continue
-            elif obj_classes is not None and task == 'keypoints':
-                imgT, obj_kp, fit_kps = build_keypoints(
-                    obj, obj_cates, img, img_info, img_size)
-                if frame_count == 0 and mean_face is None:
-                    mean_face = fit_kps[:, :2]
-                trans_mat, scale = transformation_from_points(
-                    fit_kps[:, ::-1], mean_face[:, ::-1])
-                rotate_matrix = trans_mat[:, :2] / scale
-                theta = math.asin(rotate_matrix[0][1]) * 57.3
-                theta = np.round(theta, 3)
-                frame_theta.append([theta])
-                frame_kps.append(obj_kp)
                 obj_counts.total_kps += 1
                 if min_num > len(frame_kps):
                     discard_imgs.less_than += 1
                     continue
+
         if obj_classes is not None:
             frame_kps = np.asarray(frame_kps, dtype=np.float32)
             frame_kps = complement(frame_kps, max_obj)
-        if task == "keypoints":
-            # because i bound the crop function in this script
-            # one frame with one facial landmark label , so I change the image
-            imgT = imgT[..., ::-1]
-        else:
-            imgT = img[..., ::-1]
+
+        imgT = imgT[..., ::-1]
+
         frame_kps = frame_kps.tostring()
         imgT = imgT.tostring()
         frame_theta = np.asarray(frame_theta).astype(np.float32).tostring()
@@ -417,7 +358,7 @@ def parse_config():
     parser.add_argument('--anno_root', type=str)
     parser.add_argument('--anno_file_names', default=None, nargs='+')
     parser.add_argument('--img_root', type=str)
-    parser.add_argument('--img_size', default=(256, 256), type=tuple)
+    parser.add_argument('--img_size', default=(320, 192), type=tuple)
     parser.add_argument('--obj_cate_file', type=str)
     parser.add_argument('--max_obj', default=15, type=int)
     parser.add_argument('--exclude_cates', default=None, nargs='+')

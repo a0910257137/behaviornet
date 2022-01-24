@@ -1,7 +1,6 @@
 import os
 import tensorflow as tf
 import multiprocessing
-import math
 from .general_task import GeneralTasks
 from box import Box
 from pprint import pprint
@@ -43,7 +42,7 @@ class GeneralDataset:
             datasets.append(ds)
         datasets = tf.data.TFRecordDataset.zip(tuple(datasets))
         if self.config.shuffle:
-            datasets = datasets.shuffle(buffer_size=10000)
+            datasets = datasets.shuffle(buffer_size=7000)
         options = tf.data.Options()
         options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
         datasets = datasets.with_options(options)
@@ -51,22 +50,34 @@ class GeneralDataset:
             batch_size = mirrored_strategy.num_replicas_in_sync * self.test_batch_size
         batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
         datasets = datasets.batch(batch_size, drop_remainder=True)
-        # for ds in datasets:
-        #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
-        #     # b_videos = np.asarray(targets["b_videos"].numpy()) * 255
-        #     # for i, img in enumerate(b_videos):
-        #     #     print(img.shape)
-        #     #     cv2.imwrite("image_{}.jpg".format(str(i)), img)
-        #     landmarks = targets["landmarks"]
+        for ds in datasets:
+            b_img, targets = self.gener_task.build_maps(batch_size, ds)
+            offset_vals = targets["offset_vals"]
+            size_idxs = targets['size_idxs']
+            valid_mask = tf.math.reduce_all(tf.math.is_finite(size_idxs),
+                                            axis=-1)
+            # tar_vals = tf.reshape(tar_vals, [24, -1, 10])
+
+        #     size_idxs = targets['size_idxs'].numpy()
+        #     offset_vals = targets['offset_vals'].numpy()
         #     b_img = b_img.numpy() * 255.
-        #     landmarks = landmarks.numpy()
-        #     for kps, img in zip(landmarks, b_img):
-        #         kps = kps[0] * 256.
-        #         kps = kps.astype(int)[:, ::-1]
-        #         for kp in kps:
-        #             img = cv2.circle(img, tuple(kp), 3, (0, 255, 0), -1)
+
+        #     mask = np.all(np.isfinite(size_idxs), axis=-1)
+        #     size_idxs = size_idxs[mask]
+        #     offset_vals = offset_vals[mask]
+
+        #     img = b_img[0]
+        #     offset_val = offset_vals[0]
+        #     kp = size_idxs[0]
+        #     for offset_val in offset_val:
+        #         sh_kp = (kp + offset_val).astype(np.int32)[::-1]
+        #         img = cv2.circle(img, tuple(sh_kp), 3, (0, 0, 255), -1)
+
+        #     for kp in size_idxs:
+        #         kp = kp.astype(int)[::-1]
+        #         img = cv2.circle(img, tuple(kp), 1, (0, 255, 0), -1)
         #         cv2.imwrite("./output.jpg", img[..., ::-1])
-        #         xxxx
+        #         exit(1)
         datasets = datasets.map(
             lambda *x: self.gener_task.build_maps(batch_size, x),
             num_parallel_calls=tf.data.experimental.AUTOTUNE)

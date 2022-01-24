@@ -1,8 +1,8 @@
 {
     "predictor": {
-        "visible_gpu": "0",
-        "pb_path": "/aidata/anders/objects/box2d/demo/archive_model/12_25_model",
-        "top_k_n": 100,
+        "visible_gpu": "1",
+        "pb_path": "/aidata/anders/objects/landmarks/AFLW/archive_model/final",
+        "top_k_n": 50,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,
         "n_objs": 30,

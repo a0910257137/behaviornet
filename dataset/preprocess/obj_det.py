@@ -1,31 +1,42 @@
 import numpy as np
 import tensorflow as tf
-import cv2
-from .utils import _coor_clip, _flip
+from .utils import _coor_clip
 
 
 class ObjDet:
-    def offer_kps(self, batch_size, b_objs_kps, h, w, b_obj_sizes, flip_probs,
-                  is_do_filp, branch_names):
-        b_obj_h, b_obj_w = b_obj_sizes[..., 0], b_obj_sizes[..., 1]
+    def offer_kps(self, b_objs_kps, h, w):
         b_objs_kps = tf.where(b_objs_kps > 1e8, np.inf, b_objs_kps)
         b_objs_kps = _coor_clip(b_objs_kps, h - 1, w - 1)
         b_center_kps = (b_objs_kps[:, :, 1, :] + b_objs_kps[:, :, 0, :]) / 2
         b_center_kps = b_center_kps[:, :, tf.newaxis, :]
+
+        b_objs_kps = self.pick_lnmks(b_objs_kps[:, :, 2:, :])
+        b_offset_vals = b_objs_kps - b_center_kps
+        b_offset_vals = tf.where(tf.math.is_finite(b_offset_vals),
+                                 b_offset_vals, np.inf)
+
         b_objs_kps = tf.concat([b_center_kps, b_objs_kps], axis=-2)
-        
-        if is_do_filp:
-            _, n, c, d = tf.shape(b_objs_kps)[0], tf.shape(b_objs_kps)[
-                1], tf.shape(b_objs_kps)[2], tf.shape(b_objs_kps)[3]
-            filp_kps = _flip(b_objs_kps, b_obj_w, w, branch_names, flip_probs)
-            tmp_logic = tf.tile(flip_probs[:, None, None, None], [1, n, c, d])
-            b_objs_kps = tf.where(tf.math.logical_not(tmp_logic), b_objs_kps,
-                                  filp_kps)
+        b_objs_kps = tf.cast((b_objs_kps + .5), tf.int32)
+        b_objs_kps = tf.cast(b_objs_kps, tf.float32)
+        b_objs_kps = tf.where(b_objs_kps > 1e8, np.inf, b_objs_kps)
+        b_objs_kps = tf.where(b_objs_kps < 1e-8, np.inf, b_objs_kps)
+
         b_kp_idxs = b_objs_kps[:, :, 0, :]
-        b_round_kp_idxs = tf.cast((b_kp_idxs + .5), tf.int32)
-        b_round_kp_idxs = tf.cast(b_round_kp_idxs, tf.float32)
-        b_round_kp_idxs = tf.where(b_round_kp_idxs > 1e8, np.inf,
-                                   b_round_kp_idxs)
-        b_round_kp_idxs = tf.where(b_round_kp_idxs < 1e-8, np.inf,
-                                   b_round_kp_idxs)
-        return b_round_kp_idxs, b_kp_idxs, b_objs_kps, None
+        b_round_kp_idxs = b_objs_kps[:, :, :3, :]
+        return b_round_kp_idxs, b_kp_idxs, b_objs_kps, b_offset_vals
+
+    def pick_lnmks(self, b_lnmks):
+        b_lnmks = tf.transpose(b_lnmks, [2, 0, 1, 3])
+        left_center_eye = tf.math.reduce_mean(b_lnmks[27:33, ...],
+                                              axis=0,
+                                              keepdims=True)
+        right_center_eye = tf.math.reduce_mean(b_lnmks[33:39, ...],
+                                               axis=0,
+                                               keepdims=True)
+        b_five_lnmks = tf.concat([
+            left_center_eye, right_center_eye, b_lnmks[42:43, ...],
+            b_lnmks[48:49, ...], b_lnmks[54:55, ...]
+        ],
+                                 axis=0)
+        b_five_lnmks = tf.transpose(b_five_lnmks, [1, 2, 0, 3])
+        return b_five_lnmks

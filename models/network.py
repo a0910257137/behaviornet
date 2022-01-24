@@ -18,11 +18,12 @@ class Network(tf.keras.Model):
         self.optimizer = optimizer
         # .... Define your model here ....
         # You need to have compiled your model before calling this.
-        # image_inputs = tf.keras.Input(shape=(256, 256, 3), name='image_inputs')
+        # image_inputs = tf.keras.Input(shape=(192, 320, 3), name='image_inputs')
         # preds = self.model(image_inputs, training=False)
         # fully_models = tf.keras.Model(image_inputs, preds, name='fully')
         # flops = get_flops(fully_models, batch_size=1)
         # print(f"FLOPS: {flops / 10 ** 9:.03} G")
+        # exit(1)
 
     def train_step(self, data):
         training = True

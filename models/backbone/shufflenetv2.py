@@ -1,9 +1,9 @@
-from sys import prefix
-from tensorflow.python.ops.gen_array_ops import shape
 import tensorflow as tf
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock
 from pprint import pprint
+
+conv_mode = 'sp_conv2d'
 
 
 # as public function
@@ -200,6 +200,7 @@ class ShuffleNetV2(tf.keras.Model):
                 kernel_size=3,
                 strides=2,
                 use_bias=False,
+                conv_mode='sp_conv2d',
                 kernel_initializer=tf.keras.initializers.RandomNormal(
                     mean=0, stddev=0.01),
                 name='init_conv',
@@ -257,12 +258,12 @@ class ShuffleNetV2(tf.keras.Model):
     def call(self, x, training=None):
         skip_connections = {}
         x = self.init_conv(x)
-        # skip_connections[self.skip_layers[0]] = x
+        skip_connections[self.skip_layers[0]] = x
         for i, layer_ops in enumerate(self.base):
             for layer_op in layer_ops:
                 x = layer_op(x)
-            # if i + 2 in self.out_stages:
-            #     skip_connections[self.skip_layers[i + 1]] = x
+            if i + 2 in self.out_stages:
+                skip_connections[self.skip_layers[i + 1]] = x
         return x, skip_connections
 
 

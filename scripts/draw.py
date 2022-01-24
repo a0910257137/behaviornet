@@ -1,6 +1,8 @@
+from pprint import pprint
 import cv2
 import numpy as np
 import copy
+from sklearn.cluster import KMeans, DBSCAN
 
 
 def draw_box2d(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
@@ -14,31 +16,44 @@ def draw_box2d(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
                           cv2.LINE_AA)
         return img
 
-    def crop(img, tl, br):
-        tl = tl.astype(np.int32)
-        br = br.astype(np.int32)
-        copped_img = img[tl[0]:br[0], tl[1]:br[1], :]
-        return copped_img
+    result = []
+    b_bboxes, b_lnmks = b_obj_kps
+    b_lnmks, b_lnmk_scores, b_lnmk_mask = b_lnmks
+    b_lnmks, b_lnmk_scores, b_lnmk_mask = b_lnmks.numpy(), b_lnmk_scores.numpy(
+    ), b_lnmk_mask.numpy()
+    b_bboxes = b_bboxes.numpy()
 
-    result, cropped_results = [], []
-    obj_kps_results = []
-    b_obj_kps = b_obj_kps.numpy()
 
-    for img, obj_kps in zip(b_imgs, b_obj_kps):
+    for img, obj_kps, lnmks, lnmk_scores, lnmk_masks in zip(
+            b_imgs, b_bboxes, b_lnmks, b_lnmk_scores, b_lnmk_mask):
+        for lnmk, lnmk_score, lnmk_mask in zip(lnmks, lnmk_scores, lnmk_masks):
+            lnmk = lnmk[lnmk_mask]
+            lnmk_score = lnmk_score[lnmk_mask]
+            if len(lnmk) == 0:
+                continue
+            # kmeans = KMeans(n_clusters=2).fit(lnmk)
+            clustering = DBSCAN(eps=3, min_samples=1).fit(lnmk)
+            lbs = clustering.labels_
+            items = np.unique(lbs)
+            for i in items:
+                if i == -1:
+                    continue
+                label_mask = lbs == i
+                kps = lnmk[label_mask]
+                score = lnmk_score[label_mask]
+                kp = np.mean(kps, dtype=np.int32, axis=0)
+
         valid_mask = np.all(np.isfinite(obj_kps), axis=-1)
         obj_kps = obj_kps[valid_mask]
-        obj_kps_results.append(obj_kps)
-        for_copy_img = copy.deepcopy(img)
+
         for obj_kp in obj_kps:
             category_index = int(obj_kp[..., -1])
             category = target_dict[category_index]
             score = obj_kp[..., -2]
             kp = obj_kp[:4]
-            cropped_img = crop(for_copy_img, kp[:2], kp[2:4])
             img = draw_2d(img, kp, score, category)
-            cropped_results.append(cropped_img)
         result.append(img)
-    return result, cropped_results, obj_kps_results
+    return result
 
 
 def draw_landmark(b_orig_imgs, b_landmarks):

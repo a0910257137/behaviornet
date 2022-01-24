@@ -23,8 +23,8 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
         self.train_datasets = train_datasets
         self.test_datasets = test_datasets
         self.config = config
-        self.num_lnmks = self.config.models.head.pred_layer.num_landmarks
-
+        # self.num_lnmks = self.config.models.head.pred_layer.num_landmarks
+        self.num_lnmks = 42
         self.data_cfg = self.config.data_reader
         self.max_obj_num = self.data_cfg.max_obj_num
         self.resize_size = tf.cast(self.data_cfg.resize_size, tf.float32)
@@ -37,6 +37,8 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
             'train': self.train_writer,
             'validation': self.eval_writer
         }
+        # self.keys = ['center', 'eye_lnmks', 'nose_lnmk', 'mouth_lnmk']
+        self.keys = ['center']
 
     def _get_cates(self, tasks):
         def read(path):
@@ -71,6 +73,7 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                     self._summary_hms(self.train_writer, batch_images, gt_hms,
                                       pred_hms, lb_name, self.cates,
                                       self.train_seen)
+
                 elif 'landmarks' in lb_name or 'keypoints' in lb_name:
                     pred_lnmks = tf.reshape(fmaps[lb_name],
                                             [-1, self.num_lnmks, 2])
@@ -164,17 +167,31 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                                          max_outputs=2)
                 elif 'obj' in task_name and 'obj' in lb_name:
                     cates = task_cates[task_name]
-                    for j, cate in enumerate(cates):
+                    pred_hms = pred_hms[:10, ...]
+                    gt_hms = gt_hms[:10, ...]
+                    for j, key in enumerate(self.keys):
                         pred_hm = tf.expand_dims(pred_hms[..., j], axis=-1)
                         gt_hm = tf.expand_dims(gt_hms[..., j], axis=-1)
-                        tf.summary.image(name='Predict ' + cate.upper(),
+                        tf.summary.image(name='Predict ' + key,
                                          data=pred_hm,
                                          step=saved_step,
                                          max_outputs=2)
-                        tf.summary.image(name='Input ' + cate.upper(),
+                        tf.summary.image(name='Input ' + key,
                                          data=gt_hm,
                                          step=saved_step,
                                          max_outputs=2)
+
+                    # for j, cate in enumerate(cates):
+                    #     pred_hm = tf.expand_dims(pred_hms[..., j], axis=-1)
+                    #     gt_hm = tf.expand_dims(gt_hms[..., j], axis=-1)
+                    #     tf.summary.image(name='Predict ' + cate.upper(),
+                    #                      data=pred_hm,
+                    #                      step=saved_step,
+                    #                      max_outputs=2)
+                    #     tf.summary.image(name='Input ' + cate.upper(),
+                    #                      data=gt_hm,
+                    #                      step=saved_step,
+                    #                      max_outputs=2)
 
         writer.flush()
 
@@ -191,7 +208,6 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                     self._summary_hms(self.eval_writer, batch_images, gt_hms,
                                       pred_hms, lb_name, self.cates,
                                       self.eval_seen)
-
                 elif 'landmarks' in lb_name or 'keypoints' in lb_name:
                     pred_lnmks = tf.reshape(fmaps[lb_name],
                                             [-1, self.num_lnmks, 2])
