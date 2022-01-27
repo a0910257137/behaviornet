@@ -131,23 +131,26 @@ def build_eye_cls(obj_lnmks, obj):
     return obj_lnmks
 
 
-def build_keypoints(obj, obj_cates, img, img_info, img_size):
+def build_keypoints(obj, obj_cates, img_info, img_size):
     kps = obj["keypoints"]
     keys = list(kps.keys())
-
     obj_kp = []
 
-    obj_kp = np.asarray([kps[key]
-                         for key in keys]).astype(np.float32).reshape([-1, 2])
+    for key in keys:
+        kp = kps[key]
+        if np.any(kp == None):
+            obj_kp.append([-1., -1.])
+        else:
+            obj_kp.append(kp)
+
+    obj_kp = np.asarray(obj_kp).astype(np.float32).reshape((-1, 2))
+
+    flag_68_case = False if np.any(obj_kp == -1.) else True
 
     resized_shape = np.array(img_size) / np.array(
         [img_info['width'], img_info['height']])
-
-    imgT = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
     obj_kp = np.einsum('c d, d -> c d', obj_kp, resized_shape[::-1])
-
     obj_kp = np.where(obj_kp < 0., 0., obj_kp)
-
     obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_size[1], obj_kp[:, 0],
                             img_size[1] - 1)
 
@@ -159,7 +162,7 @@ def build_keypoints(obj, obj_cates, img, img_info, img_size):
     cat_lb = np.expand_dims(np.asarray([cat_lb]), axis=-1)
     cat_lb = np.tile(cat_lb, [obj_kp.shape[0], 1])
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
-    return imgT, obj_kp
+    return obj_kp, flag_68_case
 
 
 def get_2d(box):
@@ -188,10 +191,8 @@ def build_2d_obj(obj, obj_cates, img_size, img_info):
         [img_info['width'], img_info['height']])
     obj_kp = np.einsum('c d, d -> c d', obj_kp, resized_shape[::-1])
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
-    # obj_kp = obj_kp.astype(np.float)
-
     bool_mask = np.isinf(obj_kp).astype(np.float)
-    obj_kp = np.where(obj_kp > 0., obj_kp, 0.)
+    obj_kp = np.where(obj_kp >= 0., obj_kp, 0.)
     obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_size[1], obj_kp[:, 0],
                             img_size[1] - 1)
     obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_size[0], obj_kp[:, 1],
@@ -266,38 +267,48 @@ def get_coors(img_root,
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
-    save_root = os.path.abspath(
-        os.path.join(img_root, os.pardir, 'tf_records_68'))
-    # save_root = os.path.abspath(
-    #     os.path.join('/home/anders/Downloads/eye_kps', 'tf_records_68'))
+    save_root = os.path.abspath(os.path.join(img_root, os.pardir,
+                                             'tf_records'))
     # gen btach frame list
     frame_count = 0
     mean_face = None
     for frame in tqdm(anno['frame_list']):
-
         num_train_files -= 1
         frame_kps = []
         frame_theta = []
         img_name = frame['name']
-        img_path = os.path.join(img_root, img_name)
-        img, img_info = is_img_valid(img_path)
+        dataset = frame['dataset']
 
+        if dataset == 'FFHQ':
+            img_root = "/aidata/anders/objects/box2d/ffhq/imgs"
+        img_path = os.path.join(img_root, img_name)
+        # WFLW has sequence
+        # if frame['sequence'] is not None :
+        #     img_path = os.path.join(img_root, frame['sequence'], img_name)
+        img, img_info = is_img_valid(img_path)
         if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
         if task == "obj_det":
             img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
-        elif task == "keypoints":
-            assert len(
-                frame['labels']
-            ) == 1, "Oh no! annotation error, please check one image one label!"
         for obj in frame['labels']:
             if exclude_cates and obj['category'].lower() in exclude_cates:
                 continue
             if obj_classes is not None and task == 'obj_det':
                 obj_kp = build_2d_obj(obj, obj_cates, img_size, img_info)
-                imgT, obj_lnmks = build_keypoints(obj, obj_cates, img,
-                                                  img_info, img_size)
+                obj_lnmks, flag_68_case = build_keypoints(
+                    obj, obj_cates, img_info, img_size)
+
+                if frame_count == 0 and mean_face is None:
+                    mean_face = obj_lnmks[:, :2]
+                theta = 90.
+                if flag_68_case:
+                    trans_mat, scale = transformation_from_points(
+                        obj_lnmks[:, :2][:, ::-1], mean_face[:, ::-1])
+                    rotate_matrix = trans_mat[:, :2] / scale
+                    theta = math.asin(rotate_matrix[0][1]) * 57.3
+                    theta = np.round(theta, 3)
+                frame_theta.append([theta])
                 obj_lnmks = build_eye_cls(obj_lnmks, obj)
                 obj_kp = np.concatenate([obj_kp, obj_lnmks], axis=0)
                 frame_kps.append(obj_kp)
@@ -311,7 +322,7 @@ def get_coors(img_root,
             frame_kps = np.asarray(frame_kps, dtype=np.float32)
             frame_kps = complement(frame_kps, max_obj)
 
-        imgT = imgT[..., ::-1]
+        imgT = img[..., ::-1]
 
         frame_kps = frame_kps.tostring()
         imgT = imgT.tostring()
@@ -363,7 +374,7 @@ def parse_config():
     parser.add_argument('--max_obj', default=15, type=int)
     parser.add_argument('--exclude_cates', default=None, nargs='+')
     parser.add_argument('--min_num', default=1, type=int)
-    parser.add_argument('--train_ratio', default=0.9, type=float)
+    parser.add_argument('--train_ratio', default=0.8, type=float)
     parser.add_argument('--task', default='obj_det', type=str)
     return parser.parse_args()
 

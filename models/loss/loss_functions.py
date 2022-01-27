@@ -606,8 +606,6 @@ def PDFL_wing_loss(pred_lnmks, tar_lnmks, pred_euler_amgles, tar_euler_angles,
 def offset_loss(b_idx, b_oms, tar_vals, batch_size, max_obj_num):
     with tf.name_scope('offset_loss'):
         # B C N 1
-        # b_idx = tf.reshape(b_idx, [batch_size, max_obj_num, 2])
-        # b_idx = tf.cast(b_idx, tf.int32)
         valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
         valid_n = tf.math.reduce_sum(tf.cast(valid_mask, tf.float32), axis=-1)
 
@@ -615,7 +613,6 @@ def offset_loss(b_idx, b_oms, tar_vals, batch_size, max_obj_num):
         b_idx = b_idx[valid_mask]
         tar_vals = tf.reshape(tar_vals, [batch_size, -1, 10])
 
-        # tar_vals = tf.math.log(tar_vals)
         b_idx = tf.reshape(b_idx, [batch_size, -1, 2])
         b_idx = tf.cast(b_idx, tf.int32)
         _, n, c = [tf.shape(b_idx)[i] for i in range(3)]

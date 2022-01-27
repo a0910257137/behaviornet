@@ -18,6 +18,8 @@ class ObjDet:
         b_objs_kps = tf.concat([b_center_kps, b_objs_kps], axis=-2)
         b_objs_kps = tf.cast((b_objs_kps + .5), tf.int32)
         b_objs_kps = tf.cast(b_objs_kps, tf.float32)
+        print(b_objs_kps)
+        xxx
         b_objs_kps = tf.where(b_objs_kps > 1e8, np.inf, b_objs_kps)
         b_objs_kps = tf.where(b_objs_kps < 1e-8, np.inf, b_objs_kps)
 

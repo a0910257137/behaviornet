@@ -8,13 +8,6 @@ from .augmentation.augmentation import Augmentation
 
 class GeneralTasks:
     def __init__(self, config):
-        # def _parse_video_pool(x):
-        #     parse_vals = tf.io.parse_example(x, video_features)
-        #     b_imgs = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)
-        #     b_imgs = tf.reshape(b_imgs,
-        #                         [-1, self.map_height, self.map_width, 3])
-        #     return b_imgs
-
         self.config = config
         self.task_configs = config['tasks']
         self.model_name = self.config.model_name
@@ -26,16 +19,6 @@ class GeneralTasks:
                                         dtype=tf.float32)
         self.max_obj_num = self.config.max_obj_num
         self.img_channel = 3
-        # video_pool = glob(os.path.join(self.config.video_folder,
-        #                                '*.tfrecords'))
-        # video_pool = tf.data.TFRecordDataset(video_pool)
-        # video_pool = video_pool.batch(3, drop_remainder=True)
-        # video_features = {
-        #     "b_images": tf.io.FixedLenFeature([], dtype=tf.string)
-        # }
-        # b_videos = map(lambda x: _parse_video_pool(x), video_pool)
-        # b_videos = np.asarray(list(b_videos))
-        # self.b_videos = tf.cast(b_videos / 255, tf.float32)
         self.features = {
             "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
             "origin_width": tf.io.FixedLenFeature([], dtype=tf.int64),
@@ -70,43 +53,11 @@ class GeneralTasks:
             b_round_kp_idxs, b_kp_idxs, b_coords, b_offset_vals = offer_kps_func(
                 b_objs_kps, self.map_height, self.map_width)
             if task == "obj_det":
-                # b_coords = b_coords[:, :, :, ::-1]
-                # b_obj_sizes = b_obj_sizes[..., ::-1]
-
-                # xywh = xyxy2xywh(b_coords[:, :, 0, :], b_obj_sizes)
-                # # define coords BNDC D = xywh.....5 lnmks
-                # b_coords = tf.concat([xywh, b_coords[:, :, 3:]], axis=-2)
-
-                # validds = tf.math.reduce_all(tf.math.is_finite(b_coords),
-                #                              axis=-1)[:, :, 0]
-
-                # b, n, d, c = [tf.shape(b_coords)[i] for i in range(4)]
-
-                # b_idx = tf.tile(
-                #     tf.range(self.batch_size, dtype=tf.float32)[:, None, None,
-                #                                                 None],
-                #     [1, n, 1, 1])
-                # b_cates = b_cates[:, :, None, None]
-                # b_idx = tf.concat([b_idx, b_cates], axis=-1)
-
-                # b_coords = b_coords / tf.constant([320., 192.])
-
-                # b_coords = tf.concat([b_idx, b_coords], axis=-2)
-
-                # b_coords = b_coords[validds]
-                # validds = tf.cast(validds, tf.int32)
-
-                # num_gts = tf.math.reduce_sum(validds)
-                # num_gts = tf.reshape(num_gts, [-1, 1])
-
-                # targets['b_coords'] = tf.reshape(b_coords, (-1, 8 * 2))
-                # targets['num_gts'] = num_gts
-                # TODO: later part is base line version
-
-                targets["b_coords"] = b_coords
+                b_keypoints = tf.concat(
+                    [b_coords[:, :, :1, :], b_coords[:, :, 3:4, :]], axis=-2)
                 b_hms = tf.py_function(self._draw_kps,
                                        inp=[
-                                           b_coords, b_obj_sizes,
+                                           b_keypoints, b_obj_sizes,
                                            self.map_height, self.map_width,
                                            m_cates, b_cates
                                        ],
@@ -117,7 +68,7 @@ class GeneralTasks:
                                                 np.inf, b_obj_sizes)
                 targets['obj_heat_map'] = b_hms
                 targets['offset_vals'] = b_offset_vals
-                targets['offset_idxs'] = b_coords[:, :, 0, :]
+                targets['offset_idxs'] = b_coords[:, :, 3, :]
 
             elif task == "keypoint":
                 # normalize keypoints the shape is B, N, C, D, where C are each facial landmarks and D are x, y
@@ -125,20 +76,8 @@ class GeneralTasks:
                     [self.map_height[None], self.map_width[None]], axis=-1)
                 b_coords = tf.einsum('b n c d, d-> b n c d', b_coords,
                                      1 / feat_map_shape)
-                # b_coords = gen_landmarks(self.batch_size, self.max_obj_num,
-                #                          b_coords, self.config.num_landmarks)
                 b_coords = gen_landmarks(self.batch_size, self.max_obj_num,
                                          b_coords, 42)
-                # idx = random.randint(0, 4)
-                # idx = tf.random.uniform((idx, 1),
-                #                         minval=0,
-                #                         maxval=156,
-                #                         dtype=tf.dtypes.int32)
-                # b_videos = tf.gather_nd(self.b_videos, idx)
-                # targets['landmarks'] = b_coords
-                # targets['segmap'] = b_masks
-                # targets["b_videos"] = b_videos
-                # targets['euler_angles'] = b_thetas
         return tf.cast(b_imgs, dtype=tf.float32), targets
 
     def _resize_coors(self, annos, original_sizes, resize_size):
@@ -146,12 +85,6 @@ class GeneralTasks:
         img_down_ratio = tf.cast(img_down_ratio, tf.float32)
         annos, cates = annos[..., :-1], annos[..., -1:]
         down_ratios = tf.constant(1., shape=(self.batch_size, 2))
-        # if task == "obj_det":
-        #     down_ratios = tf.cast(coors_down_ratio * img_down_ratio,
-        #                           tf.float32)
-        # elif task == "keypoint":
-        #     #normalizer via image high and width for each y x
-        #     down_ratios = tf.constant(1., shape=(self.batch_size, 2))
         annos = tf.einsum('b n c d, b  d ->b n c d', annos, down_ratios)
         annos = tf.concat([annos, cates], axis=-1)
 
@@ -235,7 +168,7 @@ class GeneralTasks:
         def draw(kps, sigmas, cates):
             mask = ~tf.math.is_inf(kps)[:, 0, 0]
             kps, sigmas, cates = kps[mask], sigmas[mask], cates[mask]
-            m = 4
+            m = 2
             shape = [int(m), int(h), int(w)]
             hms = np.zeros(shape=shape, dtype=np.float32)
             for kp, sigma, cate in zip(kps, sigmas, cates):
@@ -243,25 +176,13 @@ class GeneralTasks:
                         tf.math.is_inf(kp)):
                     continue
                 for i, i_kp in enumerate(kp):
-                    if i in [0]:
-                        cate = 0
-                    # eyes
-                    elif i in [1, 2]:
-                        cate = 1
-                    # # nose
-                    elif i in [3]:
-                        cate = 2
-                    # # mouth
-                    elif i in [4, 5]:
-                        cate = 3
-                    hms[int(cate)] = draw_msra_gaussian(
-                        hms[int(cate)], np.asarray(i_kp, dtype=np.float32),
+                    hms[int(i)] = draw_msra_gaussian(
+                        hms[int(i)], np.asarray(i_kp, dtype=np.float32),
                         np.asarray(sigma, dtype=np.float32))
 
             return hms
 
         b_sigmas = gaussian_radius(b_obj_sizes)
-
         b_hms = tf.map_fn(lambda x: draw(x[0], x[1], x[2]),
                           (b_round_kps, b_sigmas, b_cates),
                           back_prop=False,

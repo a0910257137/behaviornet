@@ -65,5 +65,5 @@ class CenterODLoss(LossBase):
                 # losses["total"] = self.uncertainty_loss(losses)
                 # losses["total"] = losses['obj_heat_map']
                 losses["total"] = losses['obj_heat_map'] + losses[
-                    "size_loss"] + 0.1 * losses["offset_loss"]
+                    "size_loss"] + 0.5 * losses["offset_loss"]
         return losses
