@@ -49,10 +49,10 @@ class GeneralTasks:
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_objs_kps, b_cates = b_coords[..., :-1], b_coords[..., -1][..., 0]
             b_obj_sizes = self._obj_sizes(b_objs_kps, task)
-
             b_round_kp_idxs, b_kp_idxs, b_coords, b_offset_vals = offer_kps_func(
                 b_objs_kps, self.map_height, self.map_width)
             if task == "obj_det":
+                targets['b_coords'] = b_coords[:, :, 1:, :]
                 b_keypoints = tf.concat(
                     [b_coords[:, :, :1, :], b_coords[:, :, 3:4, :]], axis=-2)
                 b_hms = tf.py_function(self._draw_kps,
@@ -68,6 +68,7 @@ class GeneralTasks:
                                                 np.inf, b_obj_sizes)
                 targets['obj_heat_map'] = b_hms
                 targets['offset_vals'] = b_offset_vals
+
                 targets['offset_idxs'] = b_coords[:, :, 3, :]
 
             elif task == "keypoint":
@@ -132,7 +133,6 @@ class GeneralTasks:
 
     def _obj_sizes(self, b_objs_kps, task):
         if 'obj_det' in str(task):
-
             # B, N, 2, 2
             b_obj_sizes = b_objs_kps[:, :, 1, :] - b_objs_kps[:, :, 0, :]
         elif 'keypoint' in str(task):
@@ -208,6 +208,9 @@ class GeneralTasks:
         origin_width = tf.reshape(parse_vals['origin_width'], (-1, 1))
         b_origin_sizes = tf.concat([origin_height, origin_width], axis=-1)
         b_origin_sizes = tf.cast(b_origin_sizes, tf.int32)
+
         if task == "keypoint" or task == 'obj_det':
             b_theta = tf.io.decode_raw(parse_vals['b_theta'], tf.float32)
+            b_theta = tf.reshape(b_theta,
+                                 [self.batch_size, self.max_obj_num, 1])
         return b_coords, b_images, b_origin_sizes, b_theta

@@ -8,9 +8,9 @@ from ..base import Metric
 class IoU(Metric):
     """Base IOU Metric for box2d or polygon
     """
-    def __call__(self, gt_boxes: Union[List[dict], dict],
-                 eval_boxes: Union[List[dict], dict]
-                 ) -> Union[float, np.ndarray]:
+    def __call__(
+            self, gt_boxes: Union[List[dict], dict],
+            eval_boxes: Union[List[dict], dict]) -> Union[float, np.ndarray]:
         """entry function for calculating iou
 
         Args:

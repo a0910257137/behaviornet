@@ -6,11 +6,11 @@ import os
 import json
 import tensorflow as tf
 import math
-import copy
-from numpy.lib.type_check import asfarray
 from pprint import pprint
 from tqdm import tqdm
 from box import Box
+from face_masker import FaceMasker
+import random
 
 
 def _bytes_feature(value):
@@ -125,43 +125,39 @@ def transformation_from_points(points1, points2):
 
 def build_eye_cls(obj_lnmks, obj):
     obj_lnmks[:2, 2] = -1
-
     # if obj['attributes']['eye_status'] == 'open':
     obj_lnmks[:2, 2] = True
     return obj_lnmks
 
 
-def build_keypoints(obj, obj_cates, img_info, img_size):
+def build_keypoints(obj, obj_cates, img_info):
     kps = obj["keypoints"]
-    keys = list(kps.keys())
     obj_kp = []
-
-    for key in keys:
+    for key in list(kps.keys()):
         kp = kps[key]
         if np.any(kp == None):
-            obj_kp.append([-1., -1.])
+            obj_kp.append([np.inf, np.inf])
         else:
             obj_kp.append(kp)
 
     obj_kp = np.asarray(obj_kp).astype(np.float32).reshape((-1, 2))
+    flag_68_case = False if np.any(obj_kp == np.inf) else True
 
-    flag_68_case = False if np.any(obj_kp == -1.) else True
-
-    resized_shape = np.array(img_size) / np.array(
-        [img_info['width'], img_info['height']])
-    obj_kp = np.einsum('c d, d -> c d', obj_kp, resized_shape[::-1])
     obj_kp = np.where(obj_kp < 0., 0., obj_kp)
-    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_size[1], obj_kp[:, 0],
-                            img_size[1] - 1)
+    obj_kp = np.where(obj_kp == np.inf, -1, obj_kp)
 
-    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_size[0], obj_kp[:, 1],
-                            img_size[0] - 1)
+    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_info['height'], obj_kp[:, 0],
+                            img_info['height'] - 1)
+
+    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_info['width'], obj_kp[:, 1],
+                            img_info['width'] - 1)
     bool_mask = np.isinf(obj_kp).astype(np.float)
     obj_kp = np.where(bool_mask, np.inf, obj_kp)
     cat_lb = obj_cates[obj['category']]
     cat_lb = np.expand_dims(np.asarray([cat_lb]), axis=-1)
     cat_lb = np.tile(cat_lb, [obj_kp.shape[0], 1])
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
+
     return obj_kp, flag_68_case
 
 
@@ -175,7 +171,7 @@ def get_2d(box):
     return obj_kp
 
 
-def build_2d_obj(obj, obj_cates, img_size, img_info):
+def build_2d_obj(obj, obj_cates, img_info):
     obj_kp = get_2d(obj['box2d'])
     obj_name = obj['category'].split(' ')
     cat_key = str()
@@ -187,18 +183,14 @@ def build_2d_obj(obj, obj_cates, img_size, img_info):
     cat_lb = obj_cates[cat_key]
     cat_lb = np.expand_dims(np.asarray([cat_lb, cat_lb]), axis=-1)
 
-    resized_shape = np.array(img_size) / np.array(
-        [img_info['width'], img_info['height']])
-    obj_kp = np.einsum('c d, d -> c d', obj_kp, resized_shape[::-1])
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
     bool_mask = np.isinf(obj_kp).astype(np.float)
     obj_kp = np.where(obj_kp >= 0., obj_kp, 0.)
-    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_size[1], obj_kp[:, 0],
-                            img_size[1] - 1)
-    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_size[0], obj_kp[:, 1],
-                            img_size[0] - 1)
+    obj_kp[:, 0] = np.where(obj_kp[:, 0] < img_info['height'], obj_kp[:, 0],
+                            img_info['height'] - 1)
+    obj_kp[:, 1] = np.where(obj_kp[:, 1] < img_info['width'], obj_kp[:, 1],
+                            img_info['width'] - 1)
     obj_kp = np.where(bool_mask, np.inf, obj_kp)
-
     return obj_kp
 
 
@@ -267,38 +259,39 @@ def get_coors(img_root,
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
-    save_root = os.path.abspath(os.path.join(img_root, os.pardir,
-                                             'tf_records'))
+    # save_root = os.path.abspath(os.path.join(img_root, os.pardir,
+    #                                          'tf_records'))
+    save_root = os.path.join("/home2/user/anders/driv", 'tf_records')
     # gen btach frame list
     frame_count = 0
     mean_face = None
+    face_masker = FaceMasker(
+        is_aug=False,
+        data_root="/aidata/anders/objects/landmarks/PRNet/Data",
+        model_root="/aidata/anders/objects/landmarks/PRNet/model")
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
-        frame_kps = []
-        frame_theta = []
+        frame_kps, frame_theta = [], []
         img_name = frame['name']
         dataset = frame['dataset']
-
-        if dataset == 'FFHQ':
-            img_root = "/aidata/anders/objects/box2d/ffhq/imgs"
         img_path = os.path.join(img_root, img_name)
         # WFLW has sequence
-        # if frame['sequence'] is not None :
+        template_name = "{}.png".format(random.randint(0, 8 - 1))
+        # if frame['sequence'] is not None and dataset == "WFLW":
         #     img_path = os.path.join(img_root, frame['sequence'], img_name)
         img, img_info = is_img_valid(img_path)
         if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
-        if task == "obj_det":
-            img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
+        # if task == "obj_det":
+        #     img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
         for obj in frame['labels']:
             if exclude_cates and obj['category'].lower() in exclude_cates:
                 continue
             if obj_classes is not None and task == 'obj_det':
-                obj_kp = build_2d_obj(obj, obj_cates, img_size, img_info)
+                obj_kp = build_2d_obj(obj, obj_cates, img_info)
                 obj_lnmks, flag_68_case = build_keypoints(
-                    obj, obj_cates, img_info, img_size)
-
+                    obj, obj_cates, img_info)
                 if frame_count == 0 and mean_face is None:
                     mean_face = obj_lnmks[:, :2]
                 theta = 90.
@@ -317,12 +310,40 @@ def get_coors(img_root,
                 if min_num > len(frame_kps):
                     discard_imgs.less_than += 1
                     continue
-
         if obj_classes is not None:
             frame_kps = np.asarray(frame_kps, dtype=np.float32)
             frame_kps = complement(frame_kps, max_obj)
-
+            # fill in theta
+            frame_theta = np.asarray(frame_theta)
+            n, d = frame_theta.shape
+            if len(frame_theta) < max_obj:
+                # number of keypoints
+                # this 2 is coors; hard code term
+                comp = np.empty([max_obj - len(frame_theta), d])
+                comp.fill(np.inf)
+                comp = comp.astype(np.float32)
+                if len(frame_theta) == 0:
+                    frame_theta = comp
+                else:
+                    frame_theta = np.concatenate([frame_theta, comp])
+            else:
+                frame_theta = frame_theta[:max_obj, ...]
         imgT = img[..., ::-1]
+        if random.random() < 0.5:
+            imgT = face_masker.add_mask_one(imgT, frame_kps[:,
+                                                            2:, :2][..., ::-1],
+                                            template_name)
+        imgT = np.asarray(imgT).astype(np.uint8)
+        imgT = cv2.resize(imgT, img_size, interpolation=cv2.INTER_NEAREST)
+        resized_shape = np.array(img_size) / np.array(
+            [img_info['width'], img_info['height']])
+        obj_kps, cates = frame_kps[..., :2], frame_kps[..., -1:]
+        mask = obj_kps == -1
+
+        obj_kps = np.einsum('n c d, d -> n c d', obj_kps, resized_shape[::-1])
+        obj_kps[mask] = -1
+        frame_kps = np.concatenate([obj_kps, cates], axis=-1)
+        frame_kps = frame_kps.astype(np.float32)
 
         frame_kps = frame_kps.tostring()
         imgT = imgT.tostring()
@@ -374,7 +395,7 @@ def parse_config():
     parser.add_argument('--max_obj', default=15, type=int)
     parser.add_argument('--exclude_cates', default=None, nargs='+')
     parser.add_argument('--min_num', default=1, type=int)
-    parser.add_argument('--train_ratio', default=0.8, type=float)
+    parser.add_argument('--train_ratio', default=0.9, type=float)
     parser.add_argument('--task', default='obj_det', type=str)
     return parser.parse_args()
 
