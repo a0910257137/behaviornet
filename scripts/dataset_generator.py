@@ -105,7 +105,7 @@ def transformation_from_points(points1, points2):
     s2 = np.std(points2)
     points1 /= s1
     points2 /= s2
-    '''3 - 計算矩陣M=BA^T；對矩陣M進行SVD分解；計算得到R '''
+    '''3 - 計算矩陣M=BA^T 對矩陣M進行SVD分解；計算得到R '''
     # ||RA-B||; M=BA^T
     A = points1.T  # 2xN
     B = points2.T  # 2xN

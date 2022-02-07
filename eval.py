@@ -31,6 +31,7 @@ class Eval:
         self.save_path = save_path
         self.batch_size = batch_size
         self.mode = self.pred_config['mode']
+
         self.predictor = model(self.pred_config)
 
         self.metric_type = self.metric_config['metric_type']
@@ -190,7 +191,7 @@ class Eval:
             elif self.metric_type.lower() in ['keypoints', 'landmarks', 'nle']:
                 evaluator = BDDMetricEvaluator(self.metric_config)
 
-            report_results = evaluator(gt_bdd_annos, eval_bdd_annos)
+                report_results = evaluator(gt_bdd_annos, eval_bdd_annos)
             if self.metric_type == 'NLE':
                 dump_json(
                     path=
