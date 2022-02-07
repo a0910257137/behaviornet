@@ -6,12 +6,9 @@ import logging
 import datetime
 import commentjson
 import tensorflow as tf
-from PIL import Image
-import numpy as np
 import commentjson
 from .callbacks import EmbeddingMap, LossAndErrorPrintingCallback, CheckpointManagerCallback
 from monitor import logger
-from box import Box
 
 
 def get_callbacks(config, model, optimizer, train_datasets, test_datasets):

@@ -17,24 +17,68 @@ def draw_box2d(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
         return img
 
     result = []
-    b_bboxes, b_ENM = b_obj_kps
-    b_ENM = b_ENM.numpy()
+    b_bboxes, b_lnmks, b_nose_scores = b_obj_kps
+    b_nose_scores = b_nose_scores.numpy()
+    b_lnmks = b_lnmks.numpy()
     b_bboxes = b_bboxes.numpy()
-    for img, objs_kps, ENMs in zip(b_imgs, b_bboxes, b_ENM):
+    for img, objs_kps, lnmks, nose_scores in zip(b_imgs, b_bboxes, b_lnmks,
+                                                 b_nose_scores):
         valid_mask = np.all(np.isfinite(objs_kps), axis=-1)
         objs_kps = objs_kps[valid_mask]
-        ENMs = ENMs[valid_mask].astype(np.int32)
+        hws = objs_kps[:, 2:4] - objs_kps[:, :2]
+        areas = hws[:, 0] * hws[:, 1]
+        if len(areas) != 0:
+            idx = np.argmax(areas, axis=0)
+            objs_kps = np.reshape(objs_kps[idx], (-1, 6))
+            for obj_kps in objs_kps:
+                category_index = int(obj_kps[..., -1])
+                category = target_dict[category_index]
 
-        for obj_kps, ENM in zip(objs_kps, ENMs):
-            for kp in ENM:
-                img = cv2.circle(img, tuple(kp[::-1]), 3, (0, 0, 255), -1)
-            category_index = int(obj_kps[..., -1])
-            category = target_dict[category_index]
-            score = obj_kps[..., -2]
-            kp = obj_kps[:4]
-            img = draw_2d(img, kp, score, category)
+                score = obj_kps[..., -2]
+                kp = obj_kps[:4]
+                tl, br = kp[:2], kp[2:]
+                y1, x1 = tl
+                y2, x2 = br
+                nose_lnmks = lnmks[:, 2, :]
+                logical_y = np.logical_and(y1 < nose_lnmks[:, :1],
+                                           nose_lnmks[:, :1] < y2)
+                logical_x = np.logical_and(x1 < nose_lnmks[:, 1:],
+                                           nose_lnmks[:, 1:] < x2)
+
+                logical_yx = np.concatenate([logical_y, logical_x], axis=-1)
+
+                logical_yx = np.all(logical_yx, axis=-1)
+                lnmks = lnmks[logical_yx]
+                nose_scores = nose_scores[logical_yx]
+                if len(nose_scores) != 0:
+                    max_idx = np.argmax(nose_scores)
+                    n_lnmk = np.reshape(lnmks[max_idx], (5, 2))
+                    for lnmk in n_lnmk:
+                        lnmk = lnmk.astype(np.int32)
+                        img = cv2.circle(img, tuple(lnmk[::-1]), 3,
+                                         (0, 255, 0), -1)
+                img = draw_2d(img, kp, score, category)
         result.append(img)
     return result
+    # result = []
+    # b_bboxes, b_ENM = b_obj_kps
+    # b_ENM = b_ENM.numpy()
+    # b_bboxes = b_bboxes.numpy()
+    # for img, objs_kps, ENMs in zip(b_imgs, b_bboxes, b_ENM):
+    #     valid_mask = np.all(np.isfinite(objs_kps), axis=-1)
+    #     objs_kps = objs_kps[valid_mask]
+    #     ENMs = ENMs[valid_mask].astype(np.int32)
+
+    #     for obj_kps, ENM in zip(objs_kps, ENMs):
+    #         for kp in ENM:
+    #             img = cv2.circle(img, tuple(kp[::-1]), 3, (0, 0, 255), -1)
+    #         category_index = int(obj_kps[..., -1])
+    #         category = target_dict[category_index]
+    #         score = obj_kps[..., -2]
+    #         kp = obj_kps[:4]
+    #         img = draw_2d(img, kp, score, category)
+    #     result.append(img)
+    # return result
     # ----------------------------------------heatmap version---------------------------------------
     # b_bboxes, b_lnmks = b_obj_kps
     # b_lnmks, b_lnmk_scores, b_lnmk_mask = b_lnmks

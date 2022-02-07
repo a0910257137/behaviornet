@@ -126,10 +126,13 @@ class BDDMetricEvaluator(Base):
             _, _, _, _, ret_metric = self.cal_matched_metric(
                 gt_frame, eval_frame)
             if i > 0:
+                if not isinstance(ret_metric, dict):
+                    continue
                 tmp_nle += ret_metric['nle']
                 tmp_interocular += ret_metric['interocular']
-
+        ret_metric = {}
         num_samples = len(tmp_nle)
+
         ret_metric['nle'] = tmp_nle
         ret_metric['interocular'] = tmp_interocular
         ret_metric['num_samples'] = num_samples

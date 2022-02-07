@@ -25,13 +25,16 @@ class Eval:
                  batch_size):
         self.pred_config = config['predictor']
         self.metric_config = config['metric']
+
         self.eval_path = eval_path
         self.img_root = img_root
         self.save_path = save_path
         self.batch_size = batch_size
         self.mode = self.pred_config['mode']
-        self.metric_type = self.metric_config['metric_type']
         self.predictor = model(self.pred_config)
+
+        self.metric_type = self.metric_config['metric_type']
+        self.lnmk_scheme = self.metric_config['lnmk_scheme']
         # self.predictor = None
 
     def with_bddversion(self, input_json_path):
@@ -91,15 +94,50 @@ class Eval:
             yield elems[idx:idx + n]
 
     def split_batchs(self, elems, idx):
+        def _fetch(lnmks, keys, idxs):
+            tmp = []
+            for key in keys[idxs]:
+                tmp.append(lnmks[key])
+            return np.asarray(tmp)
+
         imgs, origin_shapes = [], []
         batch_frames = []
         batch_frames = elems[idx:idx + self.batch_size]
+        LE_idxs, RE_idxs = list(range(27, 33, 1)), list(range(33, 39, 1))
+        NO_idxs, LM_idxs, RM_idxs = [42], [48], [54]
+
         for elem in batch_frames:
+
             img_path = os.path.join(self.img_root, elem['name'])
             img = cv2.imread(img_path)
             h, w, _ = img.shape
             origin_shapes.append((h, w))
             imgs.append(img)
+            for lb in elem["labels"]:
+                gt_lnmks = lb['keypoints']
+                keys = np.asarray(list(gt_lnmks.keys()))
+                LE_kp = np.mean(_fetch(gt_lnmks, keys, LE_idxs),
+                                axis=0,
+                                keepdims=True)
+                RE_kp = np.mean(_fetch(gt_lnmks, keys, RE_idxs),
+                                axis=0,
+                                keepdims=True)
+
+                NO_kp = _fetch(gt_lnmks, keys, NO_idxs)
+                LM_kp = _fetch(gt_lnmks, keys, LM_idxs)
+                RM_kp = _fetch(gt_lnmks, keys, RM_idxs)
+
+                kps = np.concatenate([LE_kp, RE_kp, NO_kp, LM_kp, RM_kp],
+                                     axis=0)
+
+                keys = [
+                    'left_eye_lnmk_27', 'right_eye_lnmk_33', 'nose_lnmk_42',
+                    'outer_lip_lnmk_48', 'outer_lip_lnmk_54'
+                ]
+                replace_infos = {}
+                for key, kp in zip(keys, kps):
+                    replace_infos[key] = kp.tolist()
+                lb["keypoints"] = replace_infos
         yield (imgs, origin_shapes, batch_frames)
 
     def run(self):
@@ -125,30 +163,38 @@ class Eval:
                 for imgs_shapes in batch_imgs_shapes:
                     imgs, shapes, batch_frames = imgs_shapes
                     batch_results = self.predictor.pred(imgs, shapes)
-                    # print("%.3f" % (time.time() - star_time))
+
                     if self.mode == 'centernet':
                         eval_bdd_annos = to_tp_od_bdd(bdd_results,
                                                       batch_results,
                                                       batch_frames, self.cates)
+
                     elif self.mode == 'landmark':
                         eval_bdd_annos = to_lnmk_bdd(bdd_results,
                                                      batch_results,
-                                                     batch_frames, self.cates)
-
+                                                     batch_frames,
+                                                     self.lnmk_scheme)
+                    elif self.mode == 'offset_v3':
+                        eval_bdd_annos = offset_v3_to_tp_od_bdd(
+                            bdd_results, batch_results, batch_frames,
+                            self.cates)
             gt_bdd_annos, eval_bdd_annos = self.with_bddversion(
                 gt_bdd_list), self.with_bddversion(
                     eval_bdd_annos['frame_list'])
+
             if self.metric_config['metric_type'] == 'IoU':
                 # old version could parse all frame and calculate FP FN
                 iou = ComputeIOU(gt_bdd_annos, eval_bdd_annos)
                 self.iou_report(iou, self.cates)
-            elif self.metric_type.lower() in ['keypoints', 'landmark', 'nle']:
+
+            elif self.metric_type.lower() in ['keypoints', 'landmarks', 'nle']:
                 evaluator = BDDMetricEvaluator(self.metric_config)
+
             report_results = evaluator(gt_bdd_annos, eval_bdd_annos)
             if self.metric_type == 'NLE':
                 dump_json(
                     path=
-                    '/aidata/anders/objects/landmarks/metrics/nle_FFHQ_LS3D_W.json',
+                    '/aidata/anders/objects/landmarks/metrics/TEST/offset.json',
                     data=report_results)
             else:
                 obj_level_results = dict(report_results['obj_level'])

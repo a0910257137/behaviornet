@@ -605,27 +605,24 @@ def PDFL_wing_loss(pred_lnmks, tar_lnmks, pred_euler_amgles, tar_euler_angles,
 
 def offset_loss(b_idx, b_oms, tar_vals, batch_size, max_obj_num):
     with tf.name_scope('offset_loss'):
-        # B C N 1
+        # B C N
         valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
-        valid_n = tf.math.reduce_sum(tf.cast(valid_mask, tf.float32), axis=-1)
+        valid_mask = tf.cast(valid_mask, tf.float32)
+        valid_n = tf.math.reduce_sum(valid_mask, axis=-1)
+        b_info_idx = tf.tile(
+            tf.range(batch_size, dtype=tf.int32)[:, None, None],
+            (1, max_obj_num, 1))
 
-        tar_vals = tar_vals[valid_mask]
-        b_idx = b_idx[valid_mask]
-        tar_vals = tf.reshape(tar_vals, [batch_size, -1, 10])
-
-        b_idx = tf.reshape(b_idx, [batch_size, -1, 2])
         b_idx = tf.cast(b_idx, tf.int32)
-        _, n, c = [tf.shape(b_idx)[i] for i in range(3)]
-
-        b_info_idx = tf.range(batch_size, dtype=tf.int32)
-        b_info_idx = tf.tile(b_info_idx[:, None, None], [1, n, 1])
         b_idx = tf.concat([b_info_idx, b_idx], axis=-1)
-
-        pred_off_vals = tf.gather_nd(b_oms, b_idx)
-        abs_vals = tf.math.abs(tar_vals -
-                               tf.reshape(pred_off_vals, [batch_size, -1, 10]))
-
-        loss = tf.math.reduce_mean(
-            tf.math.reduce_sum((abs_vals / valid_n[:, None, None]),
-                               axis=[1, 2]))
+        b_pred_off_vals = tf.reshape(tf.gather_nd(b_oms, b_idx),
+                                     (batch_size, max_obj_num, 4, 2))
+        b_tar_vals = tf.where(tf.math.is_inf(tar_vals), 0., tar_vals)
+        b_pred_off_vals = tf.cast(b_pred_off_vals, tf.float32)
+        batch_N_loss = tf.math.reduce_sum(
+            tf.math.abs(b_tar_vals - b_pred_off_vals),
+            axis=(2, 3)) * valid_mask
+        batch_loss = tf.math.reduce_sum(batch_N_loss,
+                                        axis=-1) / (valid_n + 1e-7)
+        loss = tf.math.reduce_mean(batch_loss)
         return loss

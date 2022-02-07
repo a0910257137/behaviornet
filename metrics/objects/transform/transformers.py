@@ -62,13 +62,13 @@ class Box2DToKeyPointsWithCenter:
 
 
 class LshapeToKeyPoints:
-    """Support transform {​x1, x2, y1, y2}​ to {​top_left, bottom_right}​
-        'box3d': {​
+    """Support transform {x1, x2, y1, y2} to {top_left, bottom_right}
+        'box3d': {
             'l_shape': {
-                ​'facing': 'REAR', 'is_3d': False,
-                'facing_box': {​'x1': 1170, 'y1': 435, 'x2': 1217, 'y2': 482}​
+                'facing': 'REAR', 'is_3d': False,
+                'facing_box': 'x1': 1170, 'y1': 435, 'x2': 1217, 'y2': 482}
             }
-        ​}​
+        }
     """
     def __call__(self, item):
         return dict(top_left=(item['l_shape']['facing_box']['x1'],

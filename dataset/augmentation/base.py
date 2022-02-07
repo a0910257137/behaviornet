@@ -7,7 +7,6 @@ from functools import partial
 from tensorpack.dataflow import *
 from albumentations import Compose, CoarseDropout, GridDropout
 from pprint import pprint
-import os
 
 
 class Base:
@@ -84,18 +83,19 @@ class Base:
         TRACKED_POINTS = [
             19, 23, 24, 28, 29, 32, 35, 38, 45, 49, 50, 56, 59, 10
         ]
-        for img, coors, theta, flip_prob, down_ratio, img_size in zip(
-                b_imgs, b_coors, b_theta, flip_probs, down_ratios,
-                b_img_sizes):
+        for img, coors, theta, flip_prob, img_size in zip(
+                b_imgs, b_coors, b_theta, flip_probs, b_img_sizes):
             valid_mask = np.all(np.isfinite(coors), axis=-1)
             valid_mask = valid_mask[:, 0]
             coors = coors[valid_mask]
+            # check the five landmarks in img or not
+            mask = np.any(coors == -1., axis=-1)
             #flip the yx to xy
             annos = coors[..., :2]
             annos = annos[..., ::-1]
             cates = coors[..., -1:]
             if flip_prob:
-                annos = self._flip(annos, w)
+                annos = self._flip(img, annos, w)
             coors = np.concatenate([annos, cates], axis=-1)
             for tensorpack_aug in tensorpack_chains:
                 if tensorpack_aug == "CropTransform":
@@ -106,7 +106,6 @@ class Base:
                         img, coors, cates = self.crop_transform(
                             img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
-
                 elif tensorpack_aug == "RandomPaste":
                     # do random paste
                     if random.random() < aug_prob:
@@ -121,6 +120,7 @@ class Base:
                         img, coors, cates = self.warp_affine_transform(
                             img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
+            coors[mask, :] = 0
             # norm_annos = (coors[:, TRACKED_POINTS, :2] * down_ratio) / img_size
             # norm_annos = np.reshape(norm_annos, (28))
             # pitch, yaw, roll = calculate_pitch_yaw_roll(norm_annos)
@@ -140,14 +140,39 @@ class Base:
         b_imgs = np.stack(tmp_imgs)
         return b_imgs, b_coors
 
-    def _flip(self, objs_kps, w):
+    def _flip(self, img, objs_kps, w):
+        n, c, d = objs_kps.shape
         objs_wilds = objs_kps[:, 1, 0] - objs_kps[:, 0, 0]
+        objs_wilds = np.tile(objs_wilds[:, np.newaxis, np.newaxis], [1, c, 1])
         objs_kps_x = objs_kps[..., :1]
         objs_kps_x = -objs_kps_x + w - 1
         objs_kps_y = objs_kps[..., -1:]
-        objs_kps_x[:, 0, :] -= objs_wilds
-        objs_kps_x[:, 1, :] += objs_wilds
+        objs_kps_x[:, 0, :] -= objs_wilds[:, 0, :]
+        objs_kps_x[:, 1, :] += objs_wilds[:, 1, :]
         objs_kps = np.concatenate([objs_kps_x, objs_kps_y], axis=-1)
+        objs_boxes = objs_kps[:, :2]
+        jawline = objs_kps[:, 2:19][:, ::-1]
+        eyebrows = objs_kps[:, 19:29][:, ::-1]
+        L_eyes = objs_kps[:, 29:35]
+        R_eyes = objs_kps[:, 35:41]
+
+        nose = objs_kps[:, 41:50]
+
+        out_lips = objs_kps[:, 50:62][:,
+                                      [6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8, 7]]
+
+        in_lips = objs_kps[:, 62:70][:, [4, 3, 2, 1, 0, 7, 6, 5]]
+
+        objs_kps = np.concatenate([
+            objs_boxes, jawline, eyebrows, R_eyes, L_eyes, nose, out_lips,
+            in_lips
+        ],
+                                  axis=-2)
+        # for obj_kps in objs_kps:
+        #     obj_kps = obj_kps.astype(np.int32)
+        #     for kp in obj_kps[67:69]:
+        #         img = cv2.circle(img, tuple(kp), 1, (0, 255, 0), -1)
+        # cv2.imwrite("output.jpg", img[..., ::-1])
         return objs_kps
 
     def draw_mask(self, img, coors):
@@ -338,7 +363,7 @@ class Base:
             check = np.all(check, axis=-1)
             return check
 
-        if np.any(annos > 0.):
+        if np.all(annos > 0.):
             return annos
         else:
             return np.array([])

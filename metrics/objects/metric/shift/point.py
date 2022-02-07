@@ -28,9 +28,7 @@ class PointShift(Metric):
             k: np.array([pt[k].flatten() for pt in eval_pts])
             for k in eval_pts[0].keys()
         }
-
         result = self.calculate(gt_pts, eval_pts)
-
         result = {
             k: v[0][0].item()
             if single_item_flag and isinstance(v, np.ndarray) else v
@@ -168,7 +166,7 @@ class NLE(PointShift):
         assert all(
             isinstance(coord, np.ndarray) and coord.ndim == 2
             for coord in eval_pts.values())
-        interocular_keys = ('left_eye_lnmk_36', 'right_eye_lnmk_45')
+        interocular_keys = ('left_eye_lnmk_27', 'right_eye_lnmk_33')
         interocular = []
         all_keys = set(gt_pts.keys()).union(set(eval_pts.keys()))
         all_keys = sorted(all_keys)
@@ -183,11 +181,12 @@ class NLE(PointShift):
                 interocular.append(gt_value)
             gt_lnmks.append(gt_value)
             eval_lnmks.append(eval_value)
-        gt_lnmks = np.squeeze(np.stack(gt_lnmks), axis=-2)
-        eval_lnmks = np.squeeze(np.stack(eval_lnmks), axis=-2)
-        interocular = np.squeeze(np.stack(interocular), axis=-2)
+        gt_lnmks = np.concatenate(gt_lnmks, axis=0)
+        eval_lnmks = np.concatenate(eval_lnmks, axis=0)
+        interocular = np.concatenate(interocular, axis=0)
         # frobenius norm
         interocular = np.linalg.norm(interocular[0] - interocular[1])
+
         localization_error = np.sum(
             np.linalg.norm(eval_lnmks - gt_lnmks, axis=0))
 
@@ -195,4 +194,5 @@ class NLE(PointShift):
             'nle': [float(localization_error / (interocular * len(all_keys)))],
             'interocular': [float(interocular)]
         })
+
         return nle
