@@ -37,8 +37,8 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
             'train': self.train_writer,
             'validation': self.eval_writer
         }
-        # self.keys = ['center', 'eye_lnmks', 'nose_lnmk', 'mouth_lnmk']
         self.keys = ['center', 'nose_lnmk']
+        # self.keys = ['center']
 
     def _get_cates(self, tasks):
         def read(path):

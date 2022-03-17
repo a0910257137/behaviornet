@@ -1,17 +1,17 @@
 {
     "predictor": {
         "visible_gpu": "1",
-        "pb_path": "/aidata/anders/objects/landmarks/AFLW/archive_model/offset_v2_wing",
+        "pb_path": "/aidata/anders/objects/landmarks/eye_wild/total/archive_model/max",
         "top_k_n": 50,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,
         "n_objs": 30,
         "gpu_fraction":1, 
         "eval_method":"IoU",
-        "mode": "offset",
+        "mode": "classification",
         "img_input_size": [
-            320,
-            192
+            34,
+            26
         ],
         "resize_size": [
             192,
@@ -20,9 +20,7 @@
         "cat_path": "./config/face.txt"
     },
     "metric":{
-        "metric_type":"IoU",
-        "lnmk_scheme":[0, 8, 16, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 
-            37, 38, 39, 42, 48, 50, 51, 52, 54, 56, 57, 58],
+        "metric_type":"KeyPoints",
         "conditions":
             {
                 "transformer_method":"LandMarks",

@@ -51,7 +51,7 @@ class GeneralDataset:
             batch_size = mirrored_strategy.num_replicas_in_sync * self.test_batch_size
         batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
         datasets = datasets.batch(batch_size, drop_remainder=True)
-        datasets = datasets.cache()
+        # datasets = datasets.cache()
         # for ds in datasets:
         #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
         #     #     offset_idxs = targets["offset_idxs"].numpy()

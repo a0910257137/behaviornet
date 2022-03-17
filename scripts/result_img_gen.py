@@ -15,6 +15,12 @@ from behavior_predictor.inference import BehaviorPredictor
 BATCH_SIZE = 1
 
 
+def save_bin(arr, filename):
+    output_file = open(filename, 'wb')
+    arr.tofile(output_file)
+    output_file.close
+
+
 def img_gen(config_path, img_path_root, save_root):
     def _get_cates(path):
         cates = [x.strip() for x in load_text(path)]
@@ -27,7 +33,7 @@ def img_gen(config_path, img_path_root, save_root):
     print('Restore model')
     predictor = BehaviorPredictor(config['predictor'])
     print(predictor)
-    img_names = list(filter(lambda x: 'jpg' in x, os.listdir(img_path_root)))
+    img_names = list(filter(lambda x: 'png' in x, os.listdir(img_path_root)))
     img_paths = list(map(lambda x: os.path.join(img_path_root, x), img_names))
 
     img_path_batchs = [
@@ -38,12 +44,10 @@ def img_gen(config_path, img_path_root, save_root):
         img_names[idx:idx + BATCH_SIZE]
         for idx in range(0, len(img_names), BATCH_SIZE)
     ]
+    # bin_root = "/aidata/anders/objects/landmarks/demo_test/binary"
     for i, (img_paths,
             img_names) in enumerate(zip(img_path_batchs, img_name_batchs)):
         imgs, origin_shapes, orig_imgs = [], [], []
-        if i < 333:
-            continue
-
         for img_path in img_paths:
             print(img_path)
             img = cv2.imread(img_path)
@@ -52,22 +56,23 @@ def img_gen(config_path, img_path_root, save_root):
             orig_imgs.append(img)
             imgs.append(img)
         rets = predictor.pred(imgs, origin_shapes)
-
-        if config['predictor']['mode'] == "centernet":
+        if config['predictor']['mode'] == "centernet" or config['predictor'][
+                'mode'] == "offset_v3":
             target_dict = _get_cates(config['predictor']['cat_path'])
             imgs = draw_box2d(orig_imgs, rets, target_dict)
+        elif config['predictor']['mode'] == "landmark":
+            imgs = draw_landmark(orig_imgs, rets)
+        elif config['predictor']['mode'] == "offset_v1":
+            target_dict = _get_cates(config['predictor']['cat_path'])
+            imgs = draw_offset_v1(orig_imgs, rets, target_dict)
 
-        # elif config['predictor']['mode'] == "landmark":
-        #     imgs = draw_landmark(orig_imgs, rets)
-
-        for img_name, img in zip(img_names, imgs):
-            name = img_name.split('_')[-1]
-            save_path = os.path.join(save_root, 'det_results')
-            if not os.path.exists(save_path):
-                os.mkdir(save_path)
-            print('writing %s' % os.path.join(save_path, img_name))
-            cv2.imwrite(os.path.join(save_path, img_name), img)
-            xxx
+        # for img_name, img in zip(img_names, imgs):
+        #     name = img_name.split('_')[-1]
+        #     save_path = os.path.join(save_root, 'det_results')
+        #     if not os.path.exists(save_path):
+        #         os.mkdir(save_path)
+        #     print('writing %s' % os.path.join(save_path, img_name))
+        #     cv2.imwrite(os.path.join(save_path, img_name), img)
 
 
 def parse_config():

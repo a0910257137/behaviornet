@@ -16,12 +16,15 @@ class PoseEstimator:
             [[self.focal_length, 0, self.camera_center[0]],
              [0, self.focal_length, self.camera_center[1]], [0, 0, 1]],
             dtype="double")
+
         # Assuming no lens distortion
         self.dist_coeefs = np.zeros((4, 1))
         # Rotation vector and translation vector
         self.r_vec = np.array([[0.01891013], [0.08560084], [-3.14392813]])
+
         self.t_vec = np.array([[-14.97821226], [-10.62040383],
                                [-2053.03596872]])
+
         if os.path.isfile('./assets/calibration.yml'):
             mtx, dist, rvecs, tvecs = self.load_coefficients(
                 './assets/calibration.yml')
@@ -52,10 +55,8 @@ class PoseEstimator:
         with open(filename) as file:
             for line in file:
                 raw_value.append(line)
-
         model_points = np.array(raw_value, dtype=np.float32)
         model_points = np.reshape(model_points, (3, -1)).T
-
         # Transform the model into a front view.
         model_points[:, 2] *= -1
         # fetch lnmk25
@@ -71,15 +72,15 @@ class PoseEstimator:
             27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 42, 48, 50, 51,
             52, 54, 56, 57, 58
         ]
-        # -------
         model_points = model_points[lnmk_scheme]
-        # LE = np.mean(model_points[:6], axis=0, keepdims=True)
-        # RE = np.mean(model_points[6:12], axis=0, keepdims=True)
-        # N = model_points[13:14]  #13
-        # LM = model_points[14:15]
-        # RM = model_points[18:19]
-        # model_points = np.concatenate([LE, RE, N, LM, RM], axis=0)
-        #-------
+        LE = np.mean(model_points[:6], axis=0, keepdims=True)
+        RE = np.mean(model_points[6:12], axis=0, keepdims=True)
+        N = model_points[13:14]  #13
+        LM = model_points[14:15]
+        RM = model_points[18:19]
+        model_points = np.concatenate([LE, RE, N, LM, RM], axis=0)
+
+        #----------------------------
 
         model_points = np.asarray(model_points)
         return model_points

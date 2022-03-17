@@ -12,13 +12,14 @@ kp_base_dict = {
 }
 
 
-def offset_v3_to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
+def offset_v2_to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
     b_bboxes, b_lnmks, b_nose_scores = batches_preds
     b_bboxes, b_lnmks, b_nose_scores = b_bboxes.numpy(), b_lnmks.numpy(
     ), b_nose_scores.numpy()
     for bboxes, lnmks, nose_scores, frames in zip(b_bboxes, b_lnmks,
                                                   b_nose_scores,
                                                   batches_frames):
+
         pred_frame = {
             'dataset': frames['dataset'],
             'sequence': frames['sequence'],
@@ -37,6 +38,7 @@ def offset_v3_to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
             tl, br = bbox[:2], bbox[2:4]
             y1, x1 = tl
             y2, x2 = br
+
             nose_lnmks = lnmks[:, 2, :]
             logical_y = np.logical_and(y1 < nose_lnmks[:, :1],
                                        nose_lnmks[:, :1] < y2)
@@ -50,6 +52,57 @@ def offset_v3_to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
                 max_idx = np.argmax(nose_scores)
                 n_bbox = np.reshape(bbox, (-1, 6))
                 n_lnmk = np.reshape(lnmks[max_idx], (-1, 5, 2))
+        for bbox, lnmk in zip(n_bbox, n_lnmk):
+            if len(bbox) != 0:
+                pred_lb = {
+                    'category': cates[int(bbox[5])].upper(),
+                    'box2d': {
+                        'y1': float(bbox[0]),
+                        'x1': float(bbox[1]),
+                        'y2': float(bbox[2]),
+                        'x2': float(bbox[3])
+                    }
+                }
+                kp_base = copy.deepcopy(kp_base_dict)
+                if not np.all(lnmk == None):
+                    kp_base['left_eye_lnmk_27'] = lnmk[0].tolist()
+                    kp_base['right_eye_lnmk_33'] = lnmk[1].tolist()
+                    kp_base['nose_lnmk_42'] = lnmk[2].tolist()
+                    kp_base['outer_lip_lnmk_48'] = lnmk[3].tolist()
+                    kp_base['outer_lip_lnmk_54'] = lnmk[4].tolist()
+                pred_lb['keypoints'] = kp_base
+                pred_frame['labels'].append(pred_lb)
+        bdd_results['frame_list'].append(pred_frame)
+    return bdd_results
+
+
+def offset_v1_to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
+
+    b_bboxes = batches_preds.numpy()
+    for bboxes, frames in zip(b_bboxes, batches_frames):
+
+        pred_frame = {
+            'dataset': frames['dataset'],
+            'sequence': frames['sequence'],
+            'name': frames['name'],
+            'labels': []
+        }
+        valid_mask = np.all(np.isfinite(bboxes), axis=-1)
+        bboxes = bboxes[valid_mask]
+        offset_kps = bboxes[:, -10:]
+        offset_kps = np.reshape(offset_kps, (-1, 5, 2))
+        offset_kps = offset_kps.astype(np.int32)
+        bboxes = bboxes[:, :-10]
+        hws = bboxes[:, 2:4] - bboxes[:, :2]
+        areas = hws[:, 0] * hws[:, 1]
+        n_bbox = [[]]
+        n_lnmk = [[None] * 5]
+        if len(areas) != 0:
+            idx = np.argmax(areas, axis=0)
+            bbox = bboxes[idx]
+
+            n_bbox = np.reshape(bbox, (-1, 6))
+            n_lnmk = np.reshape(offset_kps[idx], (-1, 5, 2))
         for bbox, lnmk in zip(n_bbox, n_lnmk):
             if len(bbox) != 0:
                 pred_lb = {
@@ -129,22 +182,21 @@ def to_lnmk_bdd(bdd_results, batches_preds, batches_frames, lnmk_scheme):
             'name': frame['name'],
             'labels': []
         }
-        preds = preds.astype(np.float16)
-        preds = preds.tolist()
-        tmp_gt_dict = {}
+        preds = preds.astype(np.float32)
+        LE, RE, N, LM, RM = np.mean(preds[3:9], axis=0), np.mean(
+            preds[9:15], axis=0), preds[16], preds[17], preds[21]
+        preds = np.stack([LE, RE, N, LM, RM])
         for gt_lnmks in frame['labels']:
-            keypoints = gt_lnmks['keypoints']
-            keys = list(keypoints.keys())
-            pred_lb = {'keypoints': {}, 'category': gt_lnmks['category']}
-            for i, idx in enumerate(lnmk_scheme):
-                key = keys[idx]
-                if len(preds) == 25:
-                    idx = i
-                pred_lb['keypoints'][key] = preds[idx]
-                kp = keypoints[key]
-                tmp_gt_dict[key] = kp
-            pred_frame['labels'].append(pred_lb)
-            gt_lnmks['keypoints'] = tmp_gt_dict
+            pred_lb = copy.deepcopy(gt_lnmks['keypoints'])
+            keys = list(pred_lb.keys())
+            for key, pred_kp in zip(keys, preds):
+                pred_lb[key] = pred_kp.tolist()
+
+            pred_frame['labels'].append({
+                "keypoints": pred_lb,
+                "box2d": [],
+                "category": "FACE"
+            })
         bdd_results['frame_list'].append(pred_frame)
     return bdd_results
 

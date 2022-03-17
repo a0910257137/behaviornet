@@ -55,6 +55,7 @@ class GeneralTasks:
                 targets['b_coords'] = b_coords[:, :, 1:, :]
                 b_keypoints = tf.concat(
                     [b_coords[:, :, :1, :], b_coords[:, :, 3:4, :]], axis=-2)
+                # b_keypoints = b_coords[:, :, :1, :]
                 b_hms = tf.py_function(self._draw_kps,
                                        inp=[
                                            b_keypoints, b_obj_sizes,
@@ -68,9 +69,7 @@ class GeneralTasks:
                                                 np.inf, b_obj_sizes)
                 targets['obj_heat_map'] = b_hms
                 targets['offset_vals'] = b_offset_vals
-
                 targets['offset_idxs'] = b_coords[:, :, 3, :]
-
             elif task == "keypoint":
                 # normalize keypoints the shape is B, N, C, D, where C are each facial landmarks and D are x, y
                 feat_map_shape = tf.concat(
@@ -179,7 +178,6 @@ class GeneralTasks:
                     hms[int(i)] = draw_msra_gaussian(
                         hms[int(i)], np.asarray(i_kp, dtype=np.float32),
                         np.asarray(sigma, dtype=np.float32))
-
             return hms
 
         b_sigmas = gaussian_radius(b_obj_sizes)

@@ -153,8 +153,8 @@ class Base:
         objs_boxes = objs_kps[:, :2]
         jawline = objs_kps[:, 2:19][:, ::-1]
         eyebrows = objs_kps[:, 19:29][:, ::-1]
-        L_eyes = objs_kps[:, 29:35]
-        R_eyes = objs_kps[:, 35:41]
+        L_eyes = objs_kps[:, 29:35][:, [3, 2, 1, 0, 5, 4]]
+        R_eyes = objs_kps[:, 35:41][:, [3, 2, 1, 0, 5, 4]]
 
         nose = objs_kps[:, 41:50]
 
@@ -168,11 +168,6 @@ class Base:
             in_lips
         ],
                                   axis=-2)
-        # for obj_kps in objs_kps:
-        #     obj_kps = obj_kps.astype(np.int32)
-        #     for kp in obj_kps[67:69]:
-        #         img = cv2.circle(img, tuple(kp), 1, (0, 255, 0), -1)
-        # cv2.imwrite("output.jpg", img[..., ::-1])
         return objs_kps
 
     def draw_mask(self, img, coors):

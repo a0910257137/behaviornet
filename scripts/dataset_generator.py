@@ -261,7 +261,7 @@ def get_coors(img_root,
     num_test_files = num_frames - num_train_files
     # save_root = os.path.abspath(os.path.join(img_root, os.pardir,
     #                                          'tf_records'))
-    save_root = os.path.join("/home2/user/anders/driv", 'tf_records')
+    save_root = os.path.join("/home2/user/anders/celeba", 'tf_records')
     # gen btach frame list
     frame_count = 0
     mean_face = None
@@ -329,7 +329,7 @@ def get_coors(img_root,
             else:
                 frame_theta = frame_theta[:max_obj, ...]
         imgT = img[..., ::-1]
-        if random.random() < 0.5:
+        if random.random() < 0.35:
             imgT = face_masker.add_mask_one(imgT, frame_kps[:,
                                                             2:, :2][..., ::-1],
                                             template_name)

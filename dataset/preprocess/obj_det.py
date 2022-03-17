@@ -11,10 +11,8 @@ class ObjDet:
         b_center_kps = (b_objs_kps[:, :, 1, :] + b_objs_kps[:, :, 0, :]) / 2
         b_center_kps = b_center_kps[:, :, tf.newaxis, :]
         b_objs_kps = self.pick_lnmks(b_objs_kps[:, :, 2:, :])
-
         # B N C D
         b_offset_vals = b_objs_kps[:, :, 2:3, :] - b_objs_kps
-
         b_offset_vals = tf.where(tf.math.is_nan(b_offset_vals), np.inf,
                                  b_offset_vals)
         b_offset_vals = tf.concat(
@@ -23,7 +21,6 @@ class ObjDet:
         # b_offset_vals = b_objs_kps - b_center_kps
         # b_offset_vals = tf.where(tf.math.is_finite(b_offset_vals),
         #                          b_offset_vals, np.inf)
-
         b_objs_kps = tf.concat([b_center_kps, b_objs_kps], axis=-2)
         b_objs_kps = tf.cast((b_objs_kps + .5), tf.int32)
         b_objs_kps = tf.cast(b_objs_kps, tf.float32)

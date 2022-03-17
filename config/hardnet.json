@@ -3,12 +3,12 @@
     "test_batch_size": 36,
     "epochs": 100,
     "learn_rate": 0.0005,
-    "model_path": "/aidata/anders/objects/landmarks/AFLW/archive_model/offset_v3_add_dataset",
+    "model_path": "/aidata/anders/objects/landmarks/AFLW/archive_model/offset_v2_WFLW",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/objects/landmarks/AFLW/archive_model/offset_v3_add_dataset/logs/"
+        "log_dir": "/aidata/anders/objects/landmarks/AFLW/archive_model/offset_v2_WFLW/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -22,19 +22,17 @@
             1.0
         ], //[height, width]
         "shuffle": true,
-        "tasks": [
-            {
-                "preprocess": "obj_det",
-                "read_img": true,
-                "num_lnmks":70,
-                "branches": [
-                    "keypoint"
-                ],
-                "category_path": "./config/face.txt",
-                "train_folder": "/home2/user/anders/mixed/tf_records/train",
-                "test_folder": "/home2/user/anders/mixed/tf_records/test"
-            }
-        ],
+        "tasks": [{
+            "preprocess": "obj_det",
+            "read_img": true,
+            "num_lnmks": 70,
+            "branches": [
+                "keypoint"
+            ],
+            "category_path": "./config/face.txt",
+            "train_folder": "/home2/user/anders/total/tf_records/train",
+            "test_folder": "/home2/user/anders/total/tf_records/test"
+        }],
         "augments": {
             "color_chains": [
                 "contrast",
@@ -43,15 +41,15 @@
                 "hue"
             ],
             "tensorpack_chains": ["WarpAffineTransform"], //"OverlayingMask", "CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
-            "album_chains":{
-                "cutout":{
-                    "max_holes":15,
-                    "min_holes":5,
-                    "max_height":30,
-                    "max_width":30,
-                    "min_height":10,
-                    "min_width":10,
-                    "fill_value":0
+            "album_chains": {
+                "cutout": {
+                    "max_holes": 15,
+                    "min_holes": 5,
+                    "max_height": 30,
+                    "max_width": 30,
+                    "min_height": 10,
+                    "min_width": 10,
+                    "fill_value": 0
                 }
             },
             "do_flip": true
@@ -61,7 +59,7 @@
         "model_name": "obj_det",
         "frozen_backbone": false,
         "multi_optimizer": false,
-        "optimizer": "adam",
+        "optimizer": "sgd",
         "backbone": {
             "module_name": "hardnet",
             "optimizer": "adam",
@@ -92,30 +90,24 @@
             "variables": null,
             "lr": 1e-3,
             "pred_layer": {
-                "heat_maps": [
-                    {
-                        "name": "obj_heat_map",
-                        "out_dims": 2
-                    }
-                ],
-                "size_maps": [
-                    {
-                        "name": "obj_size_maps",
-                        "out_dims": 2
-                    }
-                ],
-                "offset_maps": [
-                    {
-                        "name": "obj_offset_map",
-                        "out_dims": 8
-                    }
-                ]
+                "heat_maps": [{
+                    "name": "obj_heat_map",
+                    "out_dims": 2
+                }],
+                "size_maps": [{
+                    "name": "obj_size_maps",
+                    "out_dims": 2
+                }],
+                "offset_maps": [{
+                    "name": "obj_offset_map",
+                    "out_dims": 8
+                }]
 
             }
         },
         "loss": { //weighted constant based on DETR paper
             "type": "center_od",
-            "size_weight":1
+            "size_weight": 1
         }
     }
 }
