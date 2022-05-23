@@ -5,6 +5,7 @@ from ..utils import ChannelAttention, SelfAttention, PositionEmbeddingSine, ASPP
 from pprint import pprint
 
 conv_mode = 'sp_conv2d'
+norm_method = 'bn'
 
 
 class HardBlock(tf.keras.layers.Layer):
@@ -30,6 +31,7 @@ class HardBlock(tf.keras.layers.Layer):
                           kernel_size=3,
                           strides=1,
                           use_bias=False,
+                          norm_method=norm_method,
                           conv_mode=conv_mode,
                           kernel_initializer=kernel_initializer))
             if (i % 2 == 0) or (i == n_layers - 1):
@@ -82,16 +84,17 @@ class HardBlock(tf.keras.layers.Layer):
 
 class AvgPoolConcat(tf.keras.layers.Layer):
     def __init__(self, **kwargs):
-        self.avg9x9 = tf.keras.layers.AveragePooling2D(pool_size=(9, 9),
+        self.avg9x9 = tf.keras.layers.AveragePooling2D(pool_size=(7, 7),
                                                        strides=1,
                                                        padding='same')
         super().__init__(**kwargs)
 
     def call(self, input, **kwargs):
         x2 = self.avg9x9(input)
-        x3 = input / (
-            tf.reduce_sum(input_tensor=x2, axis=[1, 2], keepdims=True) + 0.1)
-        return tf.concat([input, x2, x3], axis=-1)
+        return tf.concat([input, x2], axis=-1)
+        # x3 = input / (
+        #     tf.reduce_sum(input_tensor=x2, axis=[1, 2], keepdims=True) + 0.1)
+        # return tf.concat([input, x2, x3], axis=-1)
 
 
 class HardNet(tf.keras.Model):
@@ -136,6 +139,7 @@ class HardNet(tf.keras.Model):
         elif arch == 39:
             #HarDNet68
             first_ch = [24, 48]
+            # first_ch = [32, 64]
             ch_list = [96, 320, 640]
             gr = [14, 18, 54]
             n_layers = [4, 16, 8]
@@ -169,6 +173,7 @@ class HardNet(tf.keras.Model):
                       kernel_size=3,
                       strides=2,
                       use_bias=False,
+                      norm_method="bn",
                       conv_mode=conv_mode,
                       name='init_conv1'))
         self._base.append(
@@ -176,8 +181,10 @@ class HardNet(tf.keras.Model):
                       kernel_size=3,
                       strides=1,
                       use_bias=False,
+                      norm_method="bn",
                       conv_mode=conv_mode,
                       name='init_conv2'))
+
         self._shortcut_layers.append(len(self._base) - 1)
         self._base.append(
             tf.keras.layers.AveragePooling2D(pool_size=(3, 3),
@@ -199,6 +206,7 @@ class HardNet(tf.keras.Model):
                     ConvBlock(ch_list[i],
                               kernel_size=1,
                               use_bias=False,
+                              norm_method=norm_method,
                               conv_mode=conv_mode,
                               name='down_trans{}'.format(i + 1)))
             ch = ch_list[i]
@@ -215,6 +223,7 @@ class HardNet(tf.keras.Model):
                     ConvBlock(last_proj_ch,
                               kernel_size=1,
                               use_bias=False,
+                              norm_method=norm_method,
                               conv_mode=conv_mode,
                               name='down_last_trans{}'.format(i + 1)))
                 self._base.append(
@@ -245,8 +254,6 @@ class HardNet(tf.keras.Model):
         j = 0
         for i in range(len(self._base)):
             x = self._base[i](x)
-            # if i == 10:
-            #     skip_connections["auxiliary"] = x
             if i in self._shortcut_layers:
                 skip_connections[self.skip_layers[j]] = x
                 j += 1

@@ -37,8 +37,7 @@ def train(config, is_restore, excluded_layers):
 
 
 def argparser():
-    parser = argparse.ArgumentParser(
-        description='Keywords spotting entry point')
+    parser = argparse.ArgumentParser(description='Facial landmarks and bboxes')
     parser.add_argument('--gpus', help='Use gpus for training or not')
     parser.add_argument(
         "--config",
@@ -56,8 +55,6 @@ def argparser():
 
 if __name__ == '__main__':
     args = argparser()
-    config = read_commentjson(args.config)
-    # config = Box(config)
     set_gpu(args.gpus)
     logger.info(f'Use config: {args.config} to train behavior')
     config = load_configger(args.config)

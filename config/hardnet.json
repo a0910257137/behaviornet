@@ -1,14 +1,14 @@
 {
-    "train_batch_size": 36,
-    "test_batch_size": 36,
+    "train_batch_size": 32,
+    "test_batch_size": 32,
     "epochs": 100,
-    "learn_rate": 0.0005,
-    "model_path": "/aidata/anders/objects/landmarks/AFLW/archive_model/offset_v2_WFLW",
+    "learn_rate": 0.00025,
+    "model_path": "/home2/user/anders/archive_model/dense_conv",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/objects/landmarks/AFLW/archive_model/offset_v2_WFLW/logs/"
+        "log_dir": "/home2/user/anders/archive_model/dense_conv/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -30,8 +30,8 @@
                 "keypoint"
             ],
             "category_path": "./config/face.txt",
-            "train_folder": "/home2/user/anders/total/tf_records/train",
-            "test_folder": "/home2/user/anders/total/tf_records/test"
+            "train_folder": "/home2/user/anders/mixed/tf_records/train",
+            "test_folder": "/home2/user/anders/mixed/tf_records/test"
         }],
         "augments": {
             "color_chains": [
@@ -59,7 +59,7 @@
         "model_name": "obj_det",
         "frozen_backbone": false,
         "multi_optimizer": false,
-        "optimizer": "sgd",
+        "optimizer": "adam",
         "backbone": {
             "module_name": "hardnet",
             "optimizer": "adam",

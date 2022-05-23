@@ -220,6 +220,7 @@ def transform_pd_data(report_results,
     elif metric_type == 'IoU' or metric_type.lower() == 'box2d':
         pd_headers = {'IoU': []}
     data_frame = {'Eval_type': eval_types}
+
     for t in eval_types:
         type_results = report_results[t]
         for key in pd_headers:

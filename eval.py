@@ -21,22 +21,16 @@ from behavior_predictor.inference import BehaviorPredictor
 
 
 class Eval:
-    def __init__(self, model, config, eval_path, img_root, save_path,
-                 batch_size):
+    def __init__(self, model, config, eval_path, img_root, batch_size):
         self.pred_config = config['predictor']
         self.metric_config = config['metric']
-
         self.eval_path = eval_path
         self.img_root = img_root
-        self.save_path = save_path
         self.batch_size = batch_size
         self.mode = self.pred_config['mode']
-
         self.predictor = model(self.pred_config)
-
         self.metric_type = self.metric_config['metric_type']
         self.lnmk_scheme = self.metric_config['lnmk_scheme']
-        # self.predictor = None
 
     def with_bddversion(self, input_json_path):
         psudo_bdd = {
@@ -175,14 +169,14 @@ class Eval:
                                                      batch_results,
                                                      batch_frames,
                                                      self.lnmk_scheme)
-                    elif self.mode == 'offset_v3':
-                        eval_bdd_annos = offset_v3_to_tp_od_bdd(
+                    elif self.mode == 'offset':
+                        eval_bdd_annos = offset_v2_to_tp_od_bdd(
                             bdd_results, batch_results, batch_frames,
                             self.cates)
+
             gt_bdd_annos, eval_bdd_annos = self.with_bddversion(
                 gt_bdd_list), self.with_bddversion(
                     eval_bdd_annos['frame_list'])
-
             if self.metric_config['metric_type'] == 'IoU':
                 # old version could parse all frame and calculate FP FN
                 iou = ComputeIOU(gt_bdd_annos, eval_bdd_annos)
@@ -195,10 +189,11 @@ class Eval:
             if self.metric_type == 'NLE':
                 dump_json(
                     path=
-                    '/aidata/anders/objects/landmarks/metrics/TEST/offset.json',
+                    '/aidata/anders/objects/landmarks/metrics/NLE/optimize.json',
                     data=report_results)
             else:
                 obj_level_results = dict(report_results['obj_level'])
+
                 df, mean_df = transform_pd_data(obj_level_results, True,
                                                 self.metric_type)
                 pprint(mean_df)
@@ -210,7 +205,6 @@ class Eval:
 def parse_args():
     parser = argparse.ArgumentParser(description='Evaluate model performance')
     parser.add_argument('--config', default=None, help='eval config')
-
     parser.add_argument('--batch_size',
                         type=int,
                         default=32,
@@ -218,11 +212,7 @@ def parse_args():
     parser.add_argument('--eval_path',
                         default=None,
                         help='eval data folder or file path')
-
     parser.add_argument('--img_root', help='eval images folder path')
-    parser.add_argument('--save_path', help='save results in folder')
-
-    parser.add_argument('--category', help='evaluate category')
     return parser.parse_args()
 
 
@@ -233,5 +223,5 @@ if __name__ == "__main__":
         raise FileNotFoundError('File %s does not exist.' % args.config)
     config = load_json(args.config)
     eval = Eval(BehaviorPredictor, Box(config), args.eval_path, args.img_root,
-                args.save_path, args.batch_size)
+                args.batch_size)
     eval.run()

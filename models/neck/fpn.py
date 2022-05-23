@@ -4,6 +4,7 @@ from ..backbone.hardnet import *
 from pprint import pprint
 
 conv_mode = 'sp_conv2d'
+norm_method = 'bn'
 
 
 class FPN(tf.keras.Model):
@@ -13,19 +14,19 @@ class FPN(tf.keras.Model):
         self.structure = self.config.neck.structure
         self.SC = self.structure.skip_conv_ch
         up_transi_lists = [
-            224 + self.SC[0], 96 + self.SC[1], 64 + self.SC[2], 32 + self.SC[3]
+            224 + self.SC[0], 96 + self.SC[1], 64 + self.SC[2], 64 + self.SC[3]
         ]
         self.skip_lv = len(self.SC) - 1
         self.conv1x1_ups = []
         for i in range(4):
+            # conv_mode=conv_mode,
             self.conv1x1_ups.append(
                 ConvBlock(up_transi_lists[i],
                           kernel_size=1,
                           use_bias=False,
-                          conv_mode=conv_mode,
+                          norm_method=norm_method,
                           name='up_trans{}'.format(i + 1)))
 
-        self.transitionUp = TransitionUp(name='up_last_trans{}'.format(i + 1))
         self.avg_pool_concat = AvgPoolConcat()
         up_filters = [388, 232, 54, 48]
         self.transpose_up_layers = []
@@ -33,11 +34,11 @@ class FPN(tf.keras.Model):
             self.transpose_up_layers.append(
                 TransposeUp(filters=up_filters[i],
                             scale=2,
-                            norm_method="bn",
+                            norm_method=norm_method,
                             activation="relu"))
-        self.final_up = TransposeUp(filters=self.structure.inter_ch,
+        self.final_up = TransposeUp(filters=32,
                                     scale=2,
-                                    norm_method="bn",
+                                    norm_method=norm_method,
                                     activation="relu")
 
     @tf.function
@@ -52,5 +53,4 @@ class FPN(tf.keras.Model):
                                             skip=skip,
                                             concat=i < self.skip_lv)
         x = self.final_up(x)
-        # x = self.transitionUp(x, up_method='bilinear', skip=None, concat=False)
         return x

@@ -7,12 +7,17 @@ import datetime
 import commentjson
 import tensorflow as tf
 import commentjson
-from .callbacks import EmbeddingMap, LossAndErrorPrintingCallback, CheckpointManagerCallback
+from .callbacks import EmbeddingMap, LossAndErrorPrintingCallback, CheckpointManagerCallback, Histogram
 from monitor import logger
 
 
 def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
     callbacks = []
+    train_writer = tf.summary.create_file_writer(
+        os.path.join(config.summary.log_dir, 'train'))
+    eval_writer = tf.summary.create_file_writer(
+        os.path.join(config.summary.log_dir, 'validation'))
+    writers = {'train': train_writer, 'validation': eval_writer}
     checkpoint = tf.train.Checkpoint(model=model, optimizer=optimizer)
     checkpoint_dir = config.model_path
     manager = tf.train.CheckpointManager(checkpoint,
@@ -29,15 +34,18 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
         write_graph=False,
         write_images=False,
         update_freq='batch',
+        histogram_freq=0,
         profile_batch=0)
-    embedding_map = EmbeddingMap(config=config,
-                                 train_datasets=train_datasets,
-                                 test_datasets=test_datasets,
-                                 update_freq=500)
+    histogram = Histogram(config=config, writers=writers, update_freq=1000)
+    # embedding_map = EmbeddingMap(config=config,
+    #                              writers=writers,
+    #                              train_datasets=train_datasets,
+    #                              test_datasets=test_datasets,
+    #                              update_freq=1000)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
     callbacks.append([
-        saver_callback, tensorboard_callback, embedding_map,
+        saver_callback, tensorboard_callback, histogram,
         LossAndErrorPrintingCallback()
     ])
     return callbacks

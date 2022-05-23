@@ -16,6 +16,10 @@ class CenterODLoss(LossBase):
         elif "center_od" == self.loss_cfg.type:
             # self.keys = ["size_loss", "obj_heat_map"]
             self.keys = ["obj_heat_map", "size_loss"]
+            self.head_keys = [
+                'offset_map_LE', 'offset_map_RE', 'offset_map_LM',
+                'offset_map_RM'
+            ]
             # self.uncertainty_loss = UncertaintyLoss(self.keys)
 
     def build_loss(self, logits, targets, batch, training):
@@ -45,6 +49,8 @@ class CenterODLoss(LossBase):
                     "size_vals"]
                 gt_offset_idxs, gt_offset_vals = targets[
                     "offset_idxs"], targets["offset_vals"]
+                logits["obj_offset_map"] = tf.concat(
+                    [logits[key] for key in self.head_keys], axis=-1)
                 # offset loss
                 losses["offset_loss"] = offset_loss(
                     gt_offset_idxs,
@@ -62,6 +68,7 @@ class CenterODLoss(LossBase):
                     gt_size_vals,
                     batch_size=batch,
                     max_obj_num=self.config.max_obj_num)
+
                 # losses["total"] = self.uncertainty_loss(losses)
                 # losses["total"] = losses['obj_heat_map']
                 losses["total"] = losses['obj_heat_map'] + losses[

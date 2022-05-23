@@ -7,6 +7,7 @@ import numpy as np
 from pprint import pprint
 from pathlib import Path
 from draw import *
+import time
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.io import load_text
@@ -33,7 +34,7 @@ def img_gen(config_path, img_path_root, save_root):
     print('Restore model')
     predictor = BehaviorPredictor(config['predictor'])
     print(predictor)
-    img_names = list(filter(lambda x: 'png' in x, os.listdir(img_path_root)))
+    img_names = list(filter(lambda x: 'jpg' in x, os.listdir(img_path_root)))
     img_paths = list(map(lambda x: os.path.join(img_path_root, x), img_names))
 
     img_path_batchs = [
@@ -44,7 +45,6 @@ def img_gen(config_path, img_path_root, save_root):
         img_names[idx:idx + BATCH_SIZE]
         for idx in range(0, len(img_names), BATCH_SIZE)
     ]
-    # bin_root = "/aidata/anders/objects/landmarks/demo_test/binary"
     for i, (img_paths,
             img_names) in enumerate(zip(img_path_batchs, img_name_batchs)):
         imgs, origin_shapes, orig_imgs = [], [], []
@@ -57,22 +57,24 @@ def img_gen(config_path, img_path_root, save_root):
             imgs.append(img)
         rets = predictor.pred(imgs, origin_shapes)
         if config['predictor']['mode'] == "centernet" or config['predictor'][
-                'mode'] == "offset_v3":
+                'mode'] == "offset" or config['predictor'][
+                    'mode'] == "tflite_offset":
             target_dict = _get_cates(config['predictor']['cat_path'])
             imgs = draw_box2d(orig_imgs, rets, target_dict)
         elif config['predictor']['mode'] == "landmark":
             imgs = draw_landmark(orig_imgs, rets)
-        elif config['predictor']['mode'] == "offset_v1":
-            target_dict = _get_cates(config['predictor']['cat_path'])
-            imgs = draw_offset_v1(orig_imgs, rets, target_dict)
 
-        # for img_name, img in zip(img_names, imgs):
-        #     name = img_name.split('_')[-1]
-        #     save_path = os.path.join(save_root, 'det_results')
-        #     if not os.path.exists(save_path):
-        #         os.mkdir(save_path)
-        #     print('writing %s' % os.path.join(save_path, img_name))
-        #     cv2.imwrite(os.path.join(save_path, img_name), img)
+        for img_name, img in zip(img_names, imgs):
+            cv2.imwrite("output.jpg", img)
+            exit(1)
+            name = img_name.split('_')[-1]
+            save_path = os.path.join(save_root, 'det_results')
+            if not os.path.exists(save_path):
+                os.mkdir(save_path)
+
+            print('writing %s' % os.path.join(save_path, img_name))
+
+            cv2.imwrite(os.path.join(save_path, img_name), img)
 
 
 def parse_config():
@@ -80,6 +82,7 @@ def parse_config():
     parser.add_argument('--config')
     parser.add_argument('--img_root')
     parser.add_argument('--save_root')
+
     return parser.parse_args()
 
 

@@ -1,6 +1,6 @@
 {
     "predictor": {
-        "visible_gpu": "1",
+        "visible_gpu": "0",
         "pb_path": "/aidata/anders/objects/landmarks/eye_wild/total/archive_model/max",
         "top_k_n": 50,
         "nms_iou_thres": 0.5,

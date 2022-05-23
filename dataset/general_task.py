@@ -55,7 +55,6 @@ class GeneralTasks:
                 targets['b_coords'] = b_coords[:, :, 1:, :]
                 b_keypoints = tf.concat(
                     [b_coords[:, :, :1, :], b_coords[:, :, 3:4, :]], axis=-2)
-                # b_keypoints = b_coords[:, :, :1, :]
                 b_hms = tf.py_function(self._draw_kps,
                                        inp=[
                                            b_keypoints, b_obj_sizes,
@@ -192,8 +191,6 @@ class GeneralTasks:
             anno_shape = [-1, self.max_obj_num, self.num_lnmks, 3]
         elif task == "obj_det":
             anno_shape = [-1, self.max_obj_num, self.num_lnmks, 3]
-            # anno_shape = [-1, self.max_obj_num, 2, 3]
-
         b_coords, b_images, b_origin_sizes, b_theta = None, None, None, None
         parse_vals = tf.io.parse_example(infos, self.features)
         b_images = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)

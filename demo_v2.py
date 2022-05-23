@@ -6,10 +6,8 @@ import os
 import argparse
 import commentjson
 from glob import glob
-from matplotlib.pyplot import pink
 import numpy as np
 from pprint import pprint
-from pathlib import Path
 from tqdm import tqdm
 import tensorflow as tf
 from utils.io import *
@@ -18,6 +16,7 @@ from utils.kalman import KalmanFilter as kf_det
 from utils.pose import PoseEstimator
 from behavior_predictor.inference import BehaviorPredictor
 from monitor import logger
+
 
 def load_config(path):
     with open(path) as f:
@@ -44,8 +43,7 @@ class Demo:
         self.pose_estimator = PoseEstimator(img_size=(self.height, self.width))
         self.video_maker = cv2.VideoWriter('demo.avi', fourcc, self.FPS,
                                            (self.width, self.height))
-        # self.video_maker = cv2.VideoWriter('demo.avi', fourcc, 30.0,
-        #                                    (1920, 1080))
+
         self.smooth_funcs = {
             "kalman_avg": self.kalman_avg,
             "rooling_avg": self.rolling_avg
@@ -95,15 +93,19 @@ class Demo:
                 for img, bboxes, lnmks, nose_scores in zip(
                         imgs, b_bboxes, b_lnmks, b_nose_scores):
                     valid_mask = np.all(np.isfinite(bboxes), axis=-1)
+
                     bboxes = bboxes[valid_mask]
                     bbox = self.priority_box2ds(bboxes)
                     tl, br, score, eye_hw = self.smooth_det(
                         bbox, self.glb_box2d_status, self.glb_box2ds)
+
                     if tl is not None and br is not None and score is not None:
                         img = self.draw_bbox(img, tl, br, score)
                         lnmks, nose_scores = self.post_lnmk(
                             tl, br, lnmks, nose_scores)
+
                         if len(nose_scores) != 0:
+
                             max_idx = np.argmax(nose_scores)
                             lnmks = np.reshape(lnmks[max_idx], (5, 2))
                             self.temp_lnmk = lnmks.reshape((-1))
@@ -139,8 +141,6 @@ class Demo:
                 progress_bar.update(1)
 
         self.video_maker.release()
-        # np.save("fatigues.npy", self.total_fatigues)
-        # np.save("distraction.npy", self.total_distraction)
         logger.info("Fished")
 
     def split_batchs(self, elems, idx):
@@ -278,16 +278,6 @@ class Demo:
                 np.int32)
             LE_img = img[LE_tl[0]:LE_br[0], LE_tl[1]:LE_br[1]]
             RE_img = img[RE_tl[0]:RE_br[0], RE_tl[1]:RE_br[1]]
-            # cv2.rectangle(img, tuple(LE_tl[::-1].astype(np.int32)),
-            #               tuple(LE_br[::-1].astype(np.int32)), (0, 255, 0), 3)
-            # cv2.rectangle(img, tuple(RE_tl[::-1].astype(np.int32)),
-            #               tuple(RE_br[::-1].astype(np.int32)), (0, 255, 0), 3)
-            # RE_path = "/aidata/anders/objects/landmarks/eye_wild/total/crop_eyes/RE_frame_{:0>5d}.jpg".format(
-            #     self.curr_frame)
-            # LE_path = "/aidata/anders/objects/landmarks/eye_wild/total/crop_eyesb/LE_frame_{:0>5d}.jpg".format(
-            #     self.curr_frame)
-            # cv2.imwrite(RE_path, LE_img)
-            # cv2.imwrite(LE_path, RE_img)
             return [LE_img, RE_img], [LE_img.shape[:2], RE_img.shape[:2]]
 
         t_h_o = 0

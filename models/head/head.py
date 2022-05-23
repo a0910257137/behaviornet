@@ -3,6 +3,7 @@ from ..utils import ConvBlock
 from pprint import pprint
 
 conv_mode = 'sp_conv2d'
+norm_method = 'bn'
 
 
 class Head(tf.keras.Model):
@@ -12,143 +13,116 @@ class Head(tf.keras.Model):
         self.config = config
         self.head_cfg = self.config.head
         self.pred_config = self.config.head.pred_layer
+        self.head_keys = [
+            'offset_map_LE', 'offset_map_RE', 'offset_map_LM', 'offset_map_RM'
+        ]
         self.task = 'landmarks' if 'num_landmarks' in self.pred_config.keys(
         ) else 'heatmaps'
-        if self.task == 'landmarks':
-            self.flatten_layer = tf.keras.layers.Flatten()
-            self.d_model = self.head_cfg.d_model
-            # self.init_layer = tf.keras.initializers.HeNormal()
-            self.init_layer = tf.keras.initializers.HeUniform()
-            self.num_lnmks = self.pred_config.num_landmarks
-            # self.euler_conv3x3 = ConvBlock(filters=self.d_model // 2,
-            #                                kernel_size=3,
-            #                                strides=1,
-            #                                conv_mode=conv_mode,
-            #                                kernel_initializer=self.init_layer,
-            #                                norm_method="bn",
-            #                                activation="relu")
-            # self.euler_angle_embed = tf.keras.models.Sequential([
-            #     tf.keras.layers.Dense(self.d_model,
-            #                           activation='relu',
-            #                           kernel_initializer=self.init_layer),
-            #     tf.keras.layers.Dense(self.d_model,
-            #                           activation='relu',
-            #                           kernel_initializer=self.init_layer),
-            #     tf.keras.layers.Dense(3,
-            #                           activation=None,
-            #                           kernel_initializer=self.init_layer)
-            # ])
-            # (x1, y1, x2, y2)
-            self.lnmk_conv3x3 = ConvBlock(filters=self.d_model // 2,
-                                          kernel_size=3,
-                                          strides=1,
-                                          conv_mode=conv_mode,
-                                          kernel_initializer=self.init_layer,
-                                          norm_method="bn",
-                                          activation="relu")
-            self.lnmk_embed = tf.keras.models.Sequential([
-                tf.keras.layers.Dense(self.d_model,
-                                      activation='relu',
-                                      kernel_initializer=self.init_layer),
-                tf.keras.layers.Dense(self.d_model,
-                                      activation='relu',
-                                      kernel_initializer=self.init_layer),
-                tf.keras.layers.Dense(self.num_lnmks * 2,
-                                      activation='sigmoid',
-                                      kernel_initializer=self.init_layer)
-            ])
 
-        elif self.task == 'heatmaps':
-            self.conv = {}
-            self.out_tran_dims = 32
-            for k in self.pred_config.keys():
-                pred_branch = self.pred_config[k]
-                for info in pred_branch:
-                    branch_name = info['name']
-                    pred_out_dims = info['out_dims']
-                    if 'heat' in branch_name:
-                        self.conv[branch_name] = [
-                            ConvBlock(filters=self.out_tran_dims,
-                                      kernel_size=3,
-                                      use_bias=True,
-                                      conv_mode=conv_mode,
-                                      norm_method='bn',
-                                      activation='relu'),
-                            ConvBlock(filters=pred_out_dims,
-                                      kernel_size=1,
-                                      activation='sigmoid',
-                                      use_bias=False,
-                                      norm_method=None,
-                                      name=branch_name)
-                        ]
-                    elif 'size' in branch_name:
-                        self.conv[branch_name] = [
-                            ConvBlock(filters=self.out_tran_dims,
-                                      kernel_size=3,
-                                      use_bias=True,
-                                      conv_mode=conv_mode,
-                                      norm_method='bn',
-                                      activation='relu'),
-                            ConvBlock(filters=pred_out_dims,
-                                      kernel_size=1,
-                                      use_bias=False,
-                                      norm_method=None,
-                                      name=branch_name)
-                        ]
-                    elif 'offset' in branch_name:
-                        self.conv[branch_name] = [
-                            ConvBlock(filters=self.out_tran_dims,
-                                      kernel_size=3,
-                                      use_bias=True,
-                                      conv_mode=conv_mode,
-                                      norm_method='bn',
-                                      activation='relu'),
-                            ConvBlock(filters=pred_out_dims,
-                                      kernel_size=1,
-                                      norm_method=None,
-                                      activation=None,
-                                      name=None)
-                        ]
-                    elif 'embed' in branch_name:
-                        self.conv[branch_name] = [
-                            tf.keras.layers.AveragePooling2D(pool_size=(3, 3),
-                                                             strides=1,
-                                                             padding='same'),
-                            ConvBlock(filters=self.out_tran_dims,
-                                      kernel_size=3,
-                                      use_bias=True,
-                                      conv_mode=conv_mode,
-                                      norm_method='bn',
-                                      activation='relu'),
-                            ConvBlock(filters=pred_out_dims,
-                                      kernel_size=1,
-                                      norm_method=None,
-                                      activation=None,
-                                      name=branch_name)
-                        ]
+        self.conv = {}
+        self.out_tran_dims = 32
+        for k in self.pred_config.keys():
+            pred_branch = self.pred_config[k]
+            for info in pred_branch:
+                branch_name = info['name']
+                pred_out_dims = info['out_dims']
+                if 'heat' in branch_name:
+                    self.conv[branch_name] = [
+                        ConvBlock(filters=self.out_tran_dims,
+                                  kernel_size=3,
+                                  use_bias=True,
+                                  norm_method=norm_method,
+                                  conv_mode=conv_mode,
+                                  activation='relu',
+                                  name='heat_conv3x3'),
+                        ConvBlock(filters=pred_out_dims,
+                                  kernel_size=1,
+                                  activation='sigmoid',
+                                  use_bias=True,
+                                  norm_method=None,
+                                  name=branch_name)
+                    ]
+                elif 'size' in branch_name:
+                    self.conv[branch_name] = [
+                        ConvBlock(filters=self.out_tran_dims,
+                                  kernel_size=3,
+                                  use_bias=True,
+                                  norm_method=norm_method,
+                                  conv_mode=conv_mode,
+                                  activation='relu',
+                                  name='size_conv3x3'),
+                        ConvBlock(filters=pred_out_dims,
+                                  kernel_size=1,
+                                  use_bias=True,
+                                  norm_method=None,
+                                  name=branch_name)
+                    ]
+                elif 'offset' in branch_name:
+                    self.conv[branch_name] = [
+                        ConvBlock(filters=self.out_tran_dims,
+                                  kernel_size=3,
+                                  use_bias=True,
+                                  norm_method=norm_method,
+                                  conv_mode=conv_mode,
+                                  activation='relu',
+                                  name='head_conv3x3'),
+                        ConvBlock(filters=2,
+                                  kernel_size=1,
+                                  use_bias=True,
+                                  norm_method=None,
+                                  activation=None,
+                                  name='head_conv1x1_LE'),
+                        ConvBlock(filters=2,
+                                  kernel_size=1,
+                                  use_bias=True,
+                                  norm_method=None,
+                                  activation=None,
+                                  name='head_conv1x1_RE'),
+                        ConvBlock(filters=2,
+                                  kernel_size=1,
+                                  use_bias=True,
+                                  norm_method=None,
+                                  activation=None,
+                                  name='head_conv1x1_LM'),
+                        ConvBlock(filters=2,
+                                  kernel_size=1,
+                                  use_bias=True,
+                                  norm_method=None,
+                                  activation=None,
+                                  name='head_conv1x1_RM')
+                    ]
+                elif 'embed' in branch_name:
+                    self.conv[branch_name] = [
+                        tf.keras.layers.AveragePooling2D(pool_size=(3, 3),
+                                                         strides=1,
+                                                         padding='same'),
+                        ConvBlock(filters=self.out_tran_dims,
+                                  kernel_size=3,
+                                  use_bias=True,
+                                  conv_mode=conv_mode,
+                                  norm_method='bn',
+                                  activation='relu'),
+                        ConvBlock(filters=pred_out_dims,
+                                  kernel_size=1,
+                                  norm_method=None,
+                                  activation=None,
+                                  name=branch_name)
+                    ]
 
     @tf.function
     def call(self, x):
         pred_branches = {}
-        if self.task == "landmarks":
-            lnmk_embeddings = self.lnmk_embed(
-                self.flatten_layer(self.lnmk_conv3x3(x)))
-            # euler_angle_embeddings = self.euler_angle_embed(
-            #     self.flatten_layer(self.euler_conv3x3(x)))
-            # pred_branches = {
-            #     "landmarks": lnmk_embeddings,
-            #     'euler_angles': euler_angle_embeddings
-            # }
-            pred_branches = {"landmarks": lnmk_embeddings}
-
-        elif self.task == "heatmaps":
-            for k in self.pred_config.keys():
-                pred_branch = self.pred_config[k]
-                for info in pred_branch:
-                    branch_name = info['name']
-                    z = self.conv[branch_name][0](x)
+        for k in self.pred_config.keys():
+            pred_branch = self.pred_config[k]
+            for info in pred_branch:
+                branch_name = info['name']
+                z = self.conv[branch_name][0](x)
+                if 'offset' in branch_name:
+                    for i, key in enumerate(self.head_keys):
+                        pred_branches[key] = self.conv[branch_name][i + 1](z)
+                else:
                     pred_branches[branch_name] = self.conv[branch_name][1](z)
-                    if 'heat' in branch_name:
-                        pred_branches[branch_name] = tf.clip_by_value(
-                            pred_branches[branch_name], 1e-4, 1 - 1e-4)
+                if 'heat' in branch_name:
+                    pred_branches[branch_name] = tf.clip_by_value(
+                        pred_branches[branch_name], 1e-4, 1 - 1e-4)
         return pred_branches

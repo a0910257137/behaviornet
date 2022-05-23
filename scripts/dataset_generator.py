@@ -261,7 +261,8 @@ def get_coors(img_root,
     num_test_files = num_frames - num_train_files
     # save_root = os.path.abspath(os.path.join(img_root, os.pardir,
     #                                          'tf_records'))
-    save_root = os.path.join("/home2/user/anders/celeba", 'tf_records')
+    save_root = os.path.join("/aidata/anders/objects/landmarks/celeba",
+                             'tf_records')
     # gen btach frame list
     frame_count = 0
     mean_face = None

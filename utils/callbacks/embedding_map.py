@@ -10,6 +10,7 @@ import copy
 class EmbeddingMap(tf.keras.callbacks.Callback):
     def __init__(self,
                  config,
+                 writers,
                  train_datasets,
                  test_datasets,
                  update_freq,
@@ -29,16 +30,8 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
         self.max_obj_num = self.data_cfg.max_obj_num
         self.resize_size = tf.cast(self.data_cfg.resize_size, tf.float32)
         self.cates = self._get_cates(self.data_cfg.tasks)
-        self.train_writer = tf.summary.create_file_writer(
-            os.path.join(self.config.summary.log_dir, 'train'))
-        self.eval_writer = tf.summary.create_file_writer(
-            os.path.join(self.config.summary.log_dir, 'validation'))
-        self.writers = {
-            'train': self.train_writer,
-            'validation': self.eval_writer
-        }
+        self.writers = writers
         self.keys = ['center', 'nose_lnmk']
-        # self.keys = ['center']
 
     def _get_cates(self, tasks):
         def read(path):
@@ -70,8 +63,8 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                 if 'heat_map' in lb_name:
                     pred_hms = tf.cast(fmaps[lb_name], tf.float16)
                     gt_hms = tf.cast(batch_labels[lb_name], tf.float16)
-                    self._summary_hms(self.train_writer, batch_images, gt_hms,
-                                      pred_hms, lb_name, self.cates,
+                    self._summary_hms(self.writers['train'], batch_images,
+                                      gt_hms, pred_hms, lb_name, self.cates,
                                       self.train_seen)
 
                 elif 'landmarks' in lb_name or 'keypoints' in lb_name:
@@ -94,7 +87,7 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                     batch_images = batch_images.numpy() * 255
                     batch_gt_lnmks = gt_lnmks
                     batch_pred_lnmks = pred_lnmks
-                    self._summary_lnmks(self.train_writer, batch_images,
+                    self._summary_lnmks(self.writers["train"], batch_images,
                                         batch_gt_lnmks, batch_pred_lnmks,
                                         self.train_seen)
 
@@ -157,11 +150,12 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                     for j, cate in enumerate(cates):
                         pred_hm = tf.expand_dims(pred_hms[..., j], axis=-1)
                         gt_hm = tf.expand_dims(gt_hms[..., j], axis=-1)
-                        tf.summary.image(name='Predict ' + cate.upper(),
+                        tf.summary.image(name='Predict/{}'.format(
+                            cate.upper()),
                                          data=pred_hm,
                                          step=saved_step,
                                          max_outputs=2)
-                        tf.summary.image(name='Input ' + cate.upper(),
+                        tf.summary.image(name='Input/{}'.format(cate.upper()),
                                          data=gt_hm,
                                          step=saved_step,
                                          max_outputs=2)
@@ -172,11 +166,11 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                     for j, key in enumerate(self.keys):
                         pred_hm = tf.expand_dims(pred_hms[..., j], axis=-1)
                         gt_hm = tf.expand_dims(gt_hms[..., j], axis=-1)
-                        tf.summary.image(name='Predict ' + key,
+                        tf.summary.image(name='Predict/{}'.format(key),
                                          data=pred_hm,
                                          step=saved_step,
                                          max_outputs=2)
-                        tf.summary.image(name='Input ' + key,
+                        tf.summary.image(name='Input/{}'.format(key),
                                          data=gt_hm,
                                          step=saved_step,
                                          max_outputs=2)
@@ -205,8 +199,8 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                 if 'heat_map' in lb_name:
                     pred_hms = tf.cast(fmaps[lb_name], tf.float32)
                     gt_hms = tf.cast(batch_labels[lb_name], tf.float32)
-                    self._summary_hms(self.eval_writer, batch_images, gt_hms,
-                                      pred_hms, lb_name, self.cates,
+                    self._summary_hms(self.writers['validation'], batch_images,
+                                      gt_hms, pred_hms, lb_name, self.cates,
                                       self.eval_seen)
                 elif 'landmarks' in lb_name or 'keypoints' in lb_name:
                     pred_lnmks = tf.reshape(fmaps[lb_name],
@@ -228,6 +222,6 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                     batch_images = batch_images.numpy() * 255
                     batch_gt_lnmks = gt_lnmks
                     batch_pred_lnmks = pred_lnmks
-                    self._summary_lnmks(self.eval_writer, batch_images,
-                                        batch_gt_lnmks, batch_pred_lnmks,
-                                        self.train_seen)
+                    self._summary_lnmks(self.writers["validation"],
+                                        batch_images, batch_gt_lnmks,
+                                        batch_pred_lnmks, self.train_seen)

@@ -51,31 +51,6 @@ class GeneralDataset:
             batch_size = mirrored_strategy.num_replicas_in_sync * self.test_batch_size
         batch_size = mirrored_strategy.num_replicas_in_sync * self.train_batch_size
         datasets = datasets.batch(batch_size, drop_remainder=True)
-        # datasets = datasets.cache()
-        # for ds in datasets:
-        #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
-        #     #     offset_idxs = targets["offset_idxs"].numpy()
-        #     #     offset_vals = targets['offset_vals'].numpy()
-        #     #     size_idxs = targets['size_idxs'].numpy()
-        #     b_coords = targets['b_coords'].numpy()
-        #     b_img = b_img.numpy() * 255
-        #     b_coords = np.reshape(b_coords, (batch_size, -1, 5, 2))
-        #     for i, (coords, img) in enumerate(zip(b_coords, b_img)):
-        #         mask = np.all(np.isfinite(coords), axis=-1)
-        #         coords = coords[mask]
-        #         coords = np.reshape(coords, (-1, 5, 2))
-        #         for kps in coords:
-        #             kps = kps.reshape((-1, 2))
-        #             for kp in kps[:1]:
-        #                 kp = kp.astype(int)[::-1]
-        #                 img = cv2.circle(img, tuple(kp), 1, (0, 255, 0), -1)
-        #         cv2.imwrite("./output_{}.jpg".format(i), img[..., ::-1])
-        #     exit(1)
-        # for kp in size_idxs:
-        #     kp = kp.astype(int)[::-1]
-        #     img = cv2.circle(img, tuple(kp), 1, (0, 255, 0), -1)
-        #     cv2.imwrite("./output.jpg", img[..., ::-1])
-        #     exit(1)
         datasets = datasets.map(
             lambda *x: self.gener_task.build_maps(batch_size, x),
             num_parallel_calls=tf.data.experimental.AUTOTUNE)

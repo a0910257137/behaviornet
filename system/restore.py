@@ -1,5 +1,4 @@
 import tensorflow as tf
-import copy
 import numpy as np
 from pprint import pprint
 from monitor import logger
@@ -27,23 +26,46 @@ class Restore:
         # load by saved model
         restore_keys = ['backbone', 'neck', 'head']
         restored_model = tf.keras.models.load_model(self.cp_dir)
-        logger.info(f'Train from restoration')
-        logger.info(f'Initialize for building')
-
         model.model(tf.constant(0., shape=[1] + self.inp_size + [3]),
                     training=False)
-
+        logger.info(f'Train from restoration')
+        logger.info(f'Initialize for building')
         logger.info(f'Excluded {excluded_layers}'.format(
             excluded_layers=excluded_layers))
         for key in restore_keys:
             try:
-                if key == 'backbone':
+                if excluded_layers is not None and key in excluded_layers:
+                    continue
+                elif key == 'backbone':
+                    # restore_layers = self.flatten_model(
+                    #     restored_model.backbone.get_layer('hard_net'))
+                    # model_layers = self.flatten_model(
+                    #     model.model.backbone.get_layer('hard_net'))
+                    # for i, (restore_layer, model_layer) in enumerate(
+                    #         zip(restore_layers, model_layers[1:])):
+                    #     if i < 2:
+                    #         continue
+                    #     model_layer.set_weights(restore_layer.get_weights())
                     load_weights = restored_model.backbone.get_layer(
                         'hard_net').get_weights()
                     model.model.backbone.get_layer('hard_net').set_weights(
                         load_weights)
-                elif excluded_layers is not None and key in excluded_layers:
-                    continue
+                elif key == 'neck':
+                    restore_layers = self.flatten_model(
+                        restored_model.get_layer(key))
+                    model_layers = self.flatten_model(
+                        model.model.get_layer(key))
+                    for i, (restore_layer, model_layer) in enumerate(
+                            zip(restore_layers, model_layers)):
+                        print('-' * 100)
+                        print(model_layer.name)
+                        if restore_layer.name in [
+                                'conv_block_44', 'transpose_up_3',
+                                'transpose_up_4'
+                        ]:
+                            continue
+
+                        model_layer.set_weights(restore_layer.get_weights())
                 else:
                     load_weights = restored_model.get_layer(key).get_weights()
                     model.model.get_layer(key).set_weights(load_weights)

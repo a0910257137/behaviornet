@@ -1,4 +1,5 @@
-from logging import error
+import math
+from numpy import dtype
 import tensorflow as tf
 from pprint import pprint
 
@@ -12,10 +13,10 @@ class ConvBlock(tf.keras.layers.Layer):
                  dilation_rate=1,
                  bias_initializer='zeros',
                  kernel_initializer=tf.keras.initializers.HeUniform(),
+                 kernel_constraint=None,
                  activation='relu',
                  norm_method='bn',
                  conv_mode='conv2d',
-                 name=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.activation = activation
@@ -46,6 +47,8 @@ class ConvBlock(tf.keras.layers.Layer):
                 pointwise_initializer=kernel_initializer,
                 depthwise_regularizer=reg_layer,
                 pointwise_regularizer=reg_layer,
+                depthwise_constraint=kernel_constraint,
+                pointwise_constraint=kernel_constraint,
                 bias_initializer=bias_initializer,
                 dilation_rate=self.dilation_rate,
                 padding='same',
@@ -64,6 +67,9 @@ class ConvBlock(tf.keras.layers.Layer):
         if norm_method == 'bn':
             self.norm = tf.keras.layers.BatchNormalization(name='bn')
 
+        elif norm_method == 'range_bn':
+            self.norm = RangeBN(filters=filters, name='range_bn')
+
         if activation in ['relu', 'swish', 'LeakyReLU', 'sigmoid', 'softmax']:
             self.act = tf.keras.layers.Activation(activation=activation,
                                                   name='act_' + activation)
@@ -79,9 +85,90 @@ class ConvBlock(tf.keras.layers.Layer):
         output = self.conv(input)
         if self.norm_method == 'bn':
             output = self.norm(output)
+        elif self.norm_method == 'range_bn':
+            output = self.norm(output)
+            # output = self.norm(output)
         if self.activation is not None:
             output = self.act(output)
         return output
+
+
+class RangeBN(tf.keras.layers.Layer):
+    def __init__(self,
+                 filters,
+                 momentum=0.1,
+                 num_chunks=16,
+                 eps=1e-5,
+                 name=None,
+                 **kwargs):
+        super(RangeBN, self).__init__(**kwargs)
+        self.filters = filters
+
+        self.momentum = momentum
+        self.num_chunks = num_chunks
+        self.eps = eps
+
+    def build(self, input_shape):
+        initializer = tf.keras.initializers.RandomUniform(minval=0., maxval=1)
+        input_shape = tf.TensorShape(input_shape)
+        self.weight = tf.Variable(initial_value=initializer(
+            shape=(input_shape[-1], ), dtype=tf.dtypes.float32),
+                                  name='weights',
+                                  trainable=True)
+        self.bias = self.add_weight(
+            shape=(input_shape[-1], ),
+            initializer=tf.keras.initializers.Constant(0.),
+            name='bias',
+            trainable=True)
+        self.moving_mean = tf.Variable(initial_value=tf.constant(
+            0., shape=(self.filters, )),
+                                       shape=self.filters,
+                                       dtype=tf.dtypes.float32,
+                                       name='moving_mean',
+                                       trainable=False)
+
+        self.moving_variance = tf.Variable(initial_value=tf.constant(
+            0., shape=(self.filters, )),
+                                           shape=(self.filters, ),
+                                           dtype=tf.dtypes.float32,
+                                           name='moving_variance',
+                                           trainable=False)
+        super(RangeBN, self).build(input_shape)
+
+    def call(self, inputs, training=False):
+        if training:
+            B, H, W, C = [tf.shape(inputs)[i] for i in range(4)]
+            y = tf.transpose(inputs, (3, 0, 1, 2))
+            y = tf.reshape(y,
+                           [C, self.num_chunks, B * H * W // self.num_chunks])
+            mean_max = tf.math.reduce_max(y, [-1])
+            mean_max = tf.math.reduce_mean(mean_max, axis=-1)  # C
+            mean_min = tf.math.reduce_min(y, [-1])
+            mean_min = tf.math.reduce_mean(mean_min, axis=-1)  # C
+
+            mean = tf.math.reduce_mean(tf.reshape(y, (C, -1)), axis=-1)  # C
+            B, H, W, C = inputs.get_shape().as_list()
+            if B is None:
+                B = 1
+            upper = (0.5 * 0.35) * (1. + (math.pi * math.log(4))**0.5)
+            lower = ((2. * math.log(B * H * W // self.num_chunks))**0.5)
+            scale_fix = upper / lower
+            scale = 1 / ((mean_max - mean_min) * scale_fix + self.eps)
+
+            self.moving_mean.assign(self.moving_mean * self.momentum +
+                                    (mean * (1 - self.momentum)))
+            self.moving_variance.assign(self.moving_variance * self.momentum +
+                                        (scale * (1 - self.momentum)))
+        else:
+            mean = self.moving_mean
+            scale = self.moving_variance
+        out = (inputs - tf.reshape(mean, (1, 1, 1, self.filters))) * \
+            tf.reshape(scale, (1, 1, 1,self.filters))
+        if self.weight is not None:
+            out = out * tf.reshape(self.weight, (1, 1, 1, self.filters))
+        if self.bias is not None:
+            out = out + tf.reshape(self.bias, (1, 1, 1, self.filters))
+        return out
 
 
 class TransitionUp(tf.keras.layers.Layer):
@@ -114,6 +201,8 @@ class TransposeUp(tf.keras.layers.Layer):
             name='deconv_%s' % self.name)
         if self.norm_method == "bn":
             self.norm = tf.keras.layers.BatchNormalization(name='bn')
+        elif norm_method == 'range_bn':
+            self.norm = RangeBN(filters=filters, name='range_bn')
         if self.activation == "relu":
             self.act = tf.keras.layers.Activation(activation=activation,
                                                   name='act_' + activation)
@@ -122,6 +211,8 @@ class TransposeUp(tf.keras.layers.Layer):
         out = self.up_sample(inputs)
         if self.norm_method is not None:
             out = self.norm(out)
+        elif self.norm_method == 'range_bn':
+            output = self.norm(output)
         if self.activation is not None:
             out = self.act(out)
         if concat:
