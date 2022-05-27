@@ -3,12 +3,12 @@
     "test_batch_size": 32,
     "epochs": 100,
     "learn_rate": 0.00025,
-    "model_path": "/home2/user/anders/archive_model/dense_conv",
+    "model_path": "/home2/user/anders/archive_model/hope_version",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/home2/user/anders/archive_model/dense_conv/logs/"
+        "log_dir": "/home2/user/anders/archive_model/hope_version/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -92,7 +92,7 @@
             "pred_layer": {
                 "heat_maps": [{
                     "name": "obj_heat_map",
-                    "out_dims": 2
+                    "out_dims": 3
                 }],
                 "size_maps": [{
                     "name": "obj_size_maps",

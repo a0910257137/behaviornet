@@ -29,13 +29,16 @@ class Histogram(tf.keras.callbacks.Callback):
         if batch % self.update_freq == 0:
             with self.writers['train'].as_default():
                 for tf_var in self.model.model.trainable_weights:
+                    print('-' * 100)
+                    print(tf_var.name)
                     if tf_var.name in [
-                            'hard_net/conv_block_1/dw_conv/depthwise_kernel:0',
-                            'hard_net/conv_block_2/conv/kernel:0',
-                            'conv_block_42/conv/kernel:0',
-                            'conv_block_43/conv/kernel:0',
-                            'conv_block_44/conv/kernel:0',
-                            'conv_block_45/conv/kernel:0'
+                            'hard_net/init_conv1/sp_conv/depthwise_kernel:0',
+                            'hard_net/init_conv1/sp_conv/pointwise_kernel:0',
+                            'experiments/conv/kernel:0',
+                            'size_conv3x3/sp_conv/depthwise_kernel:0',
+                            'size_conv3x3/sp_conv/pointwise_kernel:0',
+                            'offset_conv3x3/sp_conv/depthwise_kernel:0',
+                            'offset_conv3x3/sp_conv/pointwise_kernel:0'
                     ]:
                         tf.summary.histogram(tf_var.name,
                                              tf_var.numpy(),
@@ -49,12 +52,13 @@ class Histogram(tf.keras.callbacks.Callback):
             with self.writers['validation'].as_default():
                 for tf_var in self.model.model.trainable_weights:
                     if tf_var.name in [
-                            'hard_net/conv_block_1/dw_conv/depthwise_kernel:0',
-                            'hard_net/conv_block_2/conv/kernel:0',
-                            'conv_block_42/conv/kernel:0',
-                            'conv_block_43/conv/kernel:0',
-                            'conv_block_44/conv/kernel:0',
-                            'conv_block_45/conv/kernel:0'
+                            'hard_net/init_conv1/sp_conv/depthwise_kernel:0',
+                            'hard_net/init_conv1/sp_conv/pointwise_kernel:0',
+                            'experiments/conv/kernel:0',
+                            'size_conv3x3/sp_conv/depthwise_kernel:0',
+                            'size_conv3x3/sp_conv/pointwise_kernel:0',
+                            'offset_conv3x3/sp_conv/depthwise_kernel:0',
+                            'offset_conv3x3/sp_conv/pointwise_kernel:0'
                     ]:
                         tf.summary.histogram(tf_var.name,
                                              tf_var.numpy(),

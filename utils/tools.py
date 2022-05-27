@@ -48,6 +48,10 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
         saver_callback, tensorboard_callback, histogram,
         LossAndErrorPrintingCallback()
     ])
+    # callbacks.append([
+    #     saver_callback, tensorboard_callback, histogram,
+    #     LossAndErrorPrintingCallback()
+    # ])
     return callbacks
 
 

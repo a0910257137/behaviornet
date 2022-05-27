@@ -102,7 +102,6 @@ class Eval:
         NO_idxs, LM_idxs, RM_idxs = [42], [48], [54]
 
         for elem in batch_frames:
-
             img_path = os.path.join(self.img_root, elem['name'])
             img = cv2.imread(img_path)
             h, w, _ = img.shape
@@ -169,7 +168,7 @@ class Eval:
                                                      batch_results,
                                                      batch_frames,
                                                      self.lnmk_scheme)
-                    elif self.mode == 'offset':
+                    elif self.mode == 'offset' or self.mode == 'tflite':
                         eval_bdd_annos = offset_v2_to_tp_od_bdd(
                             bdd_results, batch_results, batch_frames,
                             self.cates)
@@ -189,7 +188,7 @@ class Eval:
             if self.metric_type == 'NLE':
                 dump_json(
                     path=
-                    '/aidata/anders/objects/landmarks/metrics/NLE/optimize.json',
+                    '/aidata/anders/objects/landmarks/metrics/concat_version/FP32.json',
                     data=report_results)
             else:
                 obj_level_results = dict(report_results['obj_level'])

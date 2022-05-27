@@ -58,13 +58,11 @@ class Restore:
                     for i, (restore_layer, model_layer) in enumerate(
                             zip(restore_layers, model_layers)):
                         print('-' * 100)
-                        print(model_layer.name)
+                        print(restore_layer.name)
                         if restore_layer.name in [
-                                'conv_block_44', 'transpose_up_3',
-                                'transpose_up_4'
+                                'transpose_up_4', 'experiments'
                         ]:
                             continue
-
                         model_layer.set_weights(restore_layer.get_weights())
                 else:
                     load_weights = restored_model.get_layer(key).get_weights()

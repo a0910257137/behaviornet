@@ -65,31 +65,31 @@ class Head(tf.keras.Model):
                                   norm_method=norm_method,
                                   conv_mode=conv_mode,
                                   activation='relu',
-                                  name='head_conv3x3'),
+                                  name='offset_conv3x3'),
                         ConvBlock(filters=2,
                                   kernel_size=1,
                                   use_bias=True,
                                   norm_method=None,
                                   activation=None,
-                                  name='head_conv1x1_LE'),
+                                  name='offset_conv1x1_LE'),
                         ConvBlock(filters=2,
                                   kernel_size=1,
                                   use_bias=True,
                                   norm_method=None,
                                   activation=None,
-                                  name='head_conv1x1_RE'),
+                                  name='offset_conv1x1_RE'),
                         ConvBlock(filters=2,
                                   kernel_size=1,
                                   use_bias=True,
                                   norm_method=None,
                                   activation=None,
-                                  name='head_conv1x1_LM'),
+                                  name='offset_conv1x1_LM'),
                         ConvBlock(filters=2,
                                   kernel_size=1,
                                   use_bias=True,
                                   norm_method=None,
                                   activation=None,
-                                  name='head_conv1x1_RM')
+                                  name='offset_conv1x1_RM')
                     ]
                 elif 'embed' in branch_name:
                     self.conv[branch_name] = [
@@ -109,6 +109,20 @@ class Head(tf.keras.Model):
                                   name=branch_name)
                     ]
 
+        self.proj_1 = ConvBlock(filters=3,
+                                kernel_size=1,
+                                use_bias=True,
+                                norm_method=norm_method,
+                                activation='relu',
+                                name='experiment_1')
+
+        self.proj_2 = ConvBlock(filters=32,
+                                kernel_size=1,
+                                use_bias=True,
+                                norm_method=norm_method,
+                                activation='relu',
+                                name='experiment_2')
+
     @tf.function
     def call(self, x):
         pred_branches = {}
@@ -116,13 +130,20 @@ class Head(tf.keras.Model):
             pred_branch = self.pred_config[k]
             for info in pred_branch:
                 branch_name = info['name']
-                z = self.conv[branch_name][0](x)
                 if 'offset' in branch_name:
+                    z = self.proj_1(x)
+                    z = self.proj_2(z)
+                    z = self.conv[branch_name][0](z)
                     for i, key in enumerate(self.head_keys):
                         pred_branches[key] = self.conv[branch_name][i + 1](z)
-                else:
+                elif 'size' in branch_name:
+                    z = self.proj_1(x)
+                    z = self.proj_2(z)
+                    z = self.conv[branch_name][0](z)
                     pred_branches[branch_name] = self.conv[branch_name][1](z)
-                if 'heat' in branch_name:
+                elif 'heat' in branch_name:
+                    z = self.conv[branch_name][0](x)
+                    z = self.conv[branch_name][1](z)
                     pred_branches[branch_name] = tf.clip_by_value(
-                        pred_branches[branch_name], 1e-4, 1 - 1e-4)
+                        z, 1e-4, 1 - 1e-4)
         return pred_branches

@@ -48,6 +48,7 @@ def draw_box2d(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
 
                 logical_yx = np.all(logical_yx, axis=-1)
                 lnmks = lnmks[logical_yx]
+
                 nose_scores = nose_scores[logical_yx]
                 if len(nose_scores) != 0:
                     max_idx = np.argmax(nose_scores)
