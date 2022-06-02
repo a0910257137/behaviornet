@@ -188,7 +188,7 @@ class Eval:
             if self.metric_type == 'NLE':
                 dump_json(
                     path=
-                    '/aidata/anders/objects/landmarks/metrics/concat_version/FP32.json',
+                    '/aidata/anders/objects/landmarks/metrics/total_methods/bn_fp32.json',
                     data=report_results)
             else:
                 obj_level_results = dict(report_results['obj_level'])

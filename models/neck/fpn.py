@@ -19,7 +19,6 @@ class FPN(tf.keras.Model):
         self.skip_lv = len(self.SC) - 1
         self.conv1x1_ups = []
         for i in range(4):
-            # conv_mode=conv_mode,
             self.conv1x1_ups.append(
                 ConvBlock(up_transi_lists[i],
                           kernel_size=1,
@@ -41,13 +40,6 @@ class FPN(tf.keras.Model):
                                     norm_method=norm_method,
                                     activation="relu")
 
-        # self.experiments = ConvBlock(32,
-        #                              kernel_size=3,
-        #                              use_bias=False,
-        #                              conv_mode='sp_conv2d',
-        #                              norm_method=norm_method,
-        #                              name='experiments')
-
     @tf.function
     def call(self, inputs):
         x, skip_connections = inputs[0], inputs[1]
@@ -60,5 +52,4 @@ class FPN(tf.keras.Model):
                                             skip=skip,
                                             concat=i < self.skip_lv)
         x = self.final_up(x)
-        # x = self.experiments(x)
         return x

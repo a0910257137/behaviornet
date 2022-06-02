@@ -15,20 +15,12 @@ class ModelFactory:
     def __init__(self, config, lr):
         self.config = config
         self._model_keys = ['backbone', 'neck', 'head']
-
         self.img_channel = 3
-        # self.backbone = Evo(input_shape=(self.config.resize_size[0],
-        #                                  self.config.resize_size[1], 3),
-        #                     pooling='avg_pool',
-        #                     kernel_initializer='he_uniform')
         self.backbone = HardNet39(input_shape=(self.config.resize_size[0],
                                                self.config.resize_size[1],
                                                self.img_channel),
                                   pooling='avg_pool',
                                   kernel_initializer='he_uniform')
-        # self.backbone = SuffleNet(input_shape=(self.config.resize_size[0],
-        #                                        self.config.resize_size[1], 3),
-        #                           kernel_initializer='he_uniform')
         self.neck = None
         if self.config.neck.module_name is not None:
             self.neck = NECK_FACTORY.get(self.config.neck.module_name)(

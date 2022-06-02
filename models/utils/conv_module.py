@@ -102,8 +102,12 @@ class RangeBN(tf.keras.layers.Layer):
                  name=None,
                  **kwargs):
         super(RangeBN, self).__init__(**kwargs)
+        """
+            Follow the reference https://arxiv.org/abs/1805.11046, Scalable Methods for 8-bit Training of Neural Networks
+            With the range of min(x) - max(x) of  input distribution, making more tolerant to quantization.    
+            Formula: x = (x - mu)/(C(n) - range(x - mu))
+        """
         self.filters = filters
-
         self.momentum = momentum
         self.num_chunks = num_chunks
         self.eps = eps

@@ -57,8 +57,7 @@ def img_gen(config_path, img_path_root, save_root):
             imgs.append(img)
         rets = predictor.pred(imgs, origin_shapes)
         if config['predictor']['mode'] == "centernet" or config['predictor'][
-                'mode'] == "offset" or config['predictor'][
-                    'mode'] == "tflite_offset":
+                'mode'] == "offset" or config['predictor']['mode'] == "tflite":
             target_dict = _get_cates(config['predictor']['cat_path'])
             imgs = draw_box2d(orig_imgs, rets, target_dict)
         elif config['predictor']['mode'] == "landmark":

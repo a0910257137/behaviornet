@@ -37,15 +37,6 @@ class Restore:
                 if excluded_layers is not None and key in excluded_layers:
                     continue
                 elif key == 'backbone':
-                    # restore_layers = self.flatten_model(
-                    #     restored_model.backbone.get_layer('hard_net'))
-                    # model_layers = self.flatten_model(
-                    #     model.model.backbone.get_layer('hard_net'))
-                    # for i, (restore_layer, model_layer) in enumerate(
-                    #         zip(restore_layers, model_layers[1:])):
-                    #     if i < 2:
-                    #         continue
-                    #     model_layer.set_weights(restore_layer.get_weights())
                     load_weights = restored_model.backbone.get_layer(
                         'hard_net').get_weights()
                     model.model.backbone.get_layer('hard_net').set_weights(

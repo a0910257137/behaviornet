@@ -167,13 +167,13 @@ class HardNet(tf.keras.Model):
             raise ValueError(
                 "Unsupported HarDNet version with number of layers {}".format(
                     arch))
-
+        # experiment for range_bn op
         self._base.append(
             ConvBlock(first_ch[0],
                       kernel_size=3,
                       strides=2,
                       use_bias=False,
-                      norm_method="bn",
+                      norm_method="range_bn",
                       conv_mode=conv_mode,
                       name='init_conv1'))
         self._base.append(
@@ -181,7 +181,7 @@ class HardNet(tf.keras.Model):
                       kernel_size=3,
                       strides=1,
                       use_bias=False,
-                      norm_method="bn",
+                      norm_method="range_bn",
                       conv_mode=conv_mode,
                       name='init_conv2'))
 

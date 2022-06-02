@@ -36,25 +36,26 @@ def read_json(path):
 
 cp_dir = '/aidata/anders/objects/landmarks/eye_wild/total/archive_model/max'
 model = tf.keras.models.load_model(cp_dir)
-inputs = tf.keras.Input(shape=(26, 34, 3), batch_size=1, name='input')
+inputs = tf.keras.Input(shape=(26, 34, 3), batch_size=2, name='input')
 preds = model(inputs, training=False)
 model = tf.keras.Model(inputs, preds)
 
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
-# converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
 converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
-converter.inference_input_type = tf.uint8
-converter.inference_output_type = tf.uint8
-converter.target_spec.supported_types = [tf.int8, tf.uint8]
-# converter.target_spec.supported_types = [tf.float32]
+converter.target_spec.supported_types = [tf.float32]
+# converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+# converter.inference_input_type = tf.uint8
+# converter.inference_output_type = tf.uint8
+# converter.target_spec.supported_types = [tf.int8, tf.uint8]
+
 converter.representative_dataset = representative_dataset_gen
 tflite_model = converter.convert()
 with open(
-        '/aidata/anders/objects/landmarks/eye_wild/total/archive_model/max/model.tflite',
+        '/aidata/anders/objects/landmarks/eye_wild/total/archive_model/max/FP32.tflite',
         'wb') as f:
     f.write(tflite_model)
 tf.lite.experimental.Analyzer.analyze(
     model_path=
-    '/aidata/anders/objects/landmarks/eye_wild/total/archive_model/max/model.tflite',
+    '/aidata/anders/objects/landmarks/eye_wild/total/archive_model/max/FP32.tflite',
     gpu_compatibility=True)
