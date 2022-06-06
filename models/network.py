@@ -16,8 +16,6 @@ class Network(tf.keras.Model):
                                      metrics=['accuracy'])
         self._loss = loss
         self.optimizer = optimizer
-        # .... Define your model here ....
-        # You need to have compiled your model before calling this.
         # image_inputs = tf.keras.Input(shape=(192, 320, 3), name='image_inputs')
         # preds = self.model(image_inputs, training=False)
         # fully_models = tf.keras.Model(image_inputs, preds, name='fully')
