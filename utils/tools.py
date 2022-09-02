@@ -6,7 +6,6 @@ import logging
 import datetime
 import commentjson
 import tensorflow as tf
-import commentjson
 from .callbacks import EmbeddingMap, LossAndErrorPrintingCallback, CheckpointManagerCallback, Histogram
 from monitor import logger
 
@@ -34,8 +33,8 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
         write_graph=False,
         write_images=False,
         update_freq='batch',
-        histogram_freq=0,
-        profile_batch=0)
+        histogram_freq=1,
+        profile_batch='500,520')
     histogram = Histogram(config=config, writers=writers, update_freq=1000)
     # embedding_map = EmbeddingMap(config=config,
     #                              writers=writers,
@@ -44,10 +43,9 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
     #                              update_freq=1000)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
-    callbacks.append([
-        saver_callback, tensorboard_callback, histogram,
-        LossAndErrorPrintingCallback()
-    ])
+    callbacks.append(
+        [saver_callback, tensorboard_callback,
+         LossAndErrorPrintingCallback()])
     return callbacks
 
 

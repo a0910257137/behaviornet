@@ -2,13 +2,13 @@
     "train_batch_size": 32,
     "test_batch_size": 32,
     "epochs": 100,
-    "learn_rate": 0.00025,
-    "model_path": "/home2/user/anders/archive_model/rang_bn_2",
+    "learn_rate": 0.000075,
+    "model_path": "/home2/user/anders/archive_model/sigma",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/home2/user/anders/archive_model/rang_bn_2/logs/"
+        "log_dir": "/home2/user/anders/archive_model/sigma/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -30,8 +30,8 @@
                 "keypoint"
             ],
             "category_path": "./config/face.txt",
-            "train_folder": "/home2/user/anders/mixed/tf_records/train",
-            "test_folder": "/home2/user/anders/mixed/tf_records/test"
+            "train_folder": "/home2/user/anders/300VW/tf_records/train",
+            "test_folder": "/home2/user/anders/300VW/tf_records/test"
         }],
         "augments": {
             "color_chains": [

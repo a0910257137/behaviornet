@@ -98,7 +98,7 @@ class RangeBN(tf.keras.layers.Layer):
                  filters,
                  momentum=0.1,
                  num_chunks=16,
-                 eps=1e-5,
+                 eps=1e-6,
                  name=None,
                  **kwargs):
         super(RangeBN, self).__init__(**kwargs)

@@ -24,6 +24,7 @@ def load_config(path):
 
 
 class Demo:
+
     def __init__(self, obj_cfg, cls_cfg, img_root, use_rolling, batch,
                  rolling_len):
         self.obj_cfg = obj_cfg
@@ -79,7 +80,6 @@ class Demo:
         batch_objects = map(lambda x: self.split_batchs(img_path_list, x),
                             range(0, len(img_path_list), self.batch))
         batch_objects = list(batch_objects)
-        # batch_objects = batch_objects[170:]
         progress_bar = tqdm(total=len(batch_objects))
         for batch_imgs_shapes in batch_objects:
             batch_imgs_shapes = list(batch_imgs_shapes)
@@ -103,9 +103,7 @@ class Demo:
                         img = self.draw_bbox(img, tl, br, score)
                         lnmks, nose_scores = self.post_lnmk(
                             tl, br, lnmks, nose_scores)
-
                         if len(nose_scores) != 0:
-
                             max_idx = np.argmax(nose_scores)
                             lnmks = np.reshape(lnmks[max_idx], (5, 2))
                             self.temp_lnmk = lnmks.reshape((-1))
@@ -129,9 +127,9 @@ class Demo:
                             mean_lnmks = np.mean(np.asarray(
                                 self.list_lnmks).reshape([-1, 5, 2]),
                                                  axis=0)
+
                             lnmks[:, 1] = mean_lnmks[:, 1]
 
-                    #TODO: write business logics
                     imgs, post_lnmks = self.business_logics(img, lnmks, eye_hw)
                     for lnmk in post_lnmks:
                         lnmk = (lnmk + .5).astype(np.int32)
@@ -214,6 +212,7 @@ class Demo:
         return tl, br, score, eye_hw
 
     def kalman_avg(self, box2d, glb_box2ds):
+
         def to_xyah(box2d):
             """Convert bounding box to format `(center x, center y, aspect ratio,
             height)`, where the aspect ratio is `width / height`.
@@ -250,6 +249,7 @@ class Demo:
         return tl, br
 
     def business_logics(self, img, lnmks, eye_hw, anl_batch=20):
+
         def reset():
             self.batch_pitch, self.batch_yaw, self.batch_roll, self.eyes_status = [], [], [], []
 

@@ -1,7 +1,6 @@
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock
 import tensorflow as tf
-from ..utils import ChannelAttention, SelfAttention, PositionEmbeddingSine, ASPP
 from pprint import pprint
 
 conv_mode = 'sp_conv2d'

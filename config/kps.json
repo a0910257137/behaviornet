@@ -1,9 +1,9 @@
 {
     "predictor": {
-        "visible_gpu": "-1",
-        "pb_path": "/aidata/anders/objects/landmarks/AFLW/archive_model/hope_version/concat",
-        "weight_root":"/aidata/anders/objects/landmarks/AFLW/archive_model/hope_version/concat", 
-        "top_k_n": 30,
+        "visible_gpu": "0",
+        "pb_path": "/aidata/anders/objects/landmarks/AFLW/archive_model/add_dataset/concat",
+        "weight_root":"/aidata/anders/objects/landmarks/AFLW/archive_model/add_dataset/concat", 
+        "top_k_n": 15,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,
         "n_objs": 30,
@@ -21,13 +21,13 @@
         "cat_path": "./config/face.txt"
     },
     "metric":{
-        "metric_type":"NLE",
+        "metric_type":"LandMarks",
         "lnmk_scheme":[0, 8, 16, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 
             37, 38, 39, 42, 48, 50, 51, 52, 54, 56, 57, 58],
         "conditions": 
             {
                 "transformer_method":"LandMarks",
-                "object_matcher_method":"NLE",
+                "object_matcher_method":"PointDistance",
                 "calculator_method" : "PRFCalculator",
                 "reporter_method" :"EdgePRFReporter",
                 "matcher_threshold" :1000,

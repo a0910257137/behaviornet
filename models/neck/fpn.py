@@ -23,7 +23,7 @@ class FPN(tf.keras.Model):
                 ConvBlock(up_transi_lists[i],
                           kernel_size=1,
                           use_bias=False,
-                          norm_method=norm_method,
+                          norm_method='range_bn',
                           name='up_trans{}'.format(i + 1)))
 
         self.avg_pool_concat = AvgPoolConcat()

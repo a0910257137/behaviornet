@@ -48,12 +48,12 @@ class Restore:
                         model.model.get_layer(key))
                     for i, (restore_layer, model_layer) in enumerate(
                             zip(restore_layers, model_layers)):
-                        print('-' * 100)
-                        print(restore_layer.name)
-                        if restore_layer.name in [
-                                'transpose_up_4', 'experiments'
-                        ]:
-                            continue
+                        # print('-' * 100)
+                        # print(restore_layer.name)
+                        # if restore_layer.name in [
+                        #         'transpose_up_4', 'experiments'
+                        # ]:
+                        #     continue
                         model_layer.set_weights(restore_layer.get_weights())
                 else:
                     load_weights = restored_model.get_layer(key).get_weights()

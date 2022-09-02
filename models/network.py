@@ -4,6 +4,7 @@ from keras_flops import get_flops
 
 
 class Network(tf.keras.Model):
+
     def __init__(self, config, model, _model_keys, **kwargs):
         super(Network, self).__init__(**kwargs)
         self.model = model
@@ -49,6 +50,7 @@ class Network(tf.keras.Model):
         return loss
 
     def get_trainable_variables(self, model):
+
         def disable_training(layer):
             for l in layer.layers:
                 l.trainable = False

@@ -284,8 +284,6 @@ def get_coors(img_root,
         if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
-        # if task == "obj_det":
-        #     img = cv2.resize(img, img_size, interpolation=cv2.INTER_NEAREST)
         for obj in frame['labels']:
             if exclude_cates and obj['category'].lower() in exclude_cates:
                 continue

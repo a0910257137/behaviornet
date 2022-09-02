@@ -172,7 +172,7 @@ def convert2tfl(img_root, save_root, model, tfl_format):
             img = img[..., ::-1] / 255
             img = np.asarray(img).astype(np.float32)
             img = cv2.resize(img, (320, 192))
-            b_imgs = b_imgs[np.newaxis, ...]
+            b_imgs = img[np.newaxis, ...]
             yield [b_imgs]
 
     print("Start converting tf-lite model and the format is {} ...".format(

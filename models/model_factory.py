@@ -12,6 +12,7 @@ from pprint import pprint
 
 
 class ModelFactory:
+
     def __init__(self, config, lr):
         self.config = config
         self._model_keys = ['backbone', 'neck', 'head']

@@ -114,14 +114,14 @@ class Head(tf.keras.Model):
                                 use_bias=True,
                                 norm_method=norm_method,
                                 activation='relu',
-                                name='experiment_1')
+                                name='project_1')
 
         self.proj_2 = ConvBlock(filters=32,
                                 kernel_size=1,
                                 use_bias=True,
                                 norm_method=norm_method,
                                 activation='relu',
-                                name='experiment_2')
+                                name='project_2')
 
     @tf.function
     def call(self, x):
