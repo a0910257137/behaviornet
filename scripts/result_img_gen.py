@@ -7,7 +7,6 @@ import numpy as np
 from pprint import pprint
 from pathlib import Path
 from draw import *
-import time
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.io import load_text
@@ -23,6 +22,7 @@ def save_bin(arr, filename):
 
 
 def img_gen(config_path, img_path_root, save_root):
+
     def _get_cates(path):
         cates = [x.strip() for x in load_text(path)]
         target_cat_dict = {i: k for i, k in enumerate(cates)}
@@ -34,9 +34,8 @@ def img_gen(config_path, img_path_root, save_root):
     print('Restore model')
     predictor = BehaviorPredictor(config['predictor'])
     print(predictor)
-    img_names = list(filter(lambda x: 'jpg' in x, os.listdir(img_path_root)))
+    img_names = list(filter(lambda x: 'png' in x, os.listdir(img_path_root)))
     img_paths = list(map(lambda x: os.path.join(img_path_root, x), img_names))
-
     img_path_batchs = [
         img_paths[idx:idx + BATCH_SIZE]
         for idx in range(0, len(img_paths), BATCH_SIZE)
@@ -45,11 +44,12 @@ def img_gen(config_path, img_path_root, save_root):
         img_names[idx:idx + BATCH_SIZE]
         for idx in range(0, len(img_names), BATCH_SIZE)
     ]
+
     for i, (img_paths,
             img_names) in enumerate(zip(img_path_batchs, img_name_batchs)):
         imgs, origin_shapes, orig_imgs = [], [], []
         for img_path in img_paths:
-            print(img_path)
+
             img = cv2.imread(img_path)
             h, w = img.shape[:2]
             origin_shapes.append((h, w))

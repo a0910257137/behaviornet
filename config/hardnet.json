@@ -1,14 +1,14 @@
 {
     "train_batch_size": 32,
     "test_batch_size": 32,
-    "epochs": 100,
-    "learn_rate": 0.000075,
-    "model_path": "/home2/user/anders/archive_model/sigma",
+    "epochs":70,
+    "learn_rate": 0.00025,
+    "model_path": "/home2/user/anders/archive_model/pose_std",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/home2/user/anders/archive_model/sigma/logs/"
+        "log_dir": "/home2/user/anders/archive_model/pose_std/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -53,6 +53,14 @@
                 }
             },
             "do_flip": true
+        },
+        "3dmm":{
+            "num_vertices":53215, 
+            "model_path":"/home/anders/proj_py/3DHead/scripts/BFM/Out/BFM.mat",
+            "pseudo_T_path":"/aidata/anders/objects/landmarks/3DDFA/pseudo_matrix/T.npy",
+            "pseudo_exp_eq_left":"/aidata/anders/objects/landmarks/3DDFA/pseudo_matrix/exp_eq_left.npy",
+            "pseudo_shp_eq_left": "/aidata/anders/objects/landmarks/3DDFA/pseudo_matrix/shp_eq_left.npy",
+            "max_iter":5
         }
     },
     "models": {
@@ -98,11 +106,10 @@
                     "name": "obj_size_maps",
                     "out_dims": 2
                 }],
-                "offset_maps": [{
-                    "name": "obj_offset_map",
-                    "out_dims": 8
+                "pose_maps": [{
+                    "name": "obj_pose_map",
+                    "out_dims": 3
                 }]
-
             }
         },
         "loss": { //weighted constant based on DETR paper

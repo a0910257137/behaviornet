@@ -6,6 +6,7 @@ import datetime
 
 
 class LossAndErrorPrintingCallback(tf.keras.callbacks.Callback):
+
     def on_epoch_begin(self, epoch, logs=None):
         self.epoch = epoch
 
@@ -17,7 +18,7 @@ class LossAndErrorPrintingCallback(tf.keras.callbacks.Callback):
         self.end_time = time.time()
         train_info = '\n[TRAIN_LOSSES] %s: %d, %s: %d, %s: %.4fs, %s: %s; ' % (
             'epoch', self.epoch, 'step', batch, 'duration',
-            self.end_time - self.start_time, 'Data', now)
+            self.end_time - self.start_time, 'Date', now)
         for key in logs.keys():
             train_info += '%s: %.6f, ' % (key, logs[key])
         logger.info(train_info)
@@ -30,7 +31,7 @@ class LossAndErrorPrintingCallback(tf.keras.callbacks.Callback):
         now = datetime.datetime.now()
         eval_info = '\n[EVAL_LOSSES] %s: %d, %s: %d, %s: %.4fs,%s: %s; ' % (
             'epoch', self.epoch, 'step', batch, 'duration',
-            self.end_time - self.start_time, 'Data', now)
+            self.end_time - self.start_time, 'Date', now)
         for key in logs.keys():
             eval_info += ' %s: %.6f, ' % (key, logs[key])
         logger.info(eval_info)

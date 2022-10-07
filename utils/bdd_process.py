@@ -10,6 +10,8 @@ kp_base_dict = {
     "outer_lip_lnmk_48": None,
     "outer_lip_lnmk_54": None
 }
+param_u_std = np.load(
+    "/aidata/anders/objects/landmarks/3dhead/3ddm_data/param_u_std.npy")
 
 
 def offset_v2_to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
@@ -52,57 +54,6 @@ def offset_v2_to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
                 max_idx = np.argmax(nose_scores)
                 n_bbox = np.reshape(bbox, (-1, 6))
                 n_lnmk = np.reshape(lnmks[max_idx], (-1, 5, 2))
-        for bbox, lnmk in zip(n_bbox, n_lnmk):
-            if len(bbox) != 0:
-                pred_lb = {
-                    'category': cates[int(bbox[5])].upper(),
-                    'box2d': {
-                        'y1': float(bbox[0]),
-                        'x1': float(bbox[1]),
-                        'y2': float(bbox[2]),
-                        'x2': float(bbox[3])
-                    }
-                }
-                kp_base = copy.deepcopy(kp_base_dict)
-                if not np.all(lnmk == None):
-                    kp_base['left_eye_lnmk_27'] = lnmk[0].tolist()
-                    kp_base['right_eye_lnmk_33'] = lnmk[1].tolist()
-                    kp_base['nose_lnmk_42'] = lnmk[2].tolist()
-                    kp_base['outer_lip_lnmk_48'] = lnmk[3].tolist()
-                    kp_base['outer_lip_lnmk_54'] = lnmk[4].tolist()
-                pred_lb['keypoints'] = kp_base
-                pred_frame['labels'].append(pred_lb)
-        bdd_results['frame_list'].append(pred_frame)
-    return bdd_results
-
-
-def offset_v1_to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
-
-    b_bboxes = batches_preds.numpy()
-    for bboxes, frames in zip(b_bboxes, batches_frames):
-
-        pred_frame = {
-            'dataset': frames['dataset'],
-            'sequence': frames['sequence'],
-            'name': frames['name'],
-            'labels': []
-        }
-        valid_mask = np.all(np.isfinite(bboxes), axis=-1)
-        bboxes = bboxes[valid_mask]
-        offset_kps = bboxes[:, -10:]
-        offset_kps = np.reshape(offset_kps, (-1, 5, 2))
-        offset_kps = offset_kps.astype(np.int32)
-        bboxes = bboxes[:, :-10]
-        hws = bboxes[:, 2:4] - bboxes[:, :2]
-        areas = hws[:, 0] * hws[:, 1]
-        n_bbox = [[]]
-        n_lnmk = [[None] * 5]
-        if len(areas) != 0:
-            idx = np.argmax(areas, axis=0)
-            bbox = bboxes[idx]
-
-            n_bbox = np.reshape(bbox, (-1, 6))
-            n_lnmk = np.reshape(offset_kps[idx], (-1, 5, 2))
         for bbox, lnmk in zip(n_bbox, n_lnmk):
             if len(bbox) != 0:
                 pred_lb = {
@@ -201,13 +152,46 @@ def to_lnmk_bdd(bdd_results, batches_preds, batches_frames, lnmk_scheme):
     return bdd_results
 
 
+def pose_to_bdd(bdd_results, batches_preds, batches_frames, cates):
+
+    u, std = param_u_std[:2]
+
+    b_bboxes, b_poses = batches_preds
+    b_bboxes, b_poses = b_bboxes.numpy(), b_poses.numpy()
+    b_poses = b_poses * std + u
+    for bboxes, poses, frames in zip(b_bboxes, b_poses, batches_frames):
+
+        pred_frame = {
+            'dataset': frames['dataset'],
+            'sequence': frames['sequence'],
+            'name': frames['name'],
+            'labels': []
+        }
+        valid_mask = np.all(np.isfinite(bboxes), axis=-1)
+        bboxes = bboxes[valid_mask]
+        for bbox, pose in zip(bboxes, poses):
+            if len(bbox) != 0:
+                pred_lb = {
+                    'category': cates[int(bbox[5])].upper(),
+                    'box2d': {
+                        'y1': float(bbox[0]),
+                        'x1': float(bbox[1]),
+                        'y2': float(bbox[2]),
+                        'x2': float(bbox[3])
+                    },
+                    'pose': pose.tolist()
+                }
+                pred_frame['labels'].append(pred_lb)
+        bdd_results['frame_list'].append(pred_frame)
+    return bdd_results
+
+
 def transform_pd_data(report_results,
                       is_post_cal,
                       metric_type='keypoints',
                       eval_types=('accuracy', 'precision', 'recall')):
     mean_df = None
-    if metric_type.lower() == 'keypoints' or metric_type.lower(
-    ) == 'landmarks':
+    if metric_type.lower() == 'keypoints' or metric_type.lower() == 'landmarks':
         # pd_headers = {'center_point': [], 'top_left': [], 'bottom_right': []}
         pd_headers = {
             'left_eye_lnmk_27': [],
@@ -244,9 +228,7 @@ def transform_pd_data(report_results,
             post_mean_infos[post_key] = array
 
         mean_data_frame = copy.deepcopy(data_frame)
-        mean_data_frame.update(
-            {k: post_mean_infos[k]
-             for k in post_mean_infos})
+        mean_data_frame.update({k: post_mean_infos[k] for k in post_mean_infos})
         mean_df = pd.DataFrame(mean_data_frame)
     data_frame.update({k: pd_headers[k] for k in pd_headers})
     df = pd.DataFrame(data_frame)

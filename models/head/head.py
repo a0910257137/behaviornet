@@ -7,6 +7,7 @@ norm_method = 'bn'
 
 
 class Head(tf.keras.Model):
+
     def __init__(self, config, *args, **kwargs):
         super(Head, self).__init__(*args, **kwargs)
 
@@ -108,20 +109,57 @@ class Head(tf.keras.Model):
                                   activation=None,
                                   name=branch_name)
                     ]
+                elif 'pose' in branch_name:
+                    self.conv[branch_name] = [
+                        ConvBlock(filters=self.out_tran_dims,
+                                  kernel_size=3,
+                                  use_bias=True,
+                                  conv_mode=conv_mode,
+                                  norm_method='bn',
+                                  activation='relu'),
+                        ConvBlock(filters=pred_out_dims,
+                                  kernel_size=3,
+                                  norm_method=None,
+                                  activation=None,
+                                  name=branch_name)
+                    ]
+                elif 'dense_y' in branch_name:
+                    self.conv[branch_name] = [
+                        tf.keras.layers.Dense(192,
+                                              activation='relu',
+                                              use_bias=True,
+                                              kernel_initializer=tf.keras.
+                                              initializers.HeUniform())
+                    ]
+                elif 'dense_x' in branch_name:
+                    self.conv[branch_name] = [
+                        tf.keras.layers.Dense(320,
+                                              activation='relu',
+                                              use_bias=True,
+                                              kernel_initializer=tf.keras.
+                                              initializers.HeUniform())
+                    ]
+                elif 'dense_pose' in branch_name:
+                    self.conv[branch_name] = [
+                        tf.keras.layers.Dense(62,
+                                              activation='relu',
+                                              use_bias=True,
+                                              kernel_initializer=tf.keras.
+                                              initializers.HeUniform())
+                    ]
+        # self.proj_1 = ConvBlock(filters=3,
+        #                         kernel_size=1,
+        #                         use_bias=True,
+        #                         norm_method=norm_method,
+        #                         activation='relu',
+        #                         name='project_1')
 
-        self.proj_1 = ConvBlock(filters=3,
-                                kernel_size=1,
-                                use_bias=True,
-                                norm_method=norm_method,
-                                activation='relu',
-                                name='project_1')
-
-        self.proj_2 = ConvBlock(filters=32,
-                                kernel_size=1,
-                                use_bias=True,
-                                norm_method=norm_method,
-                                activation='relu',
-                                name='project_2')
+        # self.proj_2 = ConvBlock(filters=32,
+        #                         kernel_size=1,
+        #                         use_bias=True,
+        #                         norm_method=norm_method,
+        #                         activation='relu',
+        #                         name='project_2')
 
     @tf.function
     def call(self, x):
@@ -131,15 +169,20 @@ class Head(tf.keras.Model):
             for info in pred_branch:
                 branch_name = info['name']
                 if 'offset' in branch_name:
-                    z = self.proj_1(x)
-                    z = self.proj_2(z)
-                    z = self.conv[branch_name][0](z)
+                    # z = self.proj_1(x)
+                    # z = self.proj_2(z)
+                    z = self.conv[branch_name][0](x)
                     for i, key in enumerate(self.head_keys):
                         pred_branches[key] = self.conv[branch_name][i + 1](z)
                 elif 'size' in branch_name:
-                    z = self.proj_1(x)
-                    z = self.proj_2(z)
-                    z = self.conv[branch_name][0](z)
+                    # z = self.proj_1(x)
+                    # z = self.proj_2(z)
+                    z = self.conv[branch_name][0](x)
+                    pred_branches[branch_name] = self.conv[branch_name][1](z)
+                elif 'pose' in branch_name:
+                    # z = self.proj_1(x)
+                    # z = self.proj_2(z)
+                    z = self.conv[branch_name][0](x)
                     pred_branches[branch_name] = self.conv[branch_name][1](z)
                 elif 'heat' in branch_name:
                     z = self.conv[branch_name][0](x)

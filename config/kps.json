@@ -1,7 +1,7 @@
 {
     "predictor": {
-        "visible_gpu": "0",
-        "pb_path": "/aidata/anders/objects/landmarks/AFLW/archive_model/add_dataset/concat",
+        "visible_gpu": "-1",
+        "pb_path": "/home2/user/anders/archive_model/pose",
         "weight_root":"/aidata/anders/objects/landmarks/AFLW/archive_model/add_dataset/concat", 
         "top_k_n": 15,
         "nms_iou_thres": 0.5,
@@ -9,7 +9,7 @@
         "n_objs": 30,
         "gpu_fraction":0.5, 
         "eval_method":"IoU",
-        "mode": "tflite",
+        "mode": "pose",
         "img_input_size": [
             320,
             192

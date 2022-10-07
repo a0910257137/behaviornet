@@ -5,6 +5,7 @@ from pprint import pprint
 
 
 class ConvBlock(tf.keras.layers.Layer):
+
     def __init__(self,
                  filters,
                  kernel_size,
@@ -94,6 +95,7 @@ class ConvBlock(tf.keras.layers.Layer):
 
 
 class RangeBN(tf.keras.layers.Layer):
+
     def __init__(self,
                  filters,
                  momentum=0.1,
@@ -176,6 +178,7 @@ class RangeBN(tf.keras.layers.Layer):
 
 
 class TransitionUp(tf.keras.layers.Layer):
+
     def call(self, inputs, up_method, skip=None, concat=True):
         # _, h, w, _ = [tf.shape(inputs)[i] for i in range(4)]
         _, h, w, _ = inputs.get_shape().as_list()
@@ -192,6 +195,7 @@ class TransitionUp(tf.keras.layers.Layer):
 
 
 class TransposeUp(tf.keras.layers.Layer):
+
     def __init__(self, filters, scale, norm_method="bn", activation="relu"):
         super().__init__()
         self.activation = activation
@@ -225,6 +229,7 @@ class TransposeUp(tf.keras.layers.Layer):
 
 
 class BottleNeck(tf.keras.layers.Layer):
+
     def __init__(self, input_chs, filters, kernel_size, e, s, is_squeeze, nl,
                  **kwargs):
         super(BottleNeck, self).__init__(**kwargs)
@@ -284,6 +289,7 @@ class BottleNeck(tf.keras.layers.Layer):
 
 
 class DW(tf.keras.layers.Layer):
+
     def __init__(self, kernel_size, strides, n1, **kwargs):
         super(DW, self).__init__(**kwargs)
         self.n1 = n1
@@ -313,6 +319,7 @@ class DW(tf.keras.layers.Layer):
 
 
 class SE(tf.keras.layers.Layer):
+
     def __init__(self, input_chs, **kwargs):
 
         super(SE, self).__init__(**kwargs)

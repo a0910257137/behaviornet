@@ -10,15 +10,14 @@ from pprint import pprint
 
 
 class Base:
+
     def __init__(self, task):
         self.clc_aug_funcs = {
             "bright": partial(tf.image.random_brightness, max_delta=0.1),
-            "saturat": partial(tf.image.random_saturation,
-                               lower=0.4,
+            "saturat": partial(tf.image.random_saturation, lower=0.4,
                                upper=1.8),
             "hue": partial(tf.image.random_hue, max_delta=0.1),
-            "contrast": partial(tf.image.random_contrast, lower=0.6,
-                                upper=1.4),
+            "contrast": partial(tf.image.random_contrast, lower=0.6, upper=1.4),
         }
         self.task = task
 
@@ -30,6 +29,7 @@ class Base:
         return b_imgs
 
     def album_augs(self, album_config, b_imgs):
+
         def album_aug(images):
             aug_imgs = np.asarray(
                 list(map(lambda x: transforms(image=x)["image"],
@@ -158,8 +158,7 @@ class Base:
 
         nose = objs_kps[:, 41:50]
 
-        out_lips = objs_kps[:, 50:62][:,
-                                      [6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8, 7]]
+        out_lips = objs_kps[:, 50:62][:, [6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8, 7]]
 
         in_lips = objs_kps[:, 62:70][:, [4, 3, 2, 1, 0, 7, 6, 5]]
 
@@ -311,8 +310,8 @@ class Base:
             points = kps[1:16].tolist()
             if 0 < prob_0 < 0.5:
                 if 0 < prob_1 < 0.33:
-                    mask = [(kps[33][0], kps[15][1]),
-                            ((kps[39][0], kps[0][1])), (kps[30][0], kps[1][1])]
+                    mask = [(kps[33][0], kps[15][1]), ((kps[39][0], kps[0][1])),
+                            (kps[30][0], kps[1][1])]
                 elif 0.33 < prob_1 < 0.66:
                     mask = [tuple(kps[41])]
                 elif 0.66 < prob_1 < 1.:
@@ -354,6 +353,7 @@ class Base:
         return img, coors
 
     def correct_out_point(self, annos, cates, h1, w1, h2, w2):
+
         def gen_boolean_mask(check):
             check = np.all(check, axis=-1)
             return check
@@ -391,6 +391,7 @@ class Base:
 
 
 class RandomPasetWithMeanBackground(imgaug.RandomPaste):
+
     def get_transform(self, img):
         img_shape = img.shape[:2]
         if self.background_shape[0] > img_shape[0] and self.background_shape[
@@ -416,6 +417,7 @@ class RandomPasetWithMeanBackground(imgaug.RandomPaste):
 
 
 class WarpAffineTransform:
+
     def __init__(self,
                  mat,
                  dsize,
@@ -457,6 +459,7 @@ class CropTransform(imgaug.Transform):
     """
     Crop a subimage from an image.
     """
+
     def __init__(self, y0, x0, h, w):
         super(CropTransform, self).__init__()
         self._init(locals())
@@ -474,6 +477,7 @@ class ResizeTransform(imgaug.Transform):
     """
     Resize the image.
     """
+
     def __init__(self, h, w, new_h, new_w, interp):
         """
         Args:
@@ -498,10 +502,7 @@ class ResizeTransform(imgaug.Transform):
         return coords
 
 
-def calculate_pitch_yaw_roll(landmarks_2D,
-                             cam_w=256,
-                             cam_h=256,
-                             radians=False):
+def calculate_pitch_yaw_roll(landmarks_2D, cam_w=256, cam_h=256, radians=False):
     """ Return the the pitch  yaw and roll angles associated with the input image.
     @param radians When True it returns the angle in radians, otherwise in degrees.
     """

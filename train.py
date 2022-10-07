@@ -1,3 +1,6 @@
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import argparse
 from box import Box
@@ -15,8 +18,8 @@ from utils.io import *
 
 def train(config, is_restore, excluded_layers):
     mirrored_strategy = tf.distribute.MirroredStrategy()
-    general_dataset = GeneralDataset(config.data_reader)
-    datasets = general_dataset.get_datasets(mirrored_strategy)
+    general_dataset = GeneralDataset(config.data_reader, mirrored_strategy)
+    datasets = general_dataset.get_datasets()
     train_datasets = datasets['train']
     test_datasets = datasets['test']
     with mirrored_strategy.scope():

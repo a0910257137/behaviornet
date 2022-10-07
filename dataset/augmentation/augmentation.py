@@ -4,6 +4,7 @@ from .base import Base
 
 
 class Augmentation(Base):
+
     def __init__(self, config, img_resize_size, num_lnmks, batch_size, task):
         super(Augmentation, self).__init__(task)
         self.config = config
@@ -24,18 +25,18 @@ class Augmentation(Base):
             tmp_logic = tf.tile(
                 flip_probs[:, None, None, None],
                 [1, self.img_resize_size[0], self.img_resize_size[1], 3])
-            b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs,
-                              filp_imgs)
+            b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, filp_imgs)
 
         if len(self.augments.tensorpack_chains) != 0:
-            b_imgs, b_coors = tf.py_function(
-                self.tensorpack_augs,
-                inp=[
-                    b_coors, b_imgs, b_origin_sizes, down_ratios, b_theta,
-                    flip_probs, self.max_obj_num,
-                    self.augments.tensorpack_chains
-                ],
-                Tout=[tf.uint8, tf.float32])
+            b_imgs, b_coors = tf.py_function(self.tensorpack_augs,
+                                             inp=[
+                                                 b_coors, b_imgs,
+                                                 b_origin_sizes, down_ratios,
+                                                 b_theta, flip_probs,
+                                                 self.max_obj_num,
+                                                 self.augments.tensorpack_chains
+                                             ],
+                                             Tout=[tf.uint8, tf.float32])
 
         if len(self.augments.album_chains.keys()) != 0:
             b_imgs = self.album_augs(self.augments.album_chains, b_imgs)

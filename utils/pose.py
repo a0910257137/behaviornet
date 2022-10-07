@@ -7,6 +7,7 @@ import os
 
 class PoseEstimator:
     """Estimate head pose according to the facial landmarks"""
+
     def __init__(self, img_size=(480, 640)):
         self.size = img_size
         # Camera internals
@@ -21,7 +22,6 @@ class PoseEstimator:
         self.dist_coeefs = np.zeros((4, 1))
         # Rotation vector and translation vector
         self.r_vec = np.array([[0.01891013], [0.08560084], [-3.14392813]])
-
         self.t_vec = np.array([[-14.97821226], [-10.62040383],
                                [-2053.03596872]])
 
@@ -79,9 +79,6 @@ class PoseEstimator:
         LM = model_points[14:15]
         RM = model_points[18:19]
         model_points = np.concatenate([LE, RE, N, LM, RM], axis=0)
-
-        #----------------------------
-
         model_points = np.asarray(model_points)
         return model_points
 

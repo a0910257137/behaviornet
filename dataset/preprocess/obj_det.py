@@ -5,6 +5,7 @@ from .utils import _coor_clip
 
 
 class ObjDet:
+
     def offer_kps(self, b_objs_kps, h, w):
         b_objs_kps = tf.where(b_objs_kps > 1e8, np.inf, b_objs_kps)
         b_objs_kps = _coor_clip(b_objs_kps, h - 1, w - 1)
@@ -31,6 +32,7 @@ class ObjDet:
         return b_round_kp_idxs, b_kp_idxs, b_objs_kps, b_offset_vals
 
     def pick_lnmks(self, b_lnmks):
+
         def pick_68(b_lnmks):
             b_lnmks = tf.transpose(b_lnmks, [2, 0, 1, 3])
             b_LE_lnmks = b_lnmks[27:33, ...]

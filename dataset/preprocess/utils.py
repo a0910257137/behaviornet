@@ -25,8 +25,7 @@ def _flip(b_objs_kps, b_obj_wid, w, channel_names, do_flip):
                 flip_x = w - kp[:, :, 1] + b_obj_wid
             else:
                 flip_x = w - kp[:, :, 1]
-            flip_kp = tf.concat([kp[:, :, 0, None], flip_x[..., None]],
-                                axis=-1)
+            flip_kp = tf.concat([kp[:, :, 0, None], flip_x[..., None]], axis=-1)
             tmp_coors.append([flip_kp])
         b_objs_kps = tf.concat(tmp_coors, axis=0)
         b_objs_kps = tf.transpose(b_objs_kps, [1, 2, 0, 3])

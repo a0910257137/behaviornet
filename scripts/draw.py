@@ -5,6 +5,7 @@ import copy
 
 
 def draw_box2d(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
+
     def draw_2d(img, kp, score, category):
         tl, br = tuple(kp[:2][::-1].astype(np.int32)), tuple(
             kp[2:4][::-1].astype(np.int32))
@@ -55,14 +56,15 @@ def draw_box2d(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
                     n_lnmk = np.reshape(lnmks[max_idx], (5, 2))
                     for lnmk in n_lnmk:
                         lnmk = lnmk.astype(np.int32)
-                        img = cv2.circle(img, tuple(lnmk[::-1]), 3,
-                                         (0, 255, 0), -1)
+                        img = cv2.circle(img, tuple(lnmk[::-1]), 3, (0, 255, 0),
+                                         -1)
                 img = draw_2d(img, kp, score, category)
         result.append(img)
     return result
 
 
 def draw_offset_v1(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
+
     def draw_2d(img, kp, score, category):
         tl, br = tuple(kp[:2][::-1].astype(np.int32)), tuple(
             kp[2:4][::-1].astype(np.int32))

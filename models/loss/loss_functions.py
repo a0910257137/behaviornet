@@ -99,6 +99,7 @@ def penalty_reduced_focal_loss(targets, logits, alpha=2, beta=4):
 
 
 def l1_loss(b_idx, b_sms, tar_vals, batch_size, max_obj_num):
+
     def make_valid_mask(b_idx):
         is_finite = tf.math.is_finite(b_idx)
         b_idx = tf.where(is_finite, b_idx, tf.zeros_like(b_idx))
@@ -127,7 +128,6 @@ def l1_loss(b_idx, b_sms, tar_vals, batch_size, max_obj_num):
                       axis=-1)
     b_idx = tf.cast(b_idx, tf.int32)
     pred_vals = tf.gather_nd(b_sms, b_idx)
-
     pred_vals = tf.transpose(pred_vals, [0, 2, 1]) * valid_pos_mask
     batch_loss_matrix = tf.cast(
         tf.abs(pred_vals - tar_vals) * valid_pos_mask, tf.float32)
@@ -248,8 +248,7 @@ def batch_push_loss(ek, valid_pos, filter_channels):
     batch_loss_matrix = batch_loss_matrix - _diagonal
     batchwise_N = tf.reduce_sum(valid_pos, axis=1)
     loss = tf.reduce_sum(batch_loss_matrix,
-                         axis=[1, 2]) / (batchwise_N *
-                                         (batchwise_N - 1) + 1e-7)
+                         axis=[1, 2]) / (batchwise_N * (batchwise_N - 1) + 1e-7)
     return tf.reduce_mean(loss)
 
 
@@ -276,8 +275,8 @@ def pull_push_loss(idxs, kp_hms, batch_size, max_obj_num):
 
     filter_channels = get_filter_channels(kp_hms)
     with tf.name_scope("pull_loss"):
-        pull_loss, ek, valid_ek_mask = batch_pull_loss(idxs, kp_hms,
-                                                       batch_size, max_obj_num,
+        pull_loss, ek, valid_ek_mask = batch_pull_loss(idxs, kp_hms, batch_size,
+                                                       max_obj_num,
                                                        filter_channels)
     with tf.name_scope("push_loss"):
         push_loss = batch_push_loss(ek, valid_ek_mask, filter_channels)
@@ -299,196 +298,6 @@ def concat_b_idx(b_idx):
         if channel == pts_channels - 1:
             b_idx = tf.concat(tmp, axis=1)
     return b_idx
-
-
-def disp_L1_loss(b_idx, tar_vals, b_sms, batch_size, max_obj_num):
-    """guiding offset loss
-        kp_hms: BWHC
-        [
-            [tl_kp_hm],
-            [br_kp_hm],
-            [st_kp_hm],
-            [sb_kp_hm],
-        ]
-        kp_idxs: BN42
-        [
-            [tl, br, st, sb]
-            .
-            .
-            .
-        ]
-        shifting_distance
-        [[tl_y_shift, tl_x_shift], [br_y_shift, br_x_shift], [st_y_shift, st_x_shift], [sb_y_shift, sb_x_shift]]
-    """
-    def arrange_b_idx(b_idx):
-        tmp = []
-        _, chs, _, _ = b_idx.get_shape().as_list()
-        for c in range(chs):
-            new_b_idxes = tf.expand_dims(b_idx[:, c, :, :], axis=1)
-            new_b_idxes = tf.tile(new_b_idxes, [1, 2, 1, 1])
-            tmp.append(new_b_idxes)
-        b_idx = tf.concat(tmp, axis=1)
-        return b_idx
-
-    def arrange_valid_pos_mask(valid_pos_mask):
-        tmp = []
-        _, n, chs, = valid_pos_mask.get_shape().as_list()
-        for c in range(chs):
-            new_valid_pos_mask = tf.expand_dims(valid_pos_mask[:, :, c],
-                                                axis=-1)
-            new_valid_pos_mask = tf.tile(new_valid_pos_mask, [1, 1, 2])
-            tmp.append(new_valid_pos_mask)
-        new_valid_pos_mask = tf.concat(tmp, axis=-1)
-        return new_valid_pos_mask
-
-    def transform_coords(data_in):
-        human2rel = tf.expand_dims(data_in[:, :, :2], axis=2)
-        obj2rel = tf.expand_dims(data_in[:, :, 2:4], axis=2)
-        output_data = tf.concat([human2rel, obj2rel], axis=-2)
-        return data_in, output_data
-
-    # B C N 4
-    # one y, x coor get two values
-    b_idx = tf.cast(tf.reshape(b_idx, [batch_size, max_obj_num, 2, 2]),
-                    tf.float32)
-    is_finite = tf.math.is_finite(b_idx)
-    b_idx = tf.where(is_finite, b_idx, tf.zeros_like(b_idx))
-    valid_pos_mask = tf.cast(tf.reduce_all(is_finite, axis=-1), tf.float32)
-    batchwise_N = tf.reduce_sum((valid_pos_mask), axis=1)
-
-    valid_pos_mask = arrange_valid_pos_mask(valid_pos_mask)
-    b_idx = tf.transpose(b_idx, [0, 2, 1, 3])
-    # B 4 N 2
-    _, c, n, d = b_idx.get_shape().as_list()
-    b_idx = arrange_b_idx(b_idx)
-
-    batch_idx = tf.tile(
-        tf.reshape(tf.range(batch_size, dtype=tf.float32), (batch_size, 1, 1)),
-        [1, c * d, n])
-    channel_idx = tf.tile(
-        tf.reshape(tf.range(c * d, dtype=tf.float32), (1, c * d, 1)),
-        [batch_size, 1, n])
-    b_idx = tf.concat([batch_idx[..., None], b_idx, channel_idx[..., None]],
-                      axis=-1)
-
-    b_idx = tf.cast(b_idx, tf.float32)
-    is_finite = tf.math.is_finite(b_idx)
-    b_idx = tf.cast(tf.where(is_finite, b_idx, tf.zeros_like(b_idx)), tf.int32)
-    pred_vals = tf.cast(tf.gather_nd(b_sms, b_idx), tf.float32)
-    pred_vals = tf.transpose(pred_vals, [0, 2, 1]) * valid_pos_mask
-
-    _, valid_pos_mask = transform_coords(valid_pos_mask)
-    _, pred_vals = transform_coords(pred_vals)
-
-    tar_vals = tf.cast(tar_vals, tf.float32)
-    batch_loss_matrix = tf.cast(
-        tf.abs(pred_vals - tar_vals) * valid_pos_mask, tf.float32)
-    batch_loss_matrix = tf.where(tf.math.is_nan(batch_loss_matrix),
-                                 tf.zeros_like(batch_loss_matrix),
-                                 batch_loss_matrix)
-    batch_loss_matrix = tf.reduce_sum(batch_loss_matrix, axis=[1, 3])
-    batch_loss_matrix = batch_loss_matrix / (batchwise_N + 1e-7)
-    loss = tf.reduce_mean(batch_loss_matrix)
-    return loss
-
-
-def offset_L1_loss(b_idx, tar_vals, b_offset_maps, batch_size, max_obj_num):
-    """guiding offset loss
-        kp_hms: BWHC
-        [
-            [tl_kp_hm],
-            [br_kp_hm],
-            [st_kp_hm],
-            [sb_kp_hm],
-        ]
-        kp_idxs: BN42
-        [
-            [tl, br, st, sb]
-            .
-            .
-            .
-        ]
-        shifting_distance
-        [[tl_y_shift, tl_x_shift], [br_y_shift, br_x_shift], [st_y_shift, st_x_shift], [sb_y_shift, sb_x_shift]]
-    """
-    def arrange_b_idx(b_idx):
-        tmp = []
-        _, chs, _, _ = b_idx.get_shape().as_list()
-        for c in range(chs):
-            new_b_idxes = tf.expand_dims(b_idx[:, c, :, :], axis=1)
-            new_b_idxes = tf.tile(new_b_idxes, [1, 2, 1, 1])
-            tmp.append(new_b_idxes)
-        b_idx = tf.concat(tmp, axis=1)
-        return b_idx
-
-    def arrange_valid_pos_mask(valid_pos_mask):
-        tmp = []
-        _, n, chs, = valid_pos_mask.get_shape().as_list()
-        for c in range(chs):
-            new_valid_pos_mask = tf.expand_dims(valid_pos_mask[:, :, c],
-                                                axis=-1)
-            new_valid_pos_mask = tf.tile(new_valid_pos_mask, [1, 1, 2])
-            tmp.append(new_valid_pos_mask)
-        new_valid_pos_mask = tf.concat(tmp, axis=-1)
-        return new_valid_pos_mask
-
-    def transform_coords(data_in):
-        # tl = tf.expand_dims(data_in[:, :, :3], axis=2)
-        # br = tf.expand_dims(data_in[:, :, 3:6], axis=2)
-        # st = tf.expand_dims(data_in[:, :, 6:9], axis=2)
-        # sb = tf.expand_dims(data_in[:, :, 9:12], axis=2)
-        hum = tf.expand_dims(data_in[:, :, 0:2], axis=2)
-        obj = tf.expand_dims(data_in[:, :, 2:4], axis=2)
-        rel = tf.expand_dims(data_in[:, :, 4:6], axis=2)
-        output_data = tf.concat([hum, obj, rel], axis=-2)
-        # for taipower_fpg_worker
-        # center_kp = tf.expand_dims(data_in[:, :, :3], axis=2)
-        # output_data = tf.concat([center_kp], axis=-2)
-        return data_in, output_data
-
-    # B C N 4
-    # one y, x coor get two values
-    b_idx = tf.cast(tf.reshape(b_idx, [batch_size, max_obj_num, 3, 2]),
-                    tf.float32)
-    is_finite = tf.math.is_finite(b_idx)
-    b_idx = tf.where(is_finite, b_idx, tf.zeros_like(b_idx))
-    valid_pos_mask = tf.cast(tf.reduce_all(is_finite, axis=-1), tf.float32)
-    batchwise_N = tf.reduce_sum((valid_pos_mask), axis=1)
-    valid_pos_mask = arrange_valid_pos_mask(valid_pos_mask)
-
-    b_idx = tf.transpose(b_idx, [0, 2, 1, 3])
-    # B 4 N 2
-    _, c, n, d = b_idx.get_shape().as_list()
-    b_idx = arrange_b_idx(b_idx)
-
-    batch_idx = tf.tile(
-        tf.reshape(tf.range(batch_size, dtype=tf.float32), (batch_size, 1, 1)),
-        [1, c * (d), n])
-    channel_idx = tf.tile(
-        tf.reshape(tf.range(c * (d), dtype=tf.float32), (1, c * (d), 1)),
-        [batch_size, 1, n])
-
-    b_idx = tf.concat([batch_idx[..., None], b_idx, channel_idx[..., None]],
-                      axis=-1)
-    b_idx = tf.cast(b_idx, tf.float32)
-
-    is_finite = tf.math.is_finite(b_idx)
-    b_idx = tf.cast(tf.where(is_finite, b_idx, tf.zeros_like(b_idx)), tf.int32)
-    pred_vals = tf.cast(tf.gather_nd(b_offset_maps, b_idx), tf.float32)
-    pred_vals = tf.transpose(pred_vals, [0, 2, 1]) * valid_pos_mask
-    _, valid_pos_mask = transform_coords(valid_pos_mask)
-    _, pred_vals = transform_coords(pred_vals)
-    tar_vals = tf.cast(tar_vals, tf.float32)
-    batch_loss_matrix = tf.cast(
-        tf.abs(pred_vals - tar_vals) * valid_pos_mask, tf.float32)
-    batch_loss_matrix = tf.where(tf.math.is_nan(batch_loss_matrix),
-                                 tf.zeros_like(batch_loss_matrix),
-                                 batch_loss_matrix)
-
-    batch_loss_matrix = tf.reduce_sum(batch_loss_matrix, axis=[1, 3])
-    batch_loss_matrix = batch_loss_matrix / (batchwise_N + 1e-7)
-    loss = tf.reduce_mean(batch_loss_matrix)
-    return loss
 
 
 def infonce(b_idxs, b_kp_hms, batch_size, max_obj_num, tau=0.2):
@@ -522,87 +331,6 @@ def infonce(b_idxs, b_kp_hms, batch_size, max_obj_num, tau=0.2):
         return loss
 
 
-def lnmk_loss(pred,
-              tars,
-              batch_size,
-              num_lnmk,
-              max_obj_num,
-              w=10.0,
-              epsilon=2.0):
-    """
-    Arguments:
-        landmarks, labels: float tensors with shape [batch_size, num_landmarks, 2].
-        w, epsilon: a float numbers.
-    Returns:
-        a float tensor with shape [].
-    """
-    with tf.name_scope('wing_loss'):
-        pred = tf.reshape(pred, [-1, num_lnmk, 2])
-        tars = tf.reshape(tars, [batch_size, max_obj_num, num_lnmk, 2])
-        valid_mask = tf.math.reduce_all(tf.math.is_finite(tars[..., 0]),
-                                        axis=-1)
-        tars = tars[valid_mask]
-        x = pred - tars
-        c = w * (1.0 - tf.math.log(1.0 + w / epsilon))
-        absolute_x = tf.math.abs(x)
-        losses = tf.where(tf.greater(w, absolute_x),
-                          w * tf.math.log(1.0 + absolute_x / epsilon),
-                          absolute_x - c)
-        loss = tf.reduce_mean(tf.reduce_sum(losses, axis=[1, 2]), axis=0)
-        return loss
-
-
-def PDFL_loss(pred_lnmks, tar_lnmks, pred_euler_amgles, tar_euler_angles,
-              batch_size, num_lnmk, max_obj_num):
-    with tf.name_scope('PDFL_loss'):
-        weight_angle = tf.math.reduce_sum(
-            1 - tf.math.cos(pred_euler_amgles - tar_euler_angles), axis=1)
-
-        pred_lnmks = tf.reshape(pred_lnmks, [-1, num_lnmk, 2])
-        tar_lnmks = tf.reshape(tar_lnmks,
-                               [batch_size, max_obj_num, num_lnmk, 2])
-        valid_mask = tf.math.reduce_all(tf.math.is_finite(tar_lnmks[..., 0]),
-                                        axis=-1)
-        tar_lnmks = tar_lnmks[valid_mask]
-
-        l2_distant = tf.math.reduce_sum(
-            (tar_lnmks - pred_lnmks) * (tar_lnmks - pred_lnmks), axis=[1, 2])
-        loss = tf.math.reduce_mean(weight_angle *
-                                   l2_distant), tf.math.reduce_mean(l2_distant)
-        return loss
-
-
-def PDFL_wing_loss(pred_lnmks, tar_lnmks, pred_euler_amgles, tar_euler_angles,
-                   batch_size, num_lnmk, max_obj_num):
-    with tf.name_scope('PDFL_wing_loss'):
-        w = 10.0
-        epsilon = 2.0
-        weight_angle = tf.math.reduce_sum(
-            1 - tf.math.cos(pred_euler_amgles - tar_euler_angles), axis=1)
-
-        pred_lnmks = tf.reshape(pred_lnmks, [-1, num_lnmk, 2])
-        tar_lnmks = tf.reshape(tar_lnmks,
-                               [batch_size, max_obj_num, num_lnmk, 2])
-        valid_mask = tf.math.reduce_all(tf.math.is_finite(tar_lnmks[..., 0]),
-                                        axis=-1)
-        tar_lnmks = tar_lnmks[valid_mask]
-        x = pred_lnmks - tar_lnmks
-        c = w * (1.0 - tf.math.log(1.0 + w / epsilon))
-        absolute_x = tf.math.abs(x)
-        wing_distance = tf.where(tf.greater(w, absolute_x),
-                                 w * tf.math.log(1.0 + absolute_x / epsilon),
-                                 absolute_x - c)
-
-        # l2_distant = tf.math.reduce_sum(
-        #     (tar_lnmks - pred_lnmks) * (tar_lnmks - pred_lnmks), axis=[1, 2])
-        wing_distance = tf.reduce_sum(wing_distance, axis=[1, 2])
-
-        loss = tf.math.reduce_mean(
-            weight_angle * wing_distance), tf.math.reduce_mean(wing_distance)
-
-        return loss
-
-
 def offset_loss(b_idx, b_oms, tar_vals, batch_size, max_obj_num):
     with tf.name_scope('offset_loss'):
         # B C N
@@ -618,37 +346,281 @@ def offset_loss(b_idx, b_oms, tar_vals, batch_size, max_obj_num):
                                      (batch_size, max_obj_num, 4, 2))
         b_tar_vals = tf.where(tf.math.is_inf(tar_vals), 0., tar_vals)
         b_pred_off_vals = tf.cast(b_pred_off_vals, tf.float32)
+
         batch_N_loss = tf.math.reduce_sum(
-            tf.math.abs(b_tar_vals - b_pred_off_vals),
-            axis=(2, 3)) * valid_mask
+            tf.math.abs(b_tar_vals - b_pred_off_vals), axis=(2, 3)) * valid_mask
         batch_loss = tf.math.reduce_sum(batch_N_loss,
                                         axis=-1) / (valid_n + 1e-7)
         loss = tf.math.reduce_mean(batch_loss)
+    return loss
 
-    #----------------------------------------------------------------
-    # with tf.name_scope('offset_wing_loss'):
-    #     w, epsilon = 10.0, 2.0
-    #     valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
-    #     valid_mask = tf.cast(valid_mask, tf.float32)
-    #     valid_n = tf.math.reduce_sum(valid_mask, axis=-1)
-    #     b_info_idx = tf.tile(
-    #         tf.range(batch_size, dtype=tf.int32)[:, None, None],
-    #         (1, max_obj_num, 1))
 
-    #     b_idx = tf.cast(b_idx, tf.int32)
-    #     b_idx = tf.concat([b_info_idx, b_idx], axis=-1)
-    #     b_pred_off_vals = tf.reshape(tf.gather_nd(b_oms, b_idx),
-    #                                  (batch_size, max_obj_num, 4, 2))
-    #     b_tar_vals = tf.where(tf.math.is_inf(tar_vals), 0., tar_vals)
-    #     b_pred_off_vals = tf.cast(b_pred_off_vals, tf.float32)
+def wpdc_loss(b_idx, param_u_std, b_opms, shapeMU, shapePC, expPC, kpt_ind,
+              shape_params, expression_params, scale, angles, tanslations,
+              batch_size, max_obj_num):
 
-    #     c = w * (1.0 - tf.math.log(1.0 + w / epsilon))
-    #     absolute_x = tf.math.abs(b_tar_vals - b_pred_off_vals)
-    #     losses = tf.where(tf.greater(w, absolute_x),
-    #                       w * tf.math.log(1.0 + absolute_x / epsilon),
-    #                       absolute_x - c)
-    #     batch_N_loss = tf.math.reduce_sum(losses, axis=(2, 3)) * valid_mask
-    #     batch_loss = tf.math.reduce_sum(batch_N_loss,
-    #                                     axis=-1) / (valid_n + 1e-7)
-    #     loss = tf.math.reduce_mean(batch_loss)
+    def angle2matrix(angles):
+        ''' get rotation matrix from three rotation angles(degree). right-handed.
+        Args:
+            angles: [3,]. x, y, z angles
+            x: pitch. positive for looking down.
+            y: yaw. positive for looking left. 
+            z: roll. positive for tilting head right. 
+        Returns:
+            R: [3, 3]. rotation matrix.
+        '''
+        # use 1 rad =  57.3
+        x, y, z = angles[..., 0], angles[..., 1], angles[..., 2]
+        # x, 3, 3
+        # for Rx
+        row1 = tf.constant([1., 0., 0.], shape=(3, 1))
+        row1 = tf.tile(row1[None, None, :, :], (batch_size, max_obj_num, 1, 1))
+        row2 = tf.concat([
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
+            tf.math.cos(x)[..., None, None], -tf.math.sin(x)[..., None, None]
+        ],
+                         axis=-2)
+        row3 = tf.concat([
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
+            tf.math.sin(x)[..., None, None],
+            tf.math.cos(x)[..., None, None]
+        ],
+                         axis=-2)
+        Rx = tf.concat([row1, row2, row3], axis=-1)
+        # for Ry
+        # y
+        row1 = tf.concat([
+            tf.math.cos(y)[..., None, None],
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
+            tf.math.sin(y)[..., None, None]
+        ],
+                         axis=-2)
+        row2 = tf.constant([0., 1., 0.], shape=(3, 1))
+        row2 = tf.tile(row2[None, None, :, :], (batch_size, max_obj_num, 1, 1))
+
+        row3 = tf.concat([
+            -tf.math.sin(y)[..., None, None],
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
+            tf.math.cos(y)[..., None, None]
+        ],
+                         axis=-2)
+        Ry = tf.concat([row1, row2, row3], axis=-1)
+        # z
+        row1 = tf.concat([
+            tf.math.cos(z)[..., None, None], -tf.math.sin(z)[..., None, None],
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1))
+        ],
+                         axis=-2)
+        row2 = tf.concat([
+            tf.math.sin(z)[..., None, None],
+            tf.math.cos(z)[..., None, None],
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1))
+        ],
+                         axis=-2)
+        row3 = tf.constant([0., 0., 1.], shape=(3, 1))
+        row3 = tf.tile(row3[None, None, :, :], (batch_size, max_obj_num, 1, 1))
+        Rz = tf.concat([row1, row2, row3], axis=-1)
+        # R = tf.linalg.matmul(Rz, tf.linalg.matmul(Ry, Rx))
+        return (Rx, Ry, Rz)
+
+    index = tf.random.shuffle(tf.range(start=0, limit=53215,
+                                       dtype=tf.int32))[:132]
+    index = tf.reshape(index, (-1, 1))
+    keypoints_resample = tf.concat([3 * index, 3 * index + 1, 3 * index + 2],
+                                   axis=-1)
+    keypoints_mix = tf.concat([kpt_ind, keypoints_resample], axis=0)
+    n_objs = tf.shape(shape_params)[1]
+    keypoints_mix = tf.reshape(keypoints_mix, [-1])
+
+    u_base = tf.tile(
+        tf.gather(shapeMU, keypoints_mix)[None, None, :, :],
+        [batch_size, n_objs, 1, 1])
+    w_shp_base = tf.tile(
+        tf.gather(shapePC, keypoints_mix)[None, None, :, :],
+        [batch_size, n_objs, 1, 1])
+    w_exp_base = tf.tile(
+        tf.gather(expPC, keypoints_mix)[None, None, :, :],
+        (batch_size, n_objs, 1, 1))
+
+    pvs = u_base + tf.linalg.matmul(w_shp_base,
+                                    shape_params) + tf.linalg.matmul(
+                                        w_exp_base, expression_params)
+    pvs = tf.reshape(pvs, [batch_size, n_objs, 200, 3])
+    with tf.name_scope('wpdc_loss'):
+        # B C N
+        valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
+        angles = tf.where(
+            tf.tile(valid_mask[..., None], (1, 1, tf.shape(angles)[-1])),
+            angles, 0.)
+
+        b_info_idx = tf.tile(
+            tf.range(batch_size, dtype=tf.int32)[:, None, None],
+            (1, max_obj_num, 1))
+        b_idx = tf.cast(b_idx, tf.int32)
+        b_idx = tf.concat([b_info_idx, b_idx], axis=-1)
+
+        eps = 1e-6
+        b_pred_pose_vals = tf.gather_nd(b_opms, b_idx)
+        b_pred_pose_vals = param_u_std[1][
+            None, None, :] * b_pred_pose_vals + param_u_std[0][None, None, :]
+        angles = param_u_std[1][None, None, :] * angles + param_u_std[0][
+            None, None, :]
+        pred_rx, pred_ry, pred_rz = angle2matrix(b_pred_pose_vals)
+        gt_rx, gt_ry, gt_rz = angle2matrix(angles)
+
+        param_diff_rx = tf.reshape(tf.math.abs(pred_rx - gt_rx),
+                                   (batch_size, max_obj_num, -1))
+        param_diff_ry = tf.reshape(tf.math.abs(pred_ry - gt_ry),
+                                   (batch_size, max_obj_num, -1))
+        param_diff_rz = tf.reshape(tf.math.abs(pred_rz - gt_rz),
+                                   (batch_size, max_obj_num, -1))
+        # R = tf.transpose(R, (0, 1, 3, 2))
+        pv_nomrs = tf.norm(pvs, ord=2, axis=2)
+        # offset_norm = tf.math.sqrt(w_shp_base.shape[-2] / 3)
+        weight_param_diff_rx = param_diff_rx * pv_nomrs[..., 0][..., None]
+        weight_param_diff_ry = param_diff_ry * pv_nomrs[..., 1][..., None]
+        weight_param_diff_rz = param_diff_rz * pv_nomrs[..., 2][..., None]
+
+        weight_param_diff_rx = (
+            weight_param_diff_rx + eps) / tf.math.reduce_max(
+                weight_param_diff_rx + eps, keepdims=True, axis=-1)
+        weight_param_diff_ry = (
+            weight_param_diff_ry + eps) / tf.math.reduce_max(
+                weight_param_diff_ry + eps, keepdims=True, axis=-1)
+        weight_param_diff_rz = (
+            weight_param_diff_rz + eps) / tf.math.reduce_max(
+                weight_param_diff_rz + eps, keepdims=True, axis=-1)
+
+        loss_rx = weight_param_diff_rx * tf.math.pow(param_diff_rx, 2)
+        loss_ry = weight_param_diff_ry * tf.math.pow(param_diff_ry, 2)
+        loss_rz = weight_param_diff_rz * tf.math.pow(param_diff_rz, 2)
+        loss = (loss_rx + loss_ry + loss_rz) / 3
+        loss = loss * tf.cast(valid_mask[..., None], tf.float32)
+        loss = tf.where(
+            tf.tile(valid_mask[..., None], (1, 1, tf.shape(loss_rx)[-1])), loss,
+            0.)
+        b_objs = tf.math.reduce_sum(tf.cast(valid_mask, tf.float32), axis=-1)
+        loss = tf.reduce_sum(loss, axis=(-2, -1)) / b_objs
+    return tf.math.reduce_mean(loss)
+
+
+def vdc_loss(b_idx, param_u_std, b_opms, shapeMU, shapePC, expPC, kpt_ind,
+             shape_params, expression_params, scale, angles, tanslations,
+             batch_size, max_obj_num):
+
+    def angle2matrix(angles):
+        ''' get rotation matrix from three rotation angles(degree). right-handed.
+        Args:
+            angles: [3,]. x, y, z angles
+            x: pitch. positive for looking down.
+            y: yaw. positive for looking left. 
+            z: roll. positive for tilting head right. 
+        Returns:
+            R: [3, 3]. rotation matrix.
+        '''
+        # use 1 rad =  57.3
+        x, y, z = angles[..., 0], angles[..., 1], angles[..., 2]
+        # x, 3, 3
+        # for Rx
+        row1 = tf.constant([1., 0., 0.], shape=(3, 1))
+        row1 = tf.tile(row1[None, None, :, :], (batch_size, max_obj_num, 1, 1))
+        row2 = tf.concat([
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
+            tf.math.cos(x)[..., None, None], -tf.math.sin(x)[..., None, None]
+        ],
+                         axis=-2)
+        row3 = tf.concat([
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
+            tf.math.sin(x)[..., None, None],
+            tf.math.cos(x)[..., None, None]
+        ],
+                         axis=-2)
+        Rx = tf.concat([row1, row2, row3], axis=-1)
+        # for Ry
+        # y
+        row1 = tf.concat([
+            tf.math.cos(y)[..., None, None],
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
+            tf.math.sin(y)[..., None, None]
+        ],
+                         axis=-2)
+        row2 = tf.constant([0., 1., 0.], shape=(3, 1))
+        row2 = tf.tile(row2[None, None, :, :], (batch_size, max_obj_num, 1, 1))
+
+        row3 = tf.concat([
+            -tf.math.sin(y)[..., None, None],
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
+            tf.math.cos(y)[..., None, None]
+        ],
+                         axis=-2)
+        Ry = tf.concat([row1, row2, row3], axis=-1)
+        # z
+        row1 = tf.concat([
+            tf.math.cos(z)[..., None, None], -tf.math.sin(z)[..., None, None],
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1))
+        ],
+                         axis=-2)
+        row2 = tf.concat([
+            tf.math.sin(z)[..., None, None],
+            tf.math.cos(z)[..., None, None],
+            tf.zeros(shape=(batch_size, max_obj_num, 1, 1))
+        ],
+                         axis=-2)
+        row3 = tf.constant([0., 0., 1.], shape=(3, 1))
+        row3 = tf.tile(row3[None, None, :, :], (batch_size, max_obj_num, 1, 1))
+        Rz = tf.concat([row1, row2, row3], axis=-1)
+        # R = tf.linalg.matmul(Rz, tf.linalg.matmul(Ry, Rx))
+        return (Rx, Ry, Rz)
+
+    index = tf.random.shuffle(tf.range(start=0, limit=53215,
+                                       dtype=tf.int32))[:132]
+    index = tf.reshape(index, (-1, 1))
+    keypoints_resample = tf.concat([3 * index, 3 * index + 1, 3 * index + 2],
+                                   axis=-1)
+    keypoints_mix = tf.concat([kpt_ind, keypoints_resample], axis=0)
+    n_objs = tf.shape(shape_params)[1]
+    keypoints_mix = tf.reshape(keypoints_mix, [-1])
+    u_base = tf.tile(
+        tf.gather(shapeMU, keypoints_mix)[None, None, :, :],
+        [batch_size, n_objs, 1, 1])
+    w_shp_base = tf.tile(
+        tf.gather(shapePC, keypoints_mix)[None, None, :, :],
+        [batch_size, n_objs, 1, 1])
+    w_exp_base = tf.tile(
+        tf.gather(expPC, keypoints_mix)[None, None, :, :],
+        (batch_size, n_objs, 1, 1))
+
+    vertices = u_base + tf.linalg.matmul(w_shp_base,
+                                         shape_params) + tf.linalg.matmul(
+                                             w_exp_base, expression_params)
+    # pvs = tf.reshape(pvs, [batch_size, n_objs, 200, 3])
+    vertices = tf.transpose(
+        tf.reshape(vertices, (batch_size, max_obj_num, 3, 200)), (0, 1, 3, 2))
+    with tf.name_scope('vdc_loss'):
+        # B C N
+        valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
+        b_info_idx = tf.tile(
+            tf.range(batch_size, dtype=tf.int32)[:, None, None],
+            (1, max_obj_num, 1))
+        b_idx = tf.cast(b_idx, tf.int32)
+        b_idx = tf.concat([b_info_idx, b_idx], axis=-1)
+        b_idx = tf.where(b_idx < -1000, 0, b_idx)
+        b_pred_pose_vals = tf.gather_nd(b_opms, b_idx)
+        pred_rx, pred_ry, pred_rz = angle2matrix(b_pred_pose_vals)
+        gt_rx, gt_ry, gt_rz = angle2matrix(angles)
+        pred_R = tf.linalg.matmul(pred_rz, tf.linalg.matmul(pred_ry, pred_rx))
+        gt_R = tf.linalg.matmul(gt_rz, tf.linalg.matmul(gt_ry, gt_rx))
+        pred_vertices = scale[..., None, None] * tf.linalg.matmul(
+            vertices, pred_R,
+            transpose_b=(0, 1, 3, 2)) + tanslations[:, :, tf.newaxis, :]
+        gt_vertices = scale[..., None, None] * tf.linalg.matmul(
+            vertices, gt_R,
+            transpose_b=(0, 1, 3, 2)) + tanslations[:, :, tf.newaxis, :]
+        b_diffs = (gt_vertices - pred_vertices)**2
+        b_loss = tf.where(
+            tf.tile(valid_mask[..., None, None],
+                    (1, 1, tf.shape(b_diffs)[-2], 1)), b_diffs, 0.)
+        b_objs = tf.math.reduce_sum(tf.cast(valid_mask, tf.float32), axis=-1)
+        b_loss = tf.reduce_sum(b_loss, axis=[1, 2, 3]) / b_objs
+        loss = tf.math.reduce_mean(b_loss)
     return loss

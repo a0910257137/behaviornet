@@ -21,6 +21,7 @@ from behavior_predictor.inference import BehaviorPredictor
 
 
 class Eval:
+
     def __init__(self, model, config, eval_path, img_root, batch_size):
         self.pred_config = config['predictor']
         self.metric_config = config['metric']
@@ -89,6 +90,7 @@ class Eval:
             yield elems[idx:idx + n]
 
     def split_batchs(self, elems, idx):
+
         def _fetch(lnmks, keys, idxs):
             tmp = []
             for key in keys[idxs]:
@@ -147,7 +149,7 @@ class Eval:
             gt_bdd_list = gt_bdd_annos['frame_list']
             batch_objects = list(
                 map(lambda x: self.split_batchs(gt_bdd_list, x),
-                    range(0, len(gt_bdd_list), self.batch_size)))
+                    range(0, len(gt_bdd_list), self.batch_size)))[:1000]
             progress = tqdm(total=len(batch_objects))
             bdd_results = {"frame_list": []}
             for batch_imgs_shapes in batch_objects:
@@ -157,25 +159,28 @@ class Eval:
                 for imgs_shapes in batch_imgs_shapes:
                     imgs, shapes, batch_frames = imgs_shapes
                     batch_results = self.predictor.pred(imgs, shapes)
-
                     if self.mode == 'centernet':
                         eval_bdd_annos = to_tp_od_bdd(bdd_results,
                                                       batch_results,
                                                       batch_frames, self.cates)
 
                     elif self.mode == 'landmark':
-                        eval_bdd_annos = to_lnmk_bdd(bdd_results,
-                                                     batch_results,
+                        eval_bdd_annos = to_lnmk_bdd(bdd_results, batch_results,
                                                      batch_frames,
                                                      self.lnmk_scheme)
                     elif self.mode == 'offset' or self.mode == 'tflite':
                         eval_bdd_annos = offset_v2_to_tp_od_bdd(
                             bdd_results, batch_results, batch_frames,
                             self.cates)
-
+                    elif self.mode == 'pose':
+                        eval_bdd_annos = pose_to_bdd(bdd_results, batch_results,
+                                                     batch_frames, self.cates)
             gt_bdd_annos, eval_bdd_annos = self.with_bddversion(
-                gt_bdd_list), self.with_bddversion(
-                    eval_bdd_annos['frame_list'])
+                gt_bdd_list), self.with_bddversion(eval_bdd_annos['frame_list'])
+            dump_json(
+                "/aidata/anders/objects/landmarks/demo_test/annos/BDD_test_eval.json",
+                eval_bdd_annos)
+            xxxx
             if self.metric_config['metric_type'] == 'IoU':
                 # old version could parse all frame and calculate FP FN
                 iou = ComputeIOU(gt_bdd_annos, eval_bdd_annos)
@@ -204,10 +209,7 @@ class Eval:
 def parse_args():
     parser = argparse.ArgumentParser(description='Evaluate model performance')
     parser.add_argument('--config', default=None, help='eval config')
-    parser.add_argument('--batch_size',
-                        type=int,
-                        default=32,
-                        help='batch size')
+    parser.add_argument('--batch_size', type=int, default=32, help='batch size')
     parser.add_argument('--eval_path',
                         default=None,
                         help='eval data folder or file path')

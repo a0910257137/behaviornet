@@ -4,9 +4,12 @@ from .utils import *
 from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
 from .augmentation.augmentation import Augmentation
+from .tdmm import MorphabelModel
+from time import time
 
 
 class GeneralTasks:
+
     def __init__(self, config):
         self.config = config
         self.task_configs = config['tasks']
@@ -18,6 +21,7 @@ class GeneralTasks:
         self.coors_down_ratio = tf.cast(self.config.coors_down_ratio,
                                         dtype=tf.float32)
         self.max_obj_num = self.config.max_obj_num
+
         self.img_channel = 3
         self.features = {
             "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
@@ -26,6 +30,9 @@ class GeneralTasks:
             "b_images": tf.io.FixedLenFeature([], dtype=tf.string),
             "b_coords": tf.io.FixedLenFeature([], dtype=tf.string)
         }
+
+        self.MorphabelModel = MorphabelModel(self.config.train_batch_size,
+                                             self.config["3dmm"])
 
     def build_maps(self, batch_size, task_infos):
         targets = {}
@@ -37,8 +44,7 @@ class GeneralTasks:
             b_coords, b_imgs, b_origin_sizes, b_theta = self._parse_TFrecord(
                 task, infos)
 
-            b_coords, down_ratios = self._resize_coors(b_coords,
-                                                       b_origin_sizes,
+            b_coords, down_ratios = self._resize_coors(b_coords, b_origin_sizes,
                                                        self.img_resize_size)
             _multi_aug_funcs = Augmentation(self.config, self.img_resize_size,
                                             self.num_lnmks, self.batch_size,
@@ -46,6 +52,9 @@ class GeneralTasks:
             b_imgs, b_coords = _multi_aug_funcs(b_imgs, b_coords,
                                                 b_origin_sizes, down_ratios,
                                                 b_theta)
+            sp, ep, s, angles, t = self.MorphabelModel.fit_points(
+                b_coords[:, :, 2:, :2])
+            # implement fitting model
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_objs_kps, b_cates = b_coords[..., :-1], b_coords[..., -1][..., 0]
             b_obj_sizes = self._obj_sizes(b_objs_kps, task)
@@ -63,6 +72,11 @@ class GeneralTasks:
                                        ],
                                        Tout=tf.float32)
 
+                targets['shape_params'] = sp
+                targets['expression_params'] = ep
+                targets['scale'] = s
+                targets['angles'] = angles
+                targets['tanslations'] = t
                 targets['size_idxs'] = b_coords[:, :, 0, :]
                 targets['size_vals'] = tf.where(tf.math.is_nan(b_obj_sizes),
                                                 np.inf, b_obj_sizes)
@@ -90,6 +104,7 @@ class GeneralTasks:
         return annos, down_ratios
 
     def _draw_mask(self, b_objs_kps, b_cates, h, w, flip_probs, is_do_filp):
+
         def draw(objs_kps, cates):
             kp_mask = ~tf.math.is_inf(objs_kps)[:, 0, 0]
             objs_kps, cates = objs_kps[kp_mask], cates[kp_mask]
@@ -120,8 +135,7 @@ class GeneralTasks:
 
             return mask
 
-        b_fg_mask = tf.map_fn(lambda x: draw(x[0], x[1]),
-                              (b_objs_kps, b_cates),
+        b_fg_mask = tf.map_fn(lambda x: draw(x[0], x[1]), (b_objs_kps, b_cates),
                               parallel_iterations=self.batch_size,
                               fn_output_signature=tf.float32)
 
@@ -138,8 +152,7 @@ class GeneralTasks:
             # make pseudo keypoint for top-left and bottom-right
             tl, br = b_objs_kps[:, :, 0, :], b_objs_kps[:, :, 1, :]
             b_obj_sizes = br - tl
-        b_obj_sizes = tf.where(tf.math.is_nan(b_obj_sizes), np.inf,
-                               b_obj_sizes)
+        b_obj_sizes = tf.where(tf.math.is_nan(b_obj_sizes), np.inf, b_obj_sizes)
         return b_obj_sizes
 
     def _rounding_offset(self, b_kp_idxs, b_round_kp_idxs):
@@ -163,6 +176,7 @@ class GeneralTasks:
         return one_hot_code
 
     def _draw_kps(self, b_round_kps, b_obj_sizes, h, w, m, b_cates):
+
         def draw(kps, sigmas, cates):
             mask = ~tf.math.is_inf(kps)[:, 0, 0]
             kps, sigmas, cates = kps[mask], sigmas[mask], cates[mask]
@@ -209,3 +223,49 @@ class GeneralTasks:
             b_theta = tf.reshape(b_theta,
                                  [self.batch_size, self.max_obj_num, 1])
         return b_coords, b_images, b_origin_sizes, b_theta
+
+    def transform(self, vertices, s, angles, t3d):
+        R = self.angle2matrix(angles)
+        return self.similarity_transform(vertices, s, R, t3d)
+
+    def angle2matrix(self, angles):
+        ''' get rotation matrix from three rotation angles(degree). right-handed.
+        Args:
+            angles: [3,]. x, y, z angles
+            x: pitch. positive for looking down.
+            y: yaw. positive for looking left. 
+            z: roll. positive for tilting head right. 
+        Returns:
+            R: [3, 3]. rotation matrix.
+        '''
+        x, y, z = np.deg2rad(angles[0]), np.deg2rad(angles[1]), np.deg2rad(
+            angles[2])
+        # x
+        Rx = np.array([[1, 0, 0], [0, tf.math.cos(x), -tf.math.sin(x)],
+                       [0, tf.math.sin(x), tf.math.cos(x)]])
+        # y
+        Ry = np.array([[tf.math.cos(y), 0, tf.math.sin(y)], [0, 1, 0],
+                       [-tf.math.sin(y), 0, tf.math.cos(y)]])
+        # z
+        Rz = np.array([[tf.math.cos(z), -tf.math.sin(z), 0],
+                       [tf.math.sin(z), tf.math.cos(z), 0], [0, 0, 1]])
+
+        R = Rz.dot(Ry.dot(Rx))
+        return R.astype(np.float32)
+
+    def similarity_transform(self, vertices, s, R, t3d):
+        ''' similarity transform. dof = 7.
+        3D: s*R.dot(X) + t
+        Homo: M = [[sR, t],[0^T, 1]].  M.dot(X)
+        Args:(float32)
+            vertices: [nver, 3]. 
+            s: [1,]. scale factor.
+            R: [3,3]. rotation matrix.
+            t3d: [3,]. 3d translation vector.
+        Returns:
+            transformed vertices: [nver, 3]
+        '''
+        t3d = np.squeeze(np.array(t3d, dtype=np.float32))
+        transformed_vertices = s * vertices.dot(R.T) + t3d[np.newaxis, :]
+
+        return transformed_vertices

@@ -82,6 +82,7 @@ def set_data_config(config):
 
 
 def set_model_config(config):
+    config.models['3dmm'] = config.data_reader['3dmm']
     config.models.max_obj_num = config.data_reader.max_obj_num
     config.models.resize_size = config.data_reader.resize_size
     config.models.batch_size = config.train_batch_size
