@@ -1,14 +1,13 @@
 {
-    "train_batch_size": 32,
-    "test_batch_size": 32,
-    "epochs":70,
+    "batch_size": 16,
+    "epochs":80,
     "learn_rate": 0.00025,
-    "model_path": "/home2/user/anders/archive_model/pose_std",
+    "model_path": "/home2/user/anders/archive_model/pose",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/home2/user/anders/archive_model/pose_std/logs/"
+        "log_dir": "/home2/user/anders/archive_model/pose/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -26,12 +25,9 @@
             "preprocess": "obj_det",
             "read_img": true,
             "num_lnmks": 70,
-            "branches": [
-                "keypoint"
-            ],
             "category_path": "./config/face.txt",
-            "train_folder": "/home2/user/anders/300VW/tf_records/train",
-            "test_folder": "/home2/user/anders/300VW/tf_records/test"
+            "train_folder": "/home2/user/anders/LS3D-W/tf_records/train",
+            "test_folder": "/home2/user/anders/LS3D-W/tf_records/test"
         }],
         "augments": {
             "color_chains": [
@@ -55,11 +51,12 @@
             "do_flip": true
         },
         "3dmm":{
-            "num_vertices":53215, 
-            "model_path":"/home/anders/proj_py/3DHead/scripts/BFM/Out/BFM.mat",
-            "pseudo_T_path":"/aidata/anders/objects/landmarks/3DDFA/pseudo_matrix/T.npy",
-            "pseudo_exp_eq_left":"/aidata/anders/objects/landmarks/3DDFA/pseudo_matrix/exp_eq_left.npy",
-            "pseudo_shp_eq_left": "/aidata/anders/objects/landmarks/3DDFA/pseudo_matrix/shp_eq_left.npy",
+            "model_path":"/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
+            "pms_path":"/home2/user/anders/LS3D-W/tf_records/params/param_mean_std.npy",
+            "n_s":1,
+            "n_R":9,
+            "n_shp":50,
+            "n_exp":29,
             "max_iter":5
         }
     },
@@ -100,20 +97,16 @@
             "pred_layer": {
                 "heat_maps": [{
                     "name": "obj_heat_map",
-                    "out_dims": 2
-                }],
-                "size_maps": [{
-                    "name": "obj_size_maps",
-                    "out_dims": 2
+                    "out_dims": 1
                 }],
                 "pose_maps": [{
-                    "name": "obj_pose_map",
-                    "out_dims": 3
+                    "name": "obj_param_map",
+                    "out_dims": 89
                 }]
             }
         },
         "loss": { //weighted constant based on DETR paper
-            "type": "center_od",
+            "type": "center_head",
             "size_weight": 1
         }
     }

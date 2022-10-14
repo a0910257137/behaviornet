@@ -17,8 +17,10 @@ from utils.io import *
 
 
 def train(config, is_restore, excluded_layers):
+
     mirrored_strategy = tf.distribute.MirroredStrategy()
     general_dataset = GeneralDataset(config.data_reader, mirrored_strategy)
+
     datasets = general_dataset.get_datasets()
     train_datasets = datasets['train']
     test_datasets = datasets['test']
@@ -29,6 +31,7 @@ def train(config, is_restore, excluded_layers):
             model = Restore(config.model_path,
                             config.data_reader.resize_size).build_restoration(
                                 model, excluded_layers)
+                                
     callbacks = get_callbacks(config, model, optimizer, train_datasets,
                               test_datasets)
 

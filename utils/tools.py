@@ -35,17 +35,18 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
         update_freq='batch',
         histogram_freq=1,
         profile_batch='500,520')
-    histogram = Histogram(config=config, writers=writers, update_freq=1000)
-    # embedding_map = EmbeddingMap(config=config,
-    #                              writers=writers,
-    #                              train_datasets=train_datasets,
-    #                              test_datasets=test_datasets,
-    #                              update_freq=1000)
+    # histogram = Histogram(config=config, writers=writers, update_freq=1000)
+    embedding_map = EmbeddingMap(config=config,
+                                 writers=writers,
+                                 train_datasets=train_datasets,
+                                 test_datasets=test_datasets,
+                                 update_freq=1000)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
-    callbacks.append(
-        [saver_callback, tensorboard_callback,
-         LossAndErrorPrintingCallback()])
+    callbacks.append([
+        saver_callback, tensorboard_callback, embedding_map,
+        LossAndErrorPrintingCallback()
+    ])
     return callbacks
 
 
@@ -66,28 +67,24 @@ def load_configger(config_path):
     config = AttrDict(config)
     config = set_data_config(config)
     config = set_model_config(config)
-    model_config = config.set_immutable()
+    # model_config = config.set_immutable()
     return config
 
 
 def set_data_config(config):
     config.data_reader.epochs = config.epochs
     # add tasks keys in data_reader
-    config.data_reader.train_batch_size = config.train_batch_size
-    config.data_reader.test_batch_size = config.test_batch_size
+    config.data_reader.batch_size = config.batch_size
     config.data_reader.model_name = config.models.model_name
-
-    # config.data_reader.num_landmarks = config.models.head.pred_layer.num_landmarks
     return config
 
 
 def set_model_config(config):
     config.models['3dmm'] = config.data_reader['3dmm']
+    config.models.tasks = config.data_reader.tasks
     config.models.max_obj_num = config.data_reader.max_obj_num
     config.models.resize_size = config.data_reader.resize_size
-    config.models.batch_size = config.train_batch_size
-    config.models.train_batch_size = config.train_batch_size
-    config.models.test_batch_size = config.test_batch_size
+    config.models.batch_size = config.batch_size
     config.models.lr = config.learn_rate
     return config
 

@@ -355,149 +355,96 @@ def offset_loss(b_idx, b_oms, tar_vals, batch_size, max_obj_num):
     return loss
 
 
-def wpdc_loss(b_idx, param_u_std, b_opms, shapeMU, shapePC, expPC, kpt_ind,
-              shape_params, expression_params, scale, angles, tanslations,
-              batch_size, max_obj_num):
+def wpdc_loss(b_idx, gt_params, param_mean_std, pred_opms, n_s, n_R, n_shp,
+              n_exp, kpt_ind, shapeMU, shapePC, expPC, batch_size, max_obj_num):
 
-    def angle2matrix(angles):
-        ''' get rotation matrix from three rotation angles(degree). right-handed.
-        Args:
-            angles: [3,]. x, y, z angles
-            x: pitch. positive for looking down.
-            y: yaw. positive for looking left. 
-            z: roll. positive for tilting head right. 
-        Returns:
-            R: [3, 3]. rotation matrix.
-        '''
-        # use 1 rad =  57.3
-        x, y, z = angles[..., 0], angles[..., 1], angles[..., 2]
-        # x, 3, 3
-        # for Rx
-        row1 = tf.constant([1., 0., 0.], shape=(3, 1))
-        row1 = tf.tile(row1[None, None, :, :], (batch_size, max_obj_num, 1, 1))
-        row2 = tf.concat([
-            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
-            tf.math.cos(x)[..., None, None], -tf.math.sin(x)[..., None, None]
-        ],
-                         axis=-2)
-        row3 = tf.concat([
-            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
-            tf.math.sin(x)[..., None, None],
-            tf.math.cos(x)[..., None, None]
-        ],
-                         axis=-2)
-        Rx = tf.concat([row1, row2, row3], axis=-1)
-        # for Ry
-        # y
-        row1 = tf.concat([
-            tf.math.cos(y)[..., None, None],
-            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
-            tf.math.sin(y)[..., None, None]
-        ],
-                         axis=-2)
-        row2 = tf.constant([0., 1., 0.], shape=(3, 1))
-        row2 = tf.tile(row2[None, None, :, :], (batch_size, max_obj_num, 1, 1))
+    def resample(gt_params, kpt_ind):
+        # resmpale different vertices for 68 landmarks and 132 random samples
+        index = tf.random.shuffle(tf.range(start=0, limit=53215,
+                                           dtype=tf.int32))[:132]
+        index = tf.reshape(index, (-1, 1))
+        keypoints_resample = tf.concat(
+            [3 * index, 3 * index + 1, 3 * index + 2], axis=-1)
+        keypoints_mix = tf.concat([kpt_ind, keypoints_resample], axis=0)
+        n_objs = tf.shape(gt_params)[1]
+        keypoints_mix = tf.reshape(keypoints_mix, [-1])
+        u_base = tf.tile(
+            tf.gather(shapeMU, keypoints_mix)[None, None, :, :],
+            [batch_size, n_objs, 1, 1])
+        w_shp_base = tf.tile(
+            tf.gather(shapePC, keypoints_mix)[None, None, :, :],
+            [batch_size, n_objs, 1, 1])
+        w_exp_base = tf.tile(
+            tf.gather(expPC, keypoints_mix)[None, None, :, :],
+            (batch_size, n_objs, 1, 1))
+        return u_base, w_shp_base, w_exp_base
 
-        row3 = tf.concat([
-            -tf.math.sin(y)[..., None, None],
-            tf.zeros(shape=(batch_size, max_obj_num, 1, 1)),
-            tf.math.cos(y)[..., None, None]
-        ],
-                         axis=-2)
-        Ry = tf.concat([row1, row2, row3], axis=-1)
-        # z
-        row1 = tf.concat([
-            tf.math.cos(z)[..., None, None], -tf.math.sin(z)[..., None, None],
-            tf.zeros(shape=(batch_size, max_obj_num, 1, 1))
-        ],
-                         axis=-2)
-        row2 = tf.concat([
-            tf.math.sin(z)[..., None, None],
-            tf.math.cos(z)[..., None, None],
-            tf.zeros(shape=(batch_size, max_obj_num, 1, 1))
-        ],
-                         axis=-2)
-        row3 = tf.constant([0., 0., 1.], shape=(3, 1))
-        row3 = tf.tile(row3[None, None, :, :], (batch_size, max_obj_num, 1, 1))
-        Rz = tf.concat([row1, row2, row3], axis=-1)
-        # R = tf.linalg.matmul(Rz, tf.linalg.matmul(Ry, Rx))
-        return (Rx, Ry, Rz)
+    u_base, w_shp_base, w_exp_base = resample(gt_params, kpt_ind)
+    gt_s, gt_R, gt_shp_exp = gt_params[..., :n_s], gt_params[
+        ..., n_s:n_R + n_s], gt_params[..., n_R + n_s:]
 
-    index = tf.random.shuffle(tf.range(start=0, limit=53215,
-                                       dtype=tf.int32))[:132]
-    index = tf.reshape(index, (-1, 1))
-    keypoints_resample = tf.concat([3 * index, 3 * index + 1, 3 * index + 2],
-                                   axis=-1)
-    keypoints_mix = tf.concat([kpt_ind, keypoints_resample], axis=0)
-    n_objs = tf.shape(shape_params)[1]
-    keypoints_mix = tf.reshape(keypoints_mix, [-1])
+    mean_s, mean_R, mean_shp, mean_exp = param_mean_std[0, :1], param_mean_std[
+        0, 1:10], param_mean_std[0, 10:209], param_mean_std[0, 209:238]
+    std_s, std_R, std_shp, std_exp = param_mean_std[1, :1], param_mean_std[
+        1, 1:10], param_mean_std[1, 10:209], param_mean_std[1, 209:238]
+    mean_shp, mean_exp = mean_shp[:n_shp], mean_exp[:n_exp]
+    std_shp, std_exp = std_shp[:n_shp], std_exp[:n_exp]
 
-    u_base = tf.tile(
-        tf.gather(shapeMU, keypoints_mix)[None, None, :, :],
-        [batch_size, n_objs, 1, 1])
-    w_shp_base = tf.tile(
-        tf.gather(shapePC, keypoints_mix)[None, None, :, :],
-        [batch_size, n_objs, 1, 1])
-    w_exp_base = tf.tile(
-        tf.gather(expPC, keypoints_mix)[None, None, :, :],
-        (batch_size, n_objs, 1, 1))
-
-    pvs = u_base + tf.linalg.matmul(w_shp_base,
-                                    shape_params) + tf.linalg.matmul(
-                                        w_exp_base, expression_params)
-    pvs = tf.reshape(pvs, [batch_size, n_objs, 200, 3])
+    gt_vertices = u_base + tf.linalg.matmul(
+        w_shp_base, gt_shp_exp[:, :, :n_shp, tf.newaxis]) + tf.linalg.matmul(
+            w_exp_base, gt_shp_exp[:, :, n_shp:, tf.newaxis])
+    gt_vertices = tf.reshape(gt_vertices, [batch_size, max_obj_num, 200, 3])
     with tf.name_scope('wpdc_loss'):
         # B C N
         valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
-        angles = tf.where(
-            tf.tile(valid_mask[..., None], (1, 1, tf.shape(angles)[-1])),
-            angles, 0.)
-
         b_info_idx = tf.tile(
             tf.range(batch_size, dtype=tf.int32)[:, None, None],
             (1, max_obj_num, 1))
         b_idx = tf.cast(b_idx, tf.int32)
         b_idx = tf.concat([b_info_idx, b_idx], axis=-1)
+        pred_params = tf.gather_nd(pred_opms, b_idx)
 
+        pred_s, pred_R, pred_shp_exp = pred_params[..., :n_s], pred_params[
+            ..., n_s:n_s + n_R], pred_params[..., n_s + n_R:]
+
+        pose_diffs = tf.reshape(tf.math.abs(pred_R - gt_R),
+                                (batch_size, max_obj_num, -1))
+        pv_nomrs = tf.norm(gt_vertices, ord=2, axis=2)
+        weights = []
+        for ind in range(9):
+            if ind in [0, 3, 6]:
+                w = pose_diffs[..., ind] * pv_nomrs[..., 0]
+            elif ind in [1, 4, 7]:
+                w = pose_diffs[..., ind] * pv_nomrs[..., 1]
+            elif ind in [2, 5, 8]:
+                w = pose_diffs[..., ind] * pv_nomrs[..., 2]
+            weights.append(w)
+        weights = tf.stack(weights)
+        magic_number = 0.00057339936  # scale
+        w_norm = tf.norm(tf.concat((w_shp_base, w_exp_base), axis=-1),
+                         ord=2,
+                         axis=2)
+        shp_exp_diffs = tf.reshape(tf.math.abs(pred_shp_exp - gt_shp_exp),
+                                   (batch_size, max_obj_num, -1))
         eps = 1e-6
-        b_pred_pose_vals = tf.gather_nd(b_opms, b_idx)
-        b_pred_pose_vals = param_u_std[1][
-            None, None, :] * b_pred_pose_vals + param_u_std[0][None, None, :]
-        angles = param_u_std[1][None, None, :] * angles + param_u_std[0][
-            None, None, :]
-        pred_rx, pred_ry, pred_rz = angle2matrix(b_pred_pose_vals)
-        gt_rx, gt_ry, gt_rz = angle2matrix(angles)
-
-        param_diff_rx = tf.reshape(tf.math.abs(pred_rx - gt_rx),
-                                   (batch_size, max_obj_num, -1))
-        param_diff_ry = tf.reshape(tf.math.abs(pred_ry - gt_ry),
-                                   (batch_size, max_obj_num, -1))
-        param_diff_rz = tf.reshape(tf.math.abs(pred_rz - gt_rz),
-                                   (batch_size, max_obj_num, -1))
-        # R = tf.transpose(R, (0, 1, 3, 2))
-        pv_nomrs = tf.norm(pvs, ord=2, axis=2)
-        # offset_norm = tf.math.sqrt(w_shp_base.shape[-2] / 3)
-        weight_param_diff_rx = param_diff_rx * pv_nomrs[..., 0][..., None]
-        weight_param_diff_ry = param_diff_ry * pv_nomrs[..., 1][..., None]
-        weight_param_diff_rz = param_diff_rz * pv_nomrs[..., 2][..., None]
-
-        weight_param_diff_rx = (
-            weight_param_diff_rx + eps) / tf.math.reduce_max(
-                weight_param_diff_rx + eps, keepdims=True, axis=-1)
-        weight_param_diff_ry = (
-            weight_param_diff_ry + eps) / tf.math.reduce_max(
-                weight_param_diff_ry + eps, keepdims=True, axis=-1)
-        weight_param_diff_rz = (
-            weight_param_diff_rz + eps) / tf.math.reduce_max(
-                weight_param_diff_rz + eps, keepdims=True, axis=-1)
-
-        loss_rx = weight_param_diff_rx * tf.math.pow(param_diff_rx, 2)
-        loss_ry = weight_param_diff_ry * tf.math.pow(param_diff_ry, 2)
-        loss_rz = weight_param_diff_rz * tf.math.pow(param_diff_rz, 2)
-        loss = (loss_rx + loss_ry + loss_rz) / 3
+        weights = tf.concat(
+            [tf.transpose(weights, (1, 2, 0)), gt_s * shp_exp_diffs * w_norm],
+            axis=-1)
+        weights = (weights + eps) / tf.math.reduce_max(
+            weights, keepdims=True, axis=-1)
+        # Z-score as noirmalization ~ N(0, 1)
+        mean_s_R_shp_exp = tf.concat([mean_s, mean_R, mean_shp, mean_exp],
+                                     axis=0)
+        std_s_R_shp_exp = tf.concat([std_s, std_R, std_shp, std_exp], axis=0)
+        Z = (gt_params -
+             mean_s_R_shp_exp[None, None, :]) / std_s_R_shp_exp[None, None, :]
+        R_shp_exp_loss = weights * tf.math.square(pred_params[..., 1:] -
+                                                  Z[..., 1:])
+        s_loss = tf.math.square(pred_params[..., :1] - Z[..., :1])
+        loss = tf.concat([s_loss, R_shp_exp_loss], axis=-1)
         loss = loss * tf.cast(valid_mask[..., None], tf.float32)
         loss = tf.where(
-            tf.tile(valid_mask[..., None], (1, 1, tf.shape(loss_rx)[-1])), loss,
+            tf.tile(valid_mask[..., None], (1, 1, tf.shape(loss)[-1])), loss,
             0.)
         b_objs = tf.math.reduce_sum(tf.cast(valid_mask, tf.float32), axis=-1)
         loss = tf.reduce_sum(loss, axis=(-2, -1)) / b_objs

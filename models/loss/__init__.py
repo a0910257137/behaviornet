@@ -1,2 +1,4 @@
 from .center_od import CenterODLoss
-LOSS_FACTORY = dict(center_od=CenterODLoss)
+from .center_head import CenterHeadLoss
+
+LOSS_FACTORY = dict(center_od=CenterODLoss, center_head=CenterHeadLoss)

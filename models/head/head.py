@@ -109,7 +109,7 @@ class Head(tf.keras.Model):
                                   activation=None,
                                   name=branch_name)
                     ]
-                elif 'pose' in branch_name:
+                elif 'param' in branch_name:
                     self.conv[branch_name] = [
                         ConvBlock(filters=self.out_tran_dims,
                                   kernel_size=3,
@@ -123,30 +123,7 @@ class Head(tf.keras.Model):
                                   activation=None,
                                   name=branch_name)
                     ]
-                elif 'dense_y' in branch_name:
-                    self.conv[branch_name] = [
-                        tf.keras.layers.Dense(192,
-                                              activation='relu',
-                                              use_bias=True,
-                                              kernel_initializer=tf.keras.
-                                              initializers.HeUniform())
-                    ]
-                elif 'dense_x' in branch_name:
-                    self.conv[branch_name] = [
-                        tf.keras.layers.Dense(320,
-                                              activation='relu',
-                                              use_bias=True,
-                                              kernel_initializer=tf.keras.
-                                              initializers.HeUniform())
-                    ]
-                elif 'dense_pose' in branch_name:
-                    self.conv[branch_name] = [
-                        tf.keras.layers.Dense(62,
-                                              activation='relu',
-                                              use_bias=True,
-                                              kernel_initializer=tf.keras.
-                                              initializers.HeUniform())
-                    ]
+
         # self.proj_1 = ConvBlock(filters=3,
         #                         kernel_size=1,
         #                         use_bias=True,
@@ -169,19 +146,13 @@ class Head(tf.keras.Model):
             for info in pred_branch:
                 branch_name = info['name']
                 if 'offset' in branch_name:
-                    # z = self.proj_1(x)
-                    # z = self.proj_2(z)
                     z = self.conv[branch_name][0](x)
                     for i, key in enumerate(self.head_keys):
                         pred_branches[key] = self.conv[branch_name][i + 1](z)
                 elif 'size' in branch_name:
-                    # z = self.proj_1(x)
-                    # z = self.proj_2(z)
                     z = self.conv[branch_name][0](x)
                     pred_branches[branch_name] = self.conv[branch_name][1](z)
-                elif 'pose' in branch_name:
-                    # z = self.proj_1(x)
-                    # z = self.proj_2(z)
+                elif 'param' in branch_name:
                     z = self.conv[branch_name][0](x)
                     pred_branches[branch_name] = self.conv[branch_name][1](z)
                 elif 'heat' in branch_name:

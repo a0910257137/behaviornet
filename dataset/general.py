@@ -20,19 +20,13 @@ class GeneralDataset:
                 return [x.strip() for x in f.readlines()]
 
         self.config = config
-        self.train_batch_size = config.train_batch_size
-        self.test_batch_size = config.test_batch_size
+        self.batch_size = config.batch_size * mirrored_strategy.num_replicas_in_sync
         self.tasks = config.tasks
         self.epochs = config.epochs
         for task in config.tasks:
             task['cates'] = read_cates(task['category_path'])
         self.config = Box(self.config)
-        self.mirrored_strategy = mirrored_strategy
-        self.config[
-            "train_batch_size"] *= self.mirrored_strategy.num_replicas_in_sync
-        self.config[
-            "test_batch_size"] *= self.mirrored_strategy.num_replicas_in_sync
-        self.gener_task = GeneralTasks(self.config)
+        self.gener_task = GeneralTasks(self.config, self.batch_size)
 
     def _dataset(self, is_train):
         datasets = []
@@ -53,12 +47,9 @@ class GeneralDataset:
         options = tf.data.Options()
         options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
         datasets = datasets.with_options(options)
-        if not is_train:
-            batch_size = self.mirrored_strategy.num_replicas_in_sync * self.test_batch_size
-        batch_size = self.mirrored_strategy.num_replicas_in_sync * self.train_batch_size
-        datasets = datasets.batch(batch_size, drop_remainder=True)
+        datasets = datasets.batch(self.batch_size, drop_remainder=True)
         # for ds in datasets:
-        #     b_img, targets = self.gener_task.build_maps(batch_size, ds)
+        #     b_img, targets = self.gener_task.build_maps(ds)
         #     #     offset_idxs = targets["offset_idxs"].numpy()
         #     #     offset_vals = targets['offset_vals'].numpy()
         #     #     size_idxs = targets['size_idxs'].numpy()
@@ -78,7 +69,7 @@ class GeneralDataset:
         #     exit(1)
 
         datasets = datasets.map(
-            lambda *x: self.gener_task.build_maps(batch_size, x),
+            lambda *x: self.gener_task.build_maps(x),
             num_parallel_calls=tf.data.experimental.AUTOTUNE)
 
         datasets = datasets.prefetch(tf.data.experimental.AUTOTUNE)

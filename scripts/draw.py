@@ -1,7 +1,13 @@
 from pprint import pprint
 import cv2
 import numpy as np
-import copy
+import sys
+from pathlib import Path
+from skimage import io
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from utils.mesh.transform import *
+from utils.mesh.render import *
 
 
 def draw_box2d(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
@@ -96,12 +102,33 @@ def draw_offset_v1(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
     return result
 
 
-def draw_landmark(b_orig_imgs, b_landmarks):
-    b_landmarks = b_landmarks.numpy()
+def draw_pose(head_model, colors, triangles, b_orig_imgs, mean_s_R_shp_exp,
+              std_s_R_shp_exp, b_rets):
+    b_coors, b_params = b_rets[0].numpy(), b_rets[1].numpy()
+    shapeMU = head_model['shapeMU'][:, :]
+    shapePC = head_model['shapePC'][:, :50]
+    expPC = head_model['expPC'][:, :]
+    b_params = b_params * std_s_R_shp_exp[None, None, :] + mean_s_R_shp_exp[
+        None, None, :]
     outputs_imgs = []
-    for img, landmarks in zip(b_orig_imgs, b_landmarks):
-        for lnmk in landmarks:
-            lnmk = lnmk.astype(int)
-            img = cv2.circle(img, tuple(lnmk[::-1]), 5, (0, 255, 0), -1)
+    for img, n_coors, n_params in zip(b_orig_imgs, b_coors, b_params):
+        for coors, params in zip(n_coors, n_params):
+            s, R, shp, exp = params[0], params[1:10], params[
+                10:60, np.newaxis], params[60:, np.newaxis]
+            R = np.reshape(R, (3, 3))
+            vertices = shapeMU + shapePC.dot(shp) + expPC.dot(exp)
+            vertices = np.reshape(vertices,
+                                  [int(3), int(len(vertices) / 3)], 'F').T
+            # prediction value -0.0030252803
+            # 0.00046006403863430023
+            transformed_vertices = 0.00000046006403863430023 * vertices.dot(R.T)
+            image_vertices = to_image(transformed_vertices, coors[::-1], h=192.)
+            fitted_image = render_colors(image_vertices, triangles, colors, 192,
+                                         320)
+            io.imsave('{}/fitted.png'.format("test"), fitted_image)
+            xxx
+            coors
+            # lnmk = lnmk.astype(int)
+            # img = cv2.circle(img, tuple(lnmk[::-1]), 5, (0, 255, 0), -1)
         outputs_imgs.append(img)
     return outputs_imgs

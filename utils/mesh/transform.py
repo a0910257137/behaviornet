@@ -28,9 +28,10 @@ def angle2matrix(angles):
     Returns:
         R: [3, 3]. rotation matrix.
     '''
-    x, y, z = np.deg2rad(angles[0]), np.deg2rad(angles[1]), np.deg2rad(
-        angles[2])
+    # x, y, z = np.deg2rad(angles[0]), np.deg2rad(angles[1]), np.deg2rad(
+    #     angles[2])
     # x
+    x, y, z = angles[0], angles[1], angles[2]
     Rx = np.array([[1, 0, 0], [0, cos(x), -sin(x)], [0, sin(x), cos(x)]])
     # y
     Ry = np.array([[cos(y), 0, sin(y)], [0, 1, 0], [-sin(y), 0, cos(y)]])
@@ -197,7 +198,7 @@ def perspective_project(vertices, fovy, aspect_ratio=1., near=0.1, far=1000.):
     return projected_vertices
 
 
-def to_image(vertices, h, w, is_perspective=False):
+def to_image(vertices, coors, h):
     ''' change vertices to image coord system
     3d system: XYZ, center(0, 0, 0)
     2d image: x(u), y(v). center(w/2, h/2), flip y-axis. 
@@ -209,16 +210,9 @@ def to_image(vertices, h, w, is_perspective=False):
         projected_vertices: [nver, 3]  
     '''
     image_vertices = vertices.copy()
-    if is_perspective:
-        # if perspective, the projected vertices are normalized to [-1, 1]. so change it to image size first.
-        image_vertices[:, 0] = image_vertices[:, 0] * w / 2
-        image_vertices[:, 1] = image_vertices[:, 1] * h / 2
-    # # move to center of image
-    # image_vertices[:, 0] = image_vertices[:, 0] + w / 2
-    # image_vertices[:, 1] = image_vertices[:, 1] + h / 2
-    # # flip vertices along y-axis.
-    # image_vertices[:, 0] = w - image_vertices[:, 0] - 1
-    # image_vertices[:, 1] = h - image_vertices[:, 1] - 1
+    image_vertices[:, 0] = image_vertices[:, 0] + coors[0]
+    image_vertices[:, 1] = image_vertices[:, 1] + coors[1]
+    image_vertices[:, 1] = h - image_vertices[:, 1] - 1
     return image_vertices
 
 
@@ -357,31 +351,3 @@ def matrix2angle(R):
     # rx, ry, rz = x * 180 / np.pi, y * 180 / np.pi, z * 180 / np.pi
     # return rx, ry, rz
     return x, y, z
-
-
-# def matrix2angle(R):
-#     ''' compute three Euler angles from a Rotation Matrix. Ref: http://www.gregslabaugh.net/publications/euler.pdf
-#     Args:
-#         R: (3,3). rotation matrix
-#     Returns:
-#         x: yaw
-#         y: pitch
-#         z: roll
-#     '''
-#     # assert(isRotationMatrix(R))
-
-#     if R[2,0] !=1 or R[2,0] != -1:
-#         x = math.asin(R[2,0])
-#         y = math.atan2(R[2,1]/cos(x), R[2,2]/cos(x))
-#         z = math.atan2(R[1,0]/cos(x), R[0,0]/cos(x))
-
-#     else:# Gimbal lock
-#         z = 0 #can be anything
-#         if R[2,0] == -1:
-#             x = np.pi/2
-#             y = z + math.atan2(R[0,1], R[0,2])
-#         else:
-#             x = -np.pi/2
-#             y = -z + math.atan2(-R[0,1], -R[0,2])
-
-#     return x, y, z

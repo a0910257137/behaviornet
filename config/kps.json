@@ -20,6 +20,13 @@
         ],
         "cat_path": "./config/face.txt"
     },
+    "3dmm":{
+        "model_path":"/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
+        "n_s":1,
+        "n_R":9,
+        "n_shp":50,
+        "n_exp":29
+    },
     "metric":{
         "metric_type":"LandMarks",
         "lnmk_scheme":[0, 8, 16, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 

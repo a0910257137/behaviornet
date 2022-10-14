@@ -1,7 +1,8 @@
 import tensorflow as tf
+import numpy as np
+import os
 from pprint import pprint
 from keras_flops import get_flops
-import numpy as np
 
 
 class Network(tf.keras.Model):
@@ -11,10 +12,9 @@ class Network(tf.keras.Model):
         self.model = model
         self.config = config
         self._model_keys = _model_keys
-        param_u_std = np.load(
-            "/aidata/anders/objects/landmarks/3dhead/3ddm_data/param_u_std.npy")
-        self.train_u_std = tf.cast(param_u_std[:2, ], tf.float32)
-        self.test_u_std = tf.cast(param_u_std[2:, ], tf.float32)
+        pms = np.load(self.config['3dmm']['pms_path'])
+        self.train_mean_std = tf.cast(pms[:2, ], tf.float32)
+        self.test_mean_std = tf.cast(pms[2:, ], tf.float32)
 
     def compile(self, optimizer, loss, run_eagerly=None):
         super(Network, self).compile(optimizer=optimizer,
@@ -22,28 +22,26 @@ class Network(tf.keras.Model):
                                      metrics=['accuracy'])
         self._loss = loss
         self.optimizer = optimizer
-        image_inputs = tf.keras.Input(shape=(192, 320, 3), name='image_inputs')
-        preds = self.model(image_inputs, training=False)
-        fully_models = tf.keras.Model(image_inputs, preds, name='fully')
-        print(fully_models.summary())
-        flops = get_flops(fully_models, batch_size=1)
-        print(f"FLOPS: {flops / 10 ** 9:.03} G")
-        exit(1)
-        
+        # image_inputs = tf.keras.Input(shape=(192, 320, 3), name='image_inputs')
+        # preds = self.model(image_inputs, training=False)
+        # fully_models = tf.keras.Model(image_inputs, preds, name='fully')
+        # print(fully_models.summary())
+        # flops = get_flops(fully_models, batch_size=1)
+        # print(f"FLOPS: {flops / 10 ** 9:.03} G")
+        # exit(1)
+
     def train_step(self, data):
         training = True
         imgs, labels = data
-        labels['u_std'] = self.train_u_std
+        labels['mean_std'] = self.train_mean_std
         with tf.GradientTape() as tape:
             preds = self.model(imgs, training=training)
-            loss = self._loss(preds, labels, self.config.train_batch_size,
-                              training)
+            loss = self._loss(preds, labels, self.config.batch_size, training)
         if self.config.multi_optimizer:
             self._gradient(self.model, self.optimizer, loss['total'], tape)
         else:
             trainable_vars = self.model.trainable_variables
             grads = tape.gradient(loss['total'], trainable_vars)
-
             self.optimizer.apply_gradients(zip(grads, trainable_vars))
 
         return loss
@@ -51,9 +49,9 @@ class Network(tf.keras.Model):
     def test_step(self, data):
         training = False
         imgs, labels = data
-        labels['u_std'] = self.test_u_std
+        labels['mean_std'] = self.test_mean_std
         preds = self.model(imgs, training=training)
-        loss = self._loss(preds, labels, self.config.test_batch_size, training)
+        loss = self._loss(preds, labels, self.config.batch_size, training)
         return loss
 
     def get_trainable_variables(self, model):
