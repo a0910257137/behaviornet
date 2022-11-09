@@ -210,9 +210,8 @@ def to_image(vertices, coors, h):
         projected_vertices: [nver, 3]  
     '''
     image_vertices = vertices.copy()
-    image_vertices[:, 0] = image_vertices[:, 0] + coors[0]
-    image_vertices[:, 1] = image_vertices[:, 1] + coors[1]
-    image_vertices[:, 1] = h - image_vertices[:, 1] - 1
+    image_vertices[:, 0] = image_vertices[:, 0].astype(np.float32) + coors[0]
+    image_vertices[:, 1] = image_vertices[:, 1].astype(np.float32) + coors[1]
     return image_vertices
 
 
@@ -260,9 +259,11 @@ def estimate_affine_matrix_3d22d(X, x):
     x = scale * x
 
     T = np.zeros((3, 3), dtype=np.float32)
+
     T[0, 0] = T[1, 1] = scale
     T[:2, 2] = -mean * scale
     T[2, 2] = 1
+
     # 3d points
     X_homo = np.vstack((X, np.ones((1, n))))
     mean = np.mean(X, 1)  # (3,)
@@ -277,7 +278,7 @@ def estimate_affine_matrix_3d22d(X, x):
     U[0, 0] = U[1, 1] = U[2, 2] = scale
     U[:3, 3] = -mean * scale
     U[3, 3] = 1
-
+    
     # --- 2. equations
     A = np.zeros((n * 2, 8), dtype=np.float32)
     X_homo = np.vstack((X, np.ones((1, n)))).T

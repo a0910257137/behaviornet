@@ -13,11 +13,9 @@ class Augmentation(Base):
         self.is_do_filp = self.augments.do_flip
         self.img_resize_size = img_resize_size
         self.batch_size = batch_size
-        # self.task = task
-        # self.num_lnmks = num_lnmks
         self.img_channel = 3
 
-    def __call__(self, b_imgs, b_coors, b_origin_sizes, num_lnmks, task):
+    def __call__(self, b_imgs, b_coors, num_lnmks, task):
         b_coors = tf.cast(b_coors, tf.float32)
         do_clc, flip_probs = self.random_param()
         if self.is_do_filp:
@@ -28,12 +26,10 @@ class Augmentation(Base):
             b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, filp_imgs)
 
         if len(self.augments.tensorpack_chains) != 0:
-
             b_imgs, b_coors = tf.py_function(self.tensorpack_augs,
                                              inp=[
-                                                 b_coors, b_imgs,
-                                                 b_origin_sizes, flip_probs,
-                                                 self.max_obj_num,
+                                                 b_coors, b_imgs, task,
+                                                 flip_probs, self.max_obj_num,
                                                  self.augments.tensorpack_chains
                                              ],
                                              Tout=[tf.uint8, tf.float32])
@@ -49,7 +45,7 @@ class Augmentation(Base):
             b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, aug_imgs)
         b_imgs = b_imgs / 255
         # for obj det
-        if task == "obj_det":
+        if task == "obj_det" or task == "tdmm":
             anno_shape = [self.batch_size, self.max_obj_num, num_lnmks, 3]
         b_coors = tf.reshape(b_coors, shape=anno_shape)
         b_imgs = tf.reshape(b_imgs, [
@@ -62,7 +58,6 @@ class Augmentation(Base):
         col_thre = 0.5 if len(self.augments.color_chains) else 0.0
         do_col = tf.random.uniform(
             shape=[self.batch_size], maxval=1, dtype=tf.float16) < col_thre
-
         flip_thre = 0.5 if self.augments.do_flip else 0.0
         do_flip = tf.random.uniform(
             shape=[self.batch_size], maxval=1, dtype=tf.float16) < flip_thre

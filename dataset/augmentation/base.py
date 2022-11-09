@@ -57,8 +57,8 @@ class Base:
         b_imgs = tf.numpy_function(func=album_aug, inp=[b_imgs], Tout=tf.uint8)
         return b_imgs
 
-    def tensorpack_augs(self, b_coors, b_imgs, b_img_sizes, flip_probs,
-                        max_obj_num, tensorpack_chains):
+    def tensorpack_augs(self, b_coors, b_imgs, task, flip_probs, max_obj_num,
+                        tensorpack_chains):
         f'''
             Do random ratation, crop and resize by using "tensorpack" augmentation class.
                 https://github.com/tensorpack/tensorpack
@@ -70,16 +70,14 @@ class Base:
             return :  B, N, [tl, br], [y, x, c] [B, N, C, D]
         '''
         # preprocess for different task annos
-
-        b_coors = np.asarray(b_coors).astype(np.float32)
-        b_img_sizes = np.asarray(b_img_sizes).astype(np.int32)
-        b_imgs = np.asarray(b_imgs).astype(np.uint8)
+        self.task = str(task.numpy())
+        b_coors = b_coors.numpy().astype(np.float32)
+        b_imgs = b_imgs.numpy().astype(np.uint8)
         flip_probs = flip_probs.numpy()
         _, h, w, c = b_imgs.shape
         aug_prob = .4
         tmp_imgs, tmp_coors = [], []
-        for img, coors, flip_prob, img_size in zip(b_imgs, b_coors, flip_probs,
-                                                   b_img_sizes):
+        for img, coors, flip_prob in zip(b_imgs, b_coors, flip_probs):
             valid_mask = np.all(np.isfinite(coors), axis=-1)
             valid_mask = valid_mask[:, 0]
             coors = coors[valid_mask]
@@ -95,8 +93,7 @@ class Base:
             for tensorpack_aug in tensorpack_chains:
                 if tensorpack_aug == "CropTransform":
                     # do crop transform
-                    crop_param = random.random(
-                    ) if self.task != "keypoint" else 0.
+                    crop_param = random.random()
                     if crop_param < aug_prob:
                         img, coors, cates = self.crop_transform(
                             img, coors, h, w)
@@ -104,20 +101,23 @@ class Base:
                 elif tensorpack_aug == "RandomPaste":
                     # do random paste
                     if random.random() < aug_prob:
+
                         img, coors, cates = self.random_paste(img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
 
                 elif tensorpack_aug == "WarpAffineTransform":
                     if random.random() < aug_prob:
+
                         img, coors, cates = self.warp_affine_transform(
                             img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
+
             coors[mask, :] = 0
+
             tmp_imgs.append(img)
             annos = coors[..., :2]
             annos = annos[..., ::-1]
             coors = np.concatenate([annos, coors[..., -1:]], axis=-1)
-
             n, c, d = coors.shape
             complement = np.empty([max_obj_num - n, c, d])
             complement.fill(np.inf)
@@ -192,7 +192,7 @@ class Base:
 
     def crop_transform(self, img, coors, h, w):
         annos, cates = coors[..., :-1], coors[..., -1:]
-        if self.task == "keypoint" and random.random() < 0.8:
+        if random.random() < 0.8:
             cropped_tl, cropped_br = annos[0, 0, :].astype(
                 np.int32), annos[0, 1, :].astype(np.int32)
             ori_shape = np.asarray(img.shape[:2])
@@ -202,7 +202,7 @@ class Base:
             h, w, _ = img.shape
             annos = np.einsum('n c d, d -> n c d', annos,
                               ori_shape / np.array([w, h]))
-            img = cv2.resize(img, tuple(ori_shape))
+            img = cv2.resize(img, tuple(ori_shape[::-1]))
             return img, annos, cates
         base_ratio = 0.8
         # crop_ratio = np.random.randint(low=5, high=20) / 100.0
@@ -225,17 +225,6 @@ class Base:
         annos_out = resize_transform.apply_coords(annos_out)
         annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
         if annos_out.any():
-            if self.task == "keypoint":
-                min_kps = np.min(annos_out[:, 2:, :-1], axis=1)
-                max_kps = np.max(annos_out[:, 2:, :-1], axis=1)
-                min_cropped_kps = coors[:, :2, :2]
-                min_cropped_tl_kps = min_cropped_kps[:, 0, :]
-                max_cropped_br_kps = min_cropped_kps[:, 1, :]
-                valid_tl_mask = min_kps > min_cropped_tl_kps
-                valid_br_mask = max_kps < max_cropped_br_kps
-                valid = np.all(valid_tl_mask) & np.all(valid_br_mask)
-                if not valid:
-                    return img, origin_annos, origin_cates
             return img_out, annos_out[..., :-1], annos_out[..., -1:]
         else:
             return img, origin_annos, origin_cates
@@ -251,6 +240,7 @@ class Base:
             return img, annos, cates
         img_out = obj._impl(img, l)
         annos_out = annos + l
+
         if annos_out.any():
             resize_transform = ResizeTransform(bg_h, bg_w, h, w,
                                                cv2.INTER_CUBIC)
@@ -258,7 +248,7 @@ class Base:
             annos_out = resize_transform.apply_coords(annos_out)
             annos_out = self.correct_out_point(annos_out, cates, 0, 0, h, w)
             if annos_out.any():
-                return img_out, annos_out[..., :-1], annos_out[..., -1:]
+                return img_out, annos_out[..., :2], annos_out[..., -1:]
             else:
                 return img, annos, cates
         else:
@@ -287,7 +277,8 @@ class Base:
             check = np.all(check, axis=-1)
             return check
 
-        if np.all(annos > 0.):
+        if np.all(annos > 0.) or 'tdmm' in self.task:
+            annos = np.concatenate([annos, cates], axis=-1)
             return annos
         else:
             return np.array([])
@@ -302,8 +293,6 @@ class Base:
         annos[:, :, 1][valid_indice_y] = h2 - 1
         annos = np.concatenate([annos, cates], axis=-1)
 
-        if self.task == "keypoint" or self.task == "landmark":
-            return annos
         _, _, c = annos.shape
         axis_check = annos[:, 0, :2] != annos[:, 1, :2]
         if np.any(axis_check == False):

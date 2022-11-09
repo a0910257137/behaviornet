@@ -10,8 +10,6 @@ kp_base_dict = {
     "outer_lip_lnmk_48": None,
     "outer_lip_lnmk_54": None
 }
-param_u_std = np.load(
-    "/aidata/anders/objects/landmarks/3dhead/3ddm_data/param_u_std.npy")
 
 
 def offset_v2_to_tp_od_bdd(bdd_results, batches_preds, batches_frames, cates):
@@ -152,15 +150,13 @@ def to_lnmk_bdd(bdd_results, batches_preds, batches_frames, lnmk_scheme):
     return bdd_results
 
 
-def pose_to_bdd(bdd_results, batches_preds, batches_frames, cates):
+def tdmm_to_bdd(bdd_results, batches_preds, batches_frames, cates):
 
-    u, std = param_u_std[:2]
+    b_bboxes, b_lnmks, b_poses = batches_preds[0].numpy(
+    ), batches_preds[1].numpy(), batches_preds[2].numpy()
 
-    b_bboxes, b_poses = batches_preds
-    b_bboxes, b_poses = b_bboxes.numpy(), b_poses.numpy()
-    b_poses = b_poses * std + u
-    for bboxes, poses, frames in zip(b_bboxes, b_poses, batches_frames):
-
+    for bboxes, lnmks, poses, frames in zip(b_bboxes, b_lnmks, b_poses,
+                                            batches_frames):
         pred_frame = {
             'dataset': frames['dataset'],
             'sequence': frames['sequence'],
@@ -169,19 +165,32 @@ def pose_to_bdd(bdd_results, batches_preds, batches_frames, cates):
         }
         valid_mask = np.all(np.isfinite(bboxes), axis=-1)
         bboxes = bboxes[valid_mask]
-        for bbox, pose in zip(bboxes, poses):
-            if len(bbox) != 0:
-                pred_lb = {
-                    'category': cates[int(bbox[5])].upper(),
-                    'box2d': {
-                        'y1': float(bbox[0]),
-                        'x1': float(bbox[1]),
-                        'y2': float(bbox[2]),
-                        'x2': float(bbox[3])
-                    },
-                    'pose': pose.tolist()
-                }
-                pred_frame['labels'].append(pred_lb)
+        valid_mask = np.all(np.isfinite(lnmks), axis=-1)
+        lnmks = np.reshape(lnmks[valid_mask], (-1, 68, 2))
+
+        valid_mask = np.all(np.isfinite(poses), axis=-1)
+        poses = np.reshape(poses[valid_mask], (-1, 3))
+
+        lnmk_keys = frames["labels"][0]["keypoints"].keys()
+        for bbox, lnmk, pose in zip(bboxes, lnmks, poses):
+            pred_lb = {
+                'category': cates[int(bbox[5])].upper(),
+                'box2d': {
+                    'y1': float(bbox[0]),
+                    'x1': float(bbox[1]),
+                    'y2': float(bbox[2]),
+                    'x2': float(bbox[3])
+                },
+                'pose': {
+                    "pitch": pose[0],
+                    "yaw": pose[1],
+                    "roll": pose[2]
+                },
+                "keypoints":
+                {k: lnmk[i].tolist()
+                 for i, k in enumerate(lnmk_keys)}
+            }
+            pred_frame['labels'].append(pred_lb)
         bdd_results['frame_list'].append(pred_frame)
     return bdd_results
 

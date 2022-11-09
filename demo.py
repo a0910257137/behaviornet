@@ -289,7 +289,6 @@ class Demo:
             eye_imgs, eye_shapes = crop_eye(img, lnmks, eye_hw)
             LRE_status = self.cls_pred.pred(eye_imgs, eye_shapes)
             marks = lnmks[..., ::-1]
-
             pose = self.pose_estimator.solve_pose_by_68_points(marks)
             r_mat, _ = cv2.Rodrigues(pose[0])
 

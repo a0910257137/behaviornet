@@ -69,66 +69,34 @@ def draw_box2d(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
     return result
 
 
-def draw_offset_v1(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
-
-    def draw_2d(img, kp, score, category):
-        tl, br = tuple(kp[:2][::-1].astype(np.int32)), tuple(
-            kp[2:4][::-1].astype(np.int32))
-        img = cv2.rectangle(img, tl, br, clr, 2)
-        center = (tl[0] + 20, tl[1] - 20)
-        img = cv2.putText(img, ('%3f' % score), center,
-                          cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 225), 2,
-                          cv2.LINE_AA)
-        return img
-
-    result = []
-    b_bboxes = b_obj_kps.numpy()
-    for img, objs_kps in zip(b_imgs, b_bboxes):
-        valid_mask = np.all(np.isfinite(objs_kps), axis=-1)
-        objs_kps = objs_kps[valid_mask]
-        for obj_kps in objs_kps:
-            offset_kps = obj_kps[-10:]
-            offset_kps = np.reshape(offset_kps, (-1, 2))
-            offset_kps = offset_kps.astype(np.int32)
-            for kp in offset_kps:
-                img = cv2.circle(img, tuple(kp[::-1]), 3, (0, 0, 255), -1)
-            obj_kps = obj_kps[:-10]
-            category_index = int(obj_kps[..., -1])
-            category = target_dict[category_index]
-            score = obj_kps[..., -2]
-            kp = obj_kps[:4]
-            img = draw_2d(img, kp, score, category)
-        result.append(img)
-    return result
-
-
-def draw_pose(head_model, colors, triangles, b_orig_imgs, mean_s_R_shp_exp,
-              std_s_R_shp_exp, b_rets):
-    b_coors, b_params = b_rets[0].numpy(), b_rets[1].numpy()
-    shapeMU = head_model['shapeMU'][:, :]
-    shapePC = head_model['shapePC'][:, :50]
-    expPC = head_model['expPC'][:, :]
-    b_params = b_params * std_s_R_shp_exp[None, None, :] + mean_s_R_shp_exp[
-        None, None, :]
+def draw_tdmm(b_orig_imgs, b_rets):
+    b_bboxes, b_lnmks, b_poses = b_rets[0].numpy(), b_rets[1].numpy(
+    ), b_rets[2].numpy()
     outputs_imgs = []
-    for img, n_coors, n_params in zip(b_orig_imgs, b_coors, b_params):
-        for coors, params in zip(n_coors, n_params):
-            s, R, shp, exp = params[0], params[1:10], params[
-                10:60, np.newaxis], params[60:, np.newaxis]
-            R = np.reshape(R, (3, 3))
-            vertices = shapeMU + shapePC.dot(shp) + expPC.dot(exp)
-            vertices = np.reshape(vertices,
-                                  [int(3), int(len(vertices) / 3)], 'F').T
-            # prediction value -0.0030252803
-            # 0.00046006403863430023
-            transformed_vertices = 0.00000046006403863430023 * vertices.dot(R.T)
-            image_vertices = to_image(transformed_vertices, coors[::-1], h=192.)
-            fitted_image = render_colors(image_vertices, triangles, colors, 192,
-                                         320)
-            io.imsave('{}/fitted.png'.format("test"), fitted_image)
-            xxx
-            coors
-            # lnmk = lnmk.astype(int)
-            # img = cv2.circle(img, tuple(lnmk[::-1]), 5, (0, 255, 0), -1)
+    for i, (img, n_bboxes, n_lnmks,
+            n_poses) in enumerate(zip(b_orig_imgs, b_bboxes, b_lnmks, b_poses)):
+        mask = np.all(np.isfinite(n_bboxes), axis=-1)
+        n_bboxes = n_bboxes[mask]
+        mask = np.all(np.isfinite(n_lnmks), axis=-1)
+        n_lnmks = np.reshape(n_lnmks[mask], (-1, 68, 2))
+        mask = np.all(np.isfinite(n_poses), axis=-1)
+        n_poses = np.reshape(n_poses[mask], (-1, 3))
+
+        # resized = np.asarray(img.shape[:2]) / np.array([192., 320.])
+        # n_lnmks = np.einsum('n k c, c -> n k c', n_lnmks, resized[::-1])
+        for (bbox, lnmks, pose) in zip(n_bboxes, n_lnmks, n_poses):
+            tl, br, scores = bbox[:2][::-1], bbox[2:4][::-1], bbox[-2]
+            tl, br = tuple(tl.astype(np.int32)), tuple(br.astype(np.int32))
+            img = cv2.rectangle(img, tl, br, (0, 255, 255), 2)
+            lnmks = lnmks[:, ::-1]
+            for j, kp in enumerate(lnmks):
+                kp = kp.astype(np.int32)
+                if j < 17:
+                    img = cv2.circle(img, tuple(kp), 3, (255, 0, 255), -1)
+                else:
+                    img = cv2.circle(img, tuple(kp), 3, (0, 255, 255), -1)
+            cv2.imwrite("output_{}.jpg".format(i), img)
+        xxxx
         outputs_imgs.append(img)
+
     return outputs_imgs

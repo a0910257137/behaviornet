@@ -2,12 +2,11 @@ from pprint import pprint
 from utils.io import load_BFM
 import numpy as np
 import tensorflow as tf
-import os
 
 
 class MorphabelModel:
 
-    def __init__(self, batch_size, config):
+    def __init__(self, batch_size, max_obj_num, config):
         """
         docstring for  MorphabelModel
             model: nver: number of vertices. ntri: number of triangles. *: must have. ~: can generate ones array for place holder.
@@ -25,9 +24,10 @@ class MorphabelModel:
                     'kpt_ind': [68,] (start from 1). ~
         """
         self.batch_size = batch_size
+        self.max_obj_num = max_obj_num
         self.model = load_BFM(config['model_path'])
         self.max_iter = config['max_iter']
-        self.n_shape = config['n_shp']
+        self.n_shp = config['n_shp']
         self.n_exp = config['n_exp']
         #-------------------- estimate
         self.kpt_ind = self.model['kpt_ind']
@@ -38,35 +38,46 @@ class MorphabelModel:
             X_ind_all[:, 27:36], X_ind_all[:, 48:68]
         ],
                               axis=-1)
-
         valid_ind = tf.reshape(tf.transpose(X_ind_all), (-1))
-        self.shapeMU = tf.gather(tf.cast(self.model['shapeMU'], tf.float32),
-                                 valid_ind)
 
+        self.shapeMU = tf.gather(tf.cast(self.model['shapeMU'], tf.float64),
+                                 valid_ind)
         self.shapePC = tf.gather(
-            tf.cast(self.model['shapePC'][:, :self.n_shape], tf.float32),
+            tf.cast(self.model['shapePC'][:, :self.n_shp], tf.float64),
             valid_ind)
         self.expPC = tf.gather(
-            tf.cast(self.model['expPC'][:, :self.n_exp], tf.float32), valid_ind)
-        self.shapeMU = tf.tile(self.shapeMU[tf.newaxis, ...],
-                               [self.batch_size, 1, 1])
-        self.shapePC = tf.tile(self.shapePC[tf.newaxis, ...],
-                               [self.batch_size, 1, 1])
-        self.expPC = tf.tile(self.expPC[tf.newaxis, ...],
-                             [self.batch_size, 1, 1])
+            tf.cast(self.model['expPC'][:, :self.n_exp], tf.float64), valid_ind)
+        self.shapeMU = tf.tile(self.shapeMU[tf.newaxis, tf.newaxis, ...],
+                               [self.batch_size, self.max_obj_num, 1, 1])
 
-        self.expEV = tf.cast(self.model['expEV'][:self.n_exp, :], tf.float32)
-        self.expEV = tf.tile(self.expEV[None, ...], [self.batch_size, 1, 1])
+        self.shapeMU = tf.reshape(self.shapeMU,
+                                  (self.batch_size, self.max_obj_num,
+                                   tf.shape(self.shapeMU)[-2] // 3, 3))
+        mean = tf.math.reduce_mean(self.shapeMU, axis=-2, keepdims=True)
+        self.shapeMU -= mean
+
+        self.shapeMU = tf.reshape(self.shapeMU,
+                                  (self.batch_size, self.max_obj_num, -1, 1))
+
+        self.shapePC = tf.tile(self.shapePC[tf.newaxis, tf.newaxis, ...],
+                               [self.batch_size, self.max_obj_num, 1, 1])
+        self.expPC = tf.tile(self.expPC[tf.newaxis, tf.newaxis, ...],
+                             [self.batch_size, self.max_obj_num, 1, 1])
+
+        self.expEV = tf.cast(self.model['expEV'][:self.n_exp, :], tf.float64)
+        self.expEV = tf.tile(self.expEV[None, None, ...],
+                             [self.batch_size, self.max_obj_num, 1, 1])
 
         self.expEV = tf.squeeze(self.expEV, axis=-1)
-        self.shapeEV = tf.cast(self.model['shapeEV'][:self.n_shape, :],
-                               tf.float32)
-        self.shapeEV = tf.tile(self.shapeEV[None, ...], [self.batch_size, 1, 1])
+        self.shapeEV = tf.cast(self.model['shapeEV'][:self.n_shp, :],
+                               tf.float64)
+        self.shapeEV = tf.tile(self.shapeEV[None, None, ...],
+                               [self.batch_size, self.max_obj_num, 1, 1])
         self.shapeEV = tf.squeeze(self.shapeEV, axis=-1)
 
     # ---------------- fit ----------------
     @tf.function
-    def fit_points(self, x):
+    def fit_points(self, x, b_origin_sizes):
         '''
         Args:
             x: (n, 2) image points
@@ -80,82 +91,87 @@ class MorphabelModel:
         '''
         # -- init --
         n_objs, k = tf.shape(x)[1], tf.shape(x)[-2]
-        x = x[..., ::-1]
-        sp = tf.zeros(shape=(self.n_shape, 1), dtype=tf.float32)
-        ep = tf.zeros(shape=(self.n_exp, 1), dtype=tf.float32)
+        # x = tf.cast(x, tf.float64)
+        b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.constant(
+            [192., 320.], dtype=tf.float32)
+        x = tf.einsum('b n k c, b c -> b n k c', x, b_resized)
+        mean = tf.math.reduce_mean(x, axis=-2, keepdims=True)
+        x -= mean
+        x = tf.cast(x[..., ::-1], tf.float64)
+        sp = tf.zeros(shape=(self.n_shp, 1), dtype=tf.float64)
+        ep = tf.zeros(shape=(self.n_exp, 1), dtype=tf.float64)
         mask = tf.math.reduce_all(tf.math.is_finite(x), axis=[-1, -2])
         mask_T = tf.tile(mask[:, :, None, None], (1, 1, 3, 3))
-        mask_A = tf.tile(mask[:, :, None, None], (1, 1, 136, 8))
+        mask_A = tf.tile(mask[:, :, None, None], (1, 1, 68 * 2, 8))
         mask_exp_eq_left = tf.tile(mask[:, :, None, None],
                                    (1, 1, self.n_exp, self.n_exp))
         mask_shp_eq_left = tf.tile(mask[:, :, None, None],
-                                   (1, 1, self.n_shape, self.n_shape))
-
+                                   (1, 1, self.n_shp, self.n_shp))
         # pre-process n_objs for shape, express
-        shapeMU = tf.tile(self.shapeMU[:, None, :, :],
-                          [1, tf.shape(x)[1], 1, 1])
-        shapePC = tf.tile(self.shapePC[:, None, :, :],
-                          [1, tf.shape(x)[1], 1, 1])
-        expPC = tf.tile(self.expPC[:, None, :, :], [1, tf.shape(x)[1], 1, 1])
-        expEV = tf.tile(self.expEV[:, None, :], [1, tf.shape(x)[1], 1])
-        shapeEV = tf.tile(self.shapeEV[:, None, :], [1, tf.shape(x)[1], 1])
+        # shapeMU = tf.tile(self.shapeMU[:, None, :, :],
+        #                   [1, tf.shape(x)[1], 1, 1])
+        # shapePC = tf.tile(self.shapePC[:, None, :, :],
+        #                   [1, tf.shape(x)[1], 1, 1])
+        # expPC = tf.tile(self.expPC[:, None, :, :], [1, tf.shape(x)[1], 1, 1])
+        # expEV = tf.tile(self.expEV[:, None, :], [1, tf.shape(x)[1], 1])
+        # shapeEV = tf.tile(self.shapeEV[:, None, :], [1, tf.shape(x)[1], 1])
+
         for _ in range(self.max_iter):
             X = tf.math.add(
-                shapeMU,
-                tf.linalg.matmul(shapePC, sp) + tf.linalg.matmul(expPC, ep))
-            X = tf.reshape(X, (self.batch_size, n_objs, tf.shape(X)[2] // 3, 3))
+                self.shapeMU,
+                tf.linalg.matmul(self.shapePC, sp) +
+                tf.linalg.matmul(self.expPC, ep))
+
+            X = tf.reshape(
+                X, (self.batch_size, self.max_obj_num, tf.shape(X)[2] // 3, 3))
             P = self.estimate_affine_matrix_3d22d(X, x, mask_A, mask_T)
             s, R, t = self.P2sRt(P)
             #----- estimate shape
             # expression
-            shape = tf.linalg.matmul(shapePC, sp)
+            shape = tf.linalg.matmul(self.shapePC, sp)
             shape = tf.transpose(
-                tf.reshape(
-                    shape,
-                    (self.batch_size, n_objs, tf.shape(shape)[2] // 3, 3)),
-                (0, 1, 3, 2))
+                tf.reshape(shape, (self.batch_size, self.max_obj_num,
+                                   tf.shape(shape)[2] // 3, 3)), (0, 1, 3, 2))
+
             ep = self.estimate_expression(x,
                                           mask_exp_eq_left,
-                                          shapeMU,
-                                          expPC,
-                                          expEV,
+                                          self.shapeMU,
+                                          self.expPC,
+                                          self.expEV,
                                           shape,
                                           s,
                                           R,
                                           t[:, :, :2],
-                                          lamb=20)
+                                          lamb=20.)
+
             # shape
-            expression = tf.linalg.matmul(
-                tf.tile(self.expPC[:, None, :, :], [1, n_objs, 1, 1]), ep)
+            expression = tf.linalg.matmul(self.expPC, ep)
             expression = tf.transpose(
                 tf.reshape(expression, (self.batch_size, n_objs, k, 3)),
                 (0, 1, 3, 2))
             sp = self.estimate_shape(x,
                                      mask_shp_eq_left,
-                                     shapeMU,
-                                     shapePC,
-                                     shapeEV,
+                                     self.shapeMU,
+                                     self.shapePC,
+                                     self.shapeEV,
                                      expression,
                                      s,
                                      R,
                                      t[:, :, :2],
-                                     lamb=40)
+                                     lamb=40.)
         angles = self.matrix2angle(R)
-        # transform angles
-        b_pitches = tf.where(angles[..., :1] > 0., -np.pi + angles[..., :1],
-                             np.pi + angles[..., :1])
-        # b_yaws = angles[..., 1:2]
-        b_rolls = tf.where(angles[..., -1:] > 0., -np.pi + angles[..., -1:],
-                           np.pi + angles[..., -1:])
-
-        angles = tf.concat([b_pitches, angles[..., 1:2], b_rolls], axis=-1)
         R = self.angle2matrix(angles)
         sp, ep, s, R, t = self.valid_objs(sp, ep, s, R, t, mask)
+        Rt = tf.concat([R, t[..., None]], axis=-1)
+
+        s = tf.reshape(s, (self.batch_size, n_objs, -1))
+        Rt = tf.reshape(Rt, (self.batch_size, n_objs, -1))
+        Rt = Rt[..., :-1]
+        # R = tf.reshape(R, (self.batch_size, n_objs, -1))
+        # t = tf.reshape(t, (self.batch_size, n_objs, -1))
         sp = tf.reshape(sp, (self.batch_size, n_objs, -1))
         ep = tf.reshape(ep, (self.batch_size, n_objs, -1))
-        s = tf.reshape(s, (self.batch_size, n_objs, -1))
-        R = tf.reshape(R, (self.batch_size, n_objs, -1))
-        params = tf.concat([s, R, sp, ep], axis=-1)
+        params = tf.concat([s, Rt, sp, ep], axis=-1)
         return params
 
     def estimate_affine_matrix_3d22d(self, X, x, mask_A, mask_T):
@@ -172,6 +188,10 @@ class MorphabelModel:
             P_Affine: [3, 4]. Affine camera matrix
             """
         #--- 1. normalization
+
+        # mean = tf.math.reduce_mean(X, axis=-2, keepdims=True)
+        # X -= mean
+
         x = tf.transpose(x, (0, 1, 3, 2))  # B, n_objs, 2, 68
         X = tf.transpose(X, (0, 1, 3, 2))  # B, 3, 68
 
@@ -182,36 +202,44 @@ class MorphabelModel:
         average_norm = tf.math.reduce_mean(tf.math.sqrt(
             tf.math.reduce_sum(x**2, axis=2)),
                                            axis=-1)  # B, n_objs
-        scale = (tf.math.sqrt(2.) / average_norm)[:, :, None, None]
+        scale = (tf.cast(tf.math.sqrt(2.), tf.float64) / average_norm)[:, :,
+                                                                       None,
+                                                                       None]
         x = scale * x
         # 2d points
 
         ms = -mean * scale
         row1 = tf.concat([
             tf.squeeze(scale, axis=2),
-            tf.zeros(shape=(self.batch_size, n_objs, 1)), ms[:, :, :1, 0]
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            ms[:, :, :1, 0]
         ],
                          axis=-1)
         row2 = tf.concat([
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
             tf.squeeze(scale, axis=2), ms[:, :, 1:, 0]
         ],
                          axis=-1)
 
         row3 = tf.concat([
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
-            tf.ones(shape=(self.batch_size, n_objs, 1))
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            tf.ones(shape=(self.batch_size, n_objs, 1), dtype=tf.float64)
         ],
                          axis=-1)
 
         T = tf.concat(
             [row1[:, :, None, :], row2[:, :, None, :], row3[:, :, None, :]],
             axis=2)
+        T = tf.cast(T, dtype=tf.float64)
+
         # 3d points
 
-        X_homo = tf.concat(
-            [X, tf.ones(shape=(self.batch_size, n_objs, 1, k))], axis=2)
+        X_homo = tf.concat([
+            X,
+            tf.ones(shape=(self.batch_size, n_objs, 1, k), dtype=tf.float64)
+        ],
+                           axis=2)
 
         mean = tf.math.reduce_mean(X, keepdims=True, axis=-1)
         X = X - mean
@@ -219,34 +247,38 @@ class MorphabelModel:
         average_norm = tf.math.reduce_mean(tf.math.sqrt(
             tf.math.reduce_sum(X**2, axis=2)),
                                            axis=-1)
-        scale = (tf.math.sqrt(3.) / average_norm)[:, :, None, None]
+        scale = (tf.cast(tf.math.sqrt(3.), tf.float64) / average_norm)[:, :,
+                                                                       None,
+                                                                       None]
         X = scale * X
         ms = -mean * scale
         row1 = tf.concat([
             tf.squeeze(scale, axis=2),
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
-            tf.zeros(shape=(self.batch_size, n_objs, 1)), ms[:, :, :1, 0]
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            ms[:, :, :1, 0]
         ],
                          axis=-1)
 
         row2 = tf.concat([
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
             tf.squeeze(scale, axis=2),
-            tf.zeros(shape=(self.batch_size, n_objs, 1)), ms[:, :, 1:2, 0]
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            ms[:, :, 1:2, 0]
         ],
                          axis=-1)
 
         row3 = tf.concat([
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
             tf.squeeze(scale, axis=2), ms[:, :, 2:, 0]
         ],
                          axis=-1)
         row4 = tf.concat([
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
-            tf.zeros(shape=(self.batch_size, n_objs, 1)),
-            tf.ones(shape=(self.batch_size, n_objs, 1))
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
+            tf.ones(shape=(self.batch_size, n_objs, 1), dtype=tf.float64)
         ],
                          axis=-1)
         U = tf.concat([
@@ -254,16 +286,23 @@ class MorphabelModel:
             row4[:, :, None, :]
         ],
                       axis=2)
-
         # --- 2. equations
-        # A = np.zeros((n * 2, 8), dtype=np.float32) # (136, 8)
-        X_homo = tf.concat(
-            [X, tf.ones(shape=(self.batch_size, n_objs, 1, k))], axis=2)
+        X_homo = tf.concat([
+            X,
+            tf.ones(shape=(self.batch_size, n_objs, 1, k), dtype=tf.float64)
+        ],
+                           axis=2)
 
-        l = tf.concat(
-            [X_homo, tf.zeros(shape=(self.batch_size, n_objs, 4, 68))], axis=2)
-        r = tf.concat(
-            [tf.zeros(shape=(self.batch_size, n_objs, 4, 68)), X_homo], axis=2)
+        l = tf.concat([
+            X_homo,
+            tf.zeros(shape=(self.batch_size, n_objs, 4, 68), dtype=tf.float64)
+        ],
+                      axis=2)
+        r = tf.concat([
+            tf.zeros(shape=(self.batch_size, n_objs, 4, 68), dtype=tf.float64),
+            X_homo
+        ],
+                      axis=2)
         A = tf.transpose(tf.concat([l, r], axis=-1), (0, 1, 3, 2))
         b = tf.reshape(x, (self.batch_size, n_objs, c * k, 1))
         # --- 3. solution
@@ -276,10 +315,10 @@ class MorphabelModel:
         row2 = p_8[:, :, None, 4:, 0]
 
         row3 = tf.concat([
-            tf.zeros(shape=(self.batch_size, n_objs, 1, 1)),
-            tf.zeros(shape=(self.batch_size, n_objs, 1, 1)),
-            tf.zeros(shape=(self.batch_size, n_objs, 1, 1)),
-            tf.ones(shape=(self.batch_size, n_objs, 1, 1))
+            tf.zeros(shape=(self.batch_size, n_objs, 1, 1), dtype=tf.float64),
+            tf.zeros(shape=(self.batch_size, n_objs, 1, 1), dtype=tf.float64),
+            tf.zeros(shape=(self.batch_size, n_objs, 1, 1), dtype=tf.float64),
+            tf.ones(shape=(self.batch_size, n_objs, 1, 1), dtype=tf.float64)
         ],
                          axis=-1)
         P = tf.concat([row1, row2, row3], axis=2)
@@ -327,9 +366,11 @@ class MorphabelModel:
                       tf.math.atan2(R[:, :, 2, 1], R[:, :, 2, 2]))
         ry = tf.where(singular, tf.math.atan2(-R[:, :, 2, 0], sy),
                       tf.math.atan2(-R[:, :, 2, 0], sy))
-        rz = tf.where(singular, 0., tf.math.atan2(R[:, :, 1, 0], R[:, :, 0, 0]))
-        return tf.concat([rx[:, :, None], ry[:, :, None], rz[:, :, None]],
-                         axis=-1)
+        rz = tf.where(singular, tf.cast(0., tf.float64),
+                      tf.math.atan2(R[:, :, 1, 0], R[:, :, 0, 0]))
+        angles = tf.concat([rx[:, :, None], ry[:, :, None], rz[:, :, None]],
+                           axis=-1)
+        return angles
 
     def estimate_expression(self,
                             x,
@@ -362,7 +403,7 @@ class MorphabelModel:
         _, n, c, k = x.get_shape().as_list()
         n_objs = tf.shape(x)[1]
         sigma = expEV
-        P = tf.constant([[1, 0, 0], [0, 1, 0]], dtype=tf.float32)
+        P = tf.constant([[1, 0, 0], [0, 1, 0]], dtype=tf.float64)
         P = tf.tile(P[None, None, :, :], [self.batch_size, n_objs, 1, 1])
         A = s[:, :, None, None] * tf.linalg.matmul(P, R)
         # --- calc pc
@@ -430,12 +471,13 @@ class MorphabelModel:
         Returns:
             shape_para: (n_sp, 1) shape parameters(coefficients)
         '''
+
         x = tf.transpose(x, (0, 1, 3, 2))  # B, n_objs, 2, 68
         dof = tf.shape(shapePC)[-1]  # 199
         _, n, c, k = x.get_shape().as_list()  # 68
         n_objs = tf.shape(x)[1]
         sigma = shapeEV
-        P = tf.constant([[1., 0., 0.], [0., 1., 0.]], tf.float32)
+        P = tf.constant([[1., 0., 0.], [0., 1., 0.]], tf.float64)
         P = tf.tile(P[None, None, :, :], (self.batch_size, n_objs, 1, 1))
         # P is (batch, 2, 3), (batch, 3, 3)
         A = s[:, :, None, None] * tf.linalg.matmul(P, R)
@@ -450,6 +492,7 @@ class MorphabelModel:
         pc_2d = tf.linalg.matmul(pc_3d, A, transpose_b=(0, 1, 3, 2))
         pc = tf.transpose(tf.reshape(pc_2d, (self.batch_size, n_objs, dof, -1)),
                           (0, 1, 3, 2))  # batch, n_objs, 2n x 199 : n = 68
+
         # --- calc b
         # shapeMU
         mu_3d = tf.transpose(
@@ -471,11 +514,12 @@ class MorphabelModel:
         equation_right = tf.linalg.matmul(pc, x - b, transpose_a=(0, 1, 3, 2))
         valid_left = tf.reshape(
             equation_left[tf.reduce_all(mask_shp_eq_left, axis=(-2, -1))],
-            (self.batch_size, -1, self.n_shape, self.n_shape))[:, :1, :, :]
+            (self.batch_size, -1, self.n_shp, self.n_shp))[:, :1, :, :]
         equation_left = tf.where(mask_shp_eq_left, equation_left,
                                  tf.tile(valid_left, [1, n, 1, 1]))
         shape_para = tf.linalg.matmul(tf.linalg.inv(equation_left),
                                       equation_right)
+
         return shape_para
 
     def valid_objs(self, sp, ep, s, R, t, mask):
@@ -509,52 +553,53 @@ class MorphabelModel:
         x, y, z = angles[..., 0], angles[..., 1], angles[..., 2]
         # x, 3, 3
         # for Rx
-        row1 = tf.constant([1., 0., 0.], shape=(3, 1))
+
+        row1 = tf.constant([1., 0., 0.], shape=(1, 3), dtype=tf.float64)
         row1 = tf.tile(row1[None, None, :, :], (self.batch_size, n, 1, 1))
         row2 = tf.concat([
-            tf.zeros(shape=(self.batch_size, n, 1, 1)),
+            tf.zeros(shape=(self.batch_size, n, 1, 1), dtype=tf.float64),
             tf.math.cos(x)[..., None, None], -tf.math.sin(x)[..., None, None]
         ],
-                         axis=-2)
+                         axis=-1)
         row3 = tf.concat([
-            tf.zeros(shape=(self.batch_size, n, 1, 1)),
+            tf.zeros(shape=(self.batch_size, n, 1, 1), dtype=tf.float64),
             tf.math.sin(x)[..., None, None],
             tf.math.cos(x)[..., None, None]
         ],
-                         axis=-2)
-        Rx = tf.concat([row1, row2, row3], axis=-1)
+                         axis=-1)
+        Rx = tf.concat([row1, row2, row3], axis=-2)
         # for Ry
         # y
         row1 = tf.concat([
             tf.math.cos(y)[..., None, None],
-            tf.zeros(shape=(self.batch_size, n, 1, 1)),
+            tf.zeros(shape=(self.batch_size, n, 1, 1), dtype=tf.float64),
             tf.math.sin(y)[..., None, None]
         ],
-                         axis=-2)
-        row2 = tf.constant([0., 1., 0.], shape=(3, 1))
+                         axis=-1)
+        row2 = tf.constant([0., 1., 0.], shape=(1, 3), dtype=tf.float64)
         row2 = tf.tile(row2[None, None, :, :], (self.batch_size, n, 1, 1))
 
         row3 = tf.concat([
             -tf.math.sin(y)[..., None, None],
-            tf.zeros(shape=(self.batch_size, n, 1, 1)),
+            tf.zeros(shape=(self.batch_size, n, 1, 1), dtype=tf.float64),
             tf.math.cos(y)[..., None, None]
         ],
-                         axis=-2)
-        Ry = tf.concat([row1, row2, row3], axis=-1)
+                         axis=-1)
+        Ry = tf.concat([row1, row2, row3], axis=-2)
         # z
         row1 = tf.concat([
             tf.math.cos(z)[..., None, None], -tf.math.sin(z)[..., None, None],
-            tf.zeros(shape=(self.batch_size, n, 1, 1))
+            tf.zeros(shape=(self.batch_size, n, 1, 1), dtype=tf.float64)
         ],
-                         axis=-2)
+                         axis=-1)
         row2 = tf.concat([
             tf.math.sin(z)[..., None, None],
             tf.math.cos(z)[..., None, None],
-            tf.zeros(shape=(self.batch_size, n, 1, 1))
+            tf.zeros(shape=(self.batch_size, n, 1, 1), dtype=tf.float64)
         ],
-                         axis=-2)
-        row3 = tf.constant([0., 0., 1.], shape=(3, 1))
+                         axis=-1)
+        row3 = tf.constant([0., 0., 1.], shape=(1, 3), dtype=tf.float64)
         row3 = tf.tile(row3[None, None, :, :], (self.batch_size, n, 1, 1))
-        Rz = tf.concat([row1, row2, row3], axis=-1)
+        Rz = tf.concat([row1, row2, row3], axis=-2)
         R = tf.linalg.matmul(Rz, tf.linalg.matmul(Ry, Rx))
         return R

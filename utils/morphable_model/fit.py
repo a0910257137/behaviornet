@@ -96,7 +96,6 @@ def estimate_shape(x,
     pc_2d = pc_3d.dot(A.T.copy())  # 199 x n x 2
 
     pc = np.reshape(pc_2d, [dof, -1]).T  # 2n x 199
-
     # --- calc b
     # shapeMU
     mu_3d = np.resize(shapeMU, [n, 3]).T  # 3 x n
@@ -109,6 +108,7 @@ def estimate_shape(x,
 
     # --- solve
     equation_left = np.dot(pc.T, pc) + lamb * np.diagflat(1 / sigma**2)
+
     x = np.reshape(x.T, [-1, 1])
     equation_right = np.dot(pc.T, x - b)
     shape_para = np.dot(np.linalg.inv(equation_left), equation_right)
@@ -195,16 +195,19 @@ def fit_points(x, X_ind, model, n_sp, n_ep, max_iter=4):
     X_ind_all[1, :] += 1
     X_ind_all[2, :] += 2
 
-    X_ind_all[:, :17]  #countour
-    X_ind_all[:, 17:27]  # eyebrows
-    X_ind_all[:, 27:36]  # nose
-    X_ind_all[:, 36:48]  # eyes
-    X_ind_all[:, 48:68]  # mouse
+    # X_ind_all[:, :17]  #countour
+    # X_ind_all[:, 17:27]  # eyebrows
+    # X_ind_all[:, 27:36]  # nose
+    # X_ind_all[:, 36:48]  # eyes
+    # X_ind_all[:, 48:68]  # mouse
     X_ind_all = np.concatenate([
         X_ind_all[:, :17], X_ind_all[:, 17:27], X_ind_all[:, 36:48],
         X_ind_all[:, 27:36], X_ind_all[:, 48:68]
     ],
                                axis=-1)
+
+    # X_idxs = [8, 17, 19, 21, 22, 24, 26, 27, 30, 33, 36, 42, 48, 54]
+    # X_ind_all = X_ind_all[:, X_idxs]
     valid_ind = X_ind_all.flatten('F')
     shapeMU = model['shapeMU'][valid_ind, :]
     shapePC = model['shapePC'][valid_ind, :n_sp]
@@ -215,6 +218,7 @@ def fit_points(x, X_ind, model, n_sp, n_ep, max_iter=4):
         X = np.reshape(X, [int(len(X) / 3), 3]).T
         # ----- estimate pose-----
         P = mesh.transform.estimate_affine_matrix_3d22d(X.T, x.T)
+
         s, R, t = mesh.transform.P2sRt(P)
         rx, ry, rz = mesh.transform.matrix2angle(R)
         # print(
@@ -223,6 +227,7 @@ def fit_points(x, X_ind, model, n_sp, n_ep, max_iter=4):
 
         #----- estimate shape
         # expression
+
         shape = shapePC.dot(sp)
         shape = np.reshape(shape, [int(len(shape) / 3), 3]).T
         ep = estimate_expression(x,
@@ -234,6 +239,7 @@ def fit_points(x, X_ind, model, n_sp, n_ep, max_iter=4):
                                  R,
                                  t[:2],
                                  lamb=20)
+
         # shape
         expression = expPC.dot(ep)
         expression = np.reshape(expression, [int(len(expression) / 3), 3]).T

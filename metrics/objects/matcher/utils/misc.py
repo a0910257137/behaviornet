@@ -20,6 +20,7 @@ def match_by_cost(cost_matrix: np.ndarray,
     ])
     assert isinstance(cost_matrix, np.ndarray) and cost_matrix.ndim == 2
     assert isinstance(thresh, (int, float))
+    
     gt_idx, eval_idx = linear_sum_assignment(cost_matrix)
     match_idx = cost_matrix[gt_idx, eval_idx] <= thresh
 

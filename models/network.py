@@ -13,6 +13,16 @@ class Network(tf.keras.Model):
         self.config = config
         self._model_keys = _model_keys
         pms = np.load(self.config['3dmm']['pms_path'])
+        n_s, n_Rt, n_shp, n_exp = self.config['3dmm']["n_s"], self.config[
+            '3dmm']["n_Rt"], self.config['3dmm']["n_shp"], self.config['3dmm'][
+                "n_exp"]
+
+        s = pms[:, :n_s]
+        Rt = pms[:, n_s:n_s + n_Rt]
+
+        shp, exp = pms[:, n_s + n_Rt:n_s + n_Rt +
+                       n_shp], pms[:, 199 + n_s + n_Rt:199 + n_s + n_Rt + n_exp]
+        pms = np.concatenate([s, Rt, shp, exp], axis=-1)
         self.train_mean_std = tf.cast(pms[:2, ], tf.float32)
         self.test_mean_std = tf.cast(pms[2:, ], tf.float32)
 
@@ -33,6 +43,10 @@ class Network(tf.keras.Model):
     def train_step(self, data):
         training = True
         imgs, labels = data
+        labels['Z_params'] = (labels['params'] -
+                              self.train_mean_std[0][None, None, :]
+                              ) / self.train_mean_std[1][None, None, :]
+
         labels['mean_std'] = self.train_mean_std
         with tf.GradientTape() as tape:
             preds = self.model(imgs, training=training)
@@ -49,6 +63,9 @@ class Network(tf.keras.Model):
     def test_step(self, data):
         training = False
         imgs, labels = data
+        labels['Z_params'] = (labels['params'] -
+                              self.test_mean_std[0][None, None, :]
+                              ) / self.test_mean_std[1][None, None, :]
         labels['mean_std'] = self.test_mean_std
         preds = self.model(imgs, training=training)
         loss = self._loss(preds, labels, self.config.batch_size, training)

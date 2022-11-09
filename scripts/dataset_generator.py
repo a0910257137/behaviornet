@@ -33,13 +33,6 @@ def _float32_feature(value):
     return tf.train.Feature(float_list=tf.train.FloatList(value=value))
 
 
-def build_eye_cls(obj_lnmks, obj):
-    obj_lnmks[:2, 2] = -1
-    # if obj['attributes']['eye_status'] == 'open':
-    obj_lnmks[:2, 2] = True
-    return obj_lnmks
-
-
 def build_keypoints(obj, obj_cates, img_info):
     kps = obj["keypoints"]
     obj_kp = []
@@ -104,17 +97,16 @@ def build_2d_obj(obj, obj_cates, img_info):
     return obj_kp
 
 
-def get_mean_std(tmp_sp, tmp_ep, tmp_angles, tmp_s, tmp_t, num_train_files):
+def get_mean_std(tmp_s, tmp_Rt, tmp_sp, tmp_ep, num_train_files):
+    tmp_Rt = np.asarray(tmp_Rt)
+    N = tmp_Rt.shape[0]
     tmp_s = np.expand_dims(np.stack(np.asarray(tmp_s)), axis=-1)
 
+    tmp_Rt = np.stack(np.asarray(tmp_Rt)).reshape([N, -1])
+    tmp_Rt = tmp_Rt[..., :-1]
     tmp_sp = np.squeeze(np.stack(np.asarray(tmp_sp)), axis=-1)
-
     tmp_ep = np.squeeze(np.stack(np.asarray(tmp_ep)), axis=-1)
-    tmp_angles = np.stack(np.asarray(tmp_angles))
-    tmp_angles = np.reshape(tmp_angles, (tmp_angles.shape[0], -1))
-
-    tmp_t = np.stack(np.asarray(tmp_t))
-    params = np.concatenate([tmp_s, tmp_angles, tmp_sp, tmp_ep], axis=-1)
+    params = np.concatenate([tmp_s, tmp_Rt, tmp_sp, tmp_ep], axis=-1)
     train_mean = np.mean(params[:num_train_files], axis=0)
     train_std = np.std(params[:num_train_files], axis=0)
     test_mean = np.mean(params[num_train_files:], axis=0)
@@ -187,9 +179,8 @@ def get_coors(img_root,
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
-    save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
-    # save_root = os.path.join("/aidata/anders/objects/3D-head/LS3D-W",
-    #                          'tf_records')
+    # save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
+    save_root = os.path.join("/home2/user/anders/3D/exp", 'tf_records')
     frame_count = 0
     mean_face = None
     bfm = MorphabelModel('/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat')
@@ -198,14 +189,14 @@ def get_coors(img_root,
             is_aug=False,
             data_root="/aidata/anders/objects/3D-head/PRNet/Data",
             model_root="/aidata/anders/objects/3D-head/PRNet/model")
-    tmp_sp, tmp_ep, tmp_angles, tmp_s, tmp_t = [], [], [], [], []
+    tmp_s, tmp_Rt, tmp_sp, tmp_ep, = [], [], [], []
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
         frame_kps = []
         img_name = frame['name']
         dataset = frame['dataset']
+        # img_path = os.path.join(img_root, dataset, "imgs", img_name)
         img_path = os.path.join(img_root, img_name)
-        # WFLW has sequence
         template_name = "{}.png".format(random.randint(0, 8 - 1))
         img, img_info = is_img_valid(img_path)
         if not img_info or len(frame['labels']) == 0 or img is None:
@@ -218,27 +209,19 @@ def get_coors(img_root,
                     obj, obj_cates, img_info)
                 if frame_count == 0 and mean_face is None:
                     mean_face = obj_lnmks[:, :2]
-
-                resized_shape = np.array(img_size) / np.array(
-                    [img_info['width'], img_info['height']])
-                obj_kps = np.einsum('c d, d -> c d', obj_lnmks[:, :2],
-                                    resized_shape[::-1])
+                obj_kps = obj_lnmks[:, :2]
+                resized = np.array([192., 320.]) / np.array(
+                    [img_info['height'], img_info['width']])
+                obj_kps = np.einsum('n c, c -> n c', obj_kps, resized)
                 fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
                     obj_kps[:, ::-1], bfm.kpt_ind, max_iter=5)
+                R = angle2matrix(np.asarray(fitted_angles))
+                tmp_s.append(fitted_s)
 
-                pitch, yaw, roll = fitted_angles[0], fitted_angles[
-                    1], fitted_angles[2]
-
-                pitch = -np.pi + pitch if pitch > 0. else np.pi + pitch
-                roll = np.pi + roll if roll > 0. else np.pi + roll
-                R = angle2matrix(np.array([pitch, yaw, roll]))
+                Rt = np.concatenate([R, fitted_t[:, None]], axis=-1)
+                tmp_Rt.append(Rt)
                 tmp_sp.append(fitted_sp)
                 tmp_ep.append(fitted_ep)
-                tmp_s.append(fitted_s)
-                tmp_angles.append(R)
-                tmp_t.append(fitted_t)
-
-                obj_lnmks = build_eye_cls(obj_lnmks, obj)
                 obj_kp = np.concatenate([obj_kp, obj_lnmks], axis=0)
                 frame_kps.append(obj_kp)
                 obj_counts.total_2d += 1
@@ -246,6 +229,7 @@ def get_coors(img_root,
                 if min_num > len(frame_kps):
                     discard_imgs.less_than += 1
                     continue
+
         if obj_classes is not None:
             # fill in keypoints
             frame_kps = complement(np.asarray(frame_kps, dtype=np.float32),
@@ -261,7 +245,6 @@ def get_coors(img_root,
             [img_info['width'], img_info['height']])
         obj_kps, cates = frame_kps[..., :2], frame_kps[..., -1:]
         mask = obj_kps == -1
-
         obj_kps = np.einsum('n c d, d -> n c d', obj_kps, resized_shape[::-1])
         obj_kps[mask] = -1
         frame_kps = np.concatenate([obj_kps, cates], axis=-1)
@@ -293,9 +276,10 @@ def get_coors(img_root,
         frame_count += 1
 
     train_mean, train_std, test_mean, test_std = get_mean_std(
-        tmp_sp, tmp_ep, tmp_angles, tmp_s, tmp_t, num_train_files)
+        tmp_s, tmp_Rt, tmp_sp, tmp_ep, num_train_files)
     save_dir = os.path.join(save_root, 'params')
     make_dir(save_dir)
+
     np.save(os.path.join(save_dir, 'param_mean_std.npy'),
             np.stack([train_mean, train_std, test_mean, test_std]))
     output = {
@@ -321,7 +305,7 @@ def parse_config():
     parser.add_argument('--img_size', default=(320, 192), type=tuple)
     parser.add_argument('--max_obj', default=15, type=int)
     parser.add_argument('--min_num', default=1, type=int)
-    parser.add_argument('--train_ratio', default=0.9, type=float)
+    parser.add_argument('--train_ratio', default=0.8, type=float)
     parser.add_argument('--task', default='obj_det', type=str)
     return parser.parse_args()
 

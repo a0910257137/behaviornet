@@ -16,6 +16,7 @@ from utils.tools import *
 from utils.io import *
 
 
+
 def train(config, is_restore, excluded_layers):
 
     mirrored_strategy = tf.distribute.MirroredStrategy()
@@ -31,7 +32,7 @@ def train(config, is_restore, excluded_layers):
             model = Restore(config.model_path,
                             config.data_reader.resize_size).build_restoration(
                                 model, excluded_layers)
-                                
+
     callbacks = get_callbacks(config, model, optimizer, train_datasets,
                               test_datasets)
 

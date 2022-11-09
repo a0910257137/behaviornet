@@ -1,7 +1,7 @@
 {
     "predictor": {
-        "visible_gpu": "-1",
-        "pb_path": "/home2/user/anders/archive_model/pose",
+        "visible_gpu": "1",
+        "pb_path": "/home2/user/anders/3D/archive_model/pose",
         "weight_root":"/aidata/anders/objects/landmarks/AFLW/archive_model/add_dataset/concat", 
         "top_k_n": 15,
         "nms_iou_thres": 0.5,
@@ -9,7 +9,8 @@
         "n_objs": 30,
         "gpu_fraction":0.5, 
         "eval_method":"IoU",
-        "mode": "pose",
+        
+        "mode": "tdmm",
         "img_input_size": [
             320,
             192
@@ -20,24 +21,24 @@
         ],
         "cat_path": "./config/face.txt"
     },
-    "3dmm":{
+    "tdmm":{
         "model_path":"/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
+        "pms_path":"/home2/user/anders/3D/exp/tf_records/params/param_mean_std.npy",
         "n_s":1,
-        "n_R":9,
+        "n_Rt":11,
         "n_shp":50,
-        "n_exp":29
+        "n_exp":29,
+        "is_render":true
     },
     "metric":{
         "metric_type":"LandMarks",
-        "lnmk_scheme":[0, 8, 16, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 
-            37, 38, 39, 42, 48, 50, 51, 52, 54, 56, 57, 58],
         "conditions": 
             {
                 "transformer_method":"LandMarks",
                 "object_matcher_method":"PointDistance",
                 "calculator_method" : "PRFCalculator",
                 "reporter_method" :"EdgePRFReporter",
-                "matcher_threshold" :1000,
+                "matcher_threshold" :10000,
                 "reporter_threshold" :11
             }
     }

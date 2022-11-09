@@ -7,6 +7,11 @@ from .general_task import GeneralTasks
 from box import Box
 from pprint import pprint
 from glob import glob
+from utils.io import load_BFM
+from utils.mesh.transform import *
+from utils.mesh.render import *
+
+from skimage import io
 
 threads = multiprocessing.cpu_count()
 
@@ -41,31 +46,81 @@ class GeneralDataset:
                                              num_parallel_reads=threads)
             datasets.append(ds)
         datasets = tf.data.TFRecordDataset.zip(tuple(datasets))
-
         if self.config.shuffle:
             datasets = datasets.shuffle(buffer_size=10000)
         options = tf.data.Options()
         options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
         datasets = datasets.with_options(options)
         datasets = datasets.batch(self.batch_size, drop_remainder=True)
+
+        # load BFM
+        # head_model = load_BFM(
+        #     '/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat')
+        # kpt_ind = head_model['kpt_ind']
+        # X_ind_all = np.stack([kpt_ind * 3, kpt_ind * 3 + 1, kpt_ind * 3 + 2])
+        # X_ind_all = tf.concat([
+        #     X_ind_all[:, :17], X_ind_all[:, 17:27], X_ind_all[:, 36:48],
+        #     X_ind_all[:, 27:36], X_ind_all[:, 48:68]
+        # ],
+        #                       axis=-1)
+        # valid_ind = tf.reshape(tf.transpose(X_ind_all), (-1))
+        # shapeMU = tf.gather(tf.cast(head_model['shapeMU'], tf.float32),
+        #                     valid_ind).numpy()
+        # shapeMU = tf.reshape(shapeMU, (tf.shape(shapeMU)[0] // 3, 3))
+        # mean = tf.math.reduce_mean(shapeMU, axis=0, keepdims=True)
+        # shapeMU -= mean
+        # shapeMU = tf.reshape(shapeMU, (tf.shape(shapeMU)[0] * 3, 1))
+        # shapePC = tf.gather(tf.cast(head_model['shapePC'][:, :50], tf.float32),
+        #                     valid_ind).numpy()
+        # expPC = tf.gather(tf.cast(head_model['expPC'][:, :29], tf.float32),
+        #                   valid_ind).numpy()
         # for ds in datasets:
         #     b_img, targets = self.gener_task.build_maps(ds)
-        #     #     offset_idxs = targets["offset_idxs"].numpy()
-        #     #     offset_vals = targets['offset_vals'].numpy()
-        #     #     size_idxs = targets['size_idxs'].numpy()
-        #     b_coords = targets['b_coords'].numpy()
         #     b_img = b_img.numpy() * 255
-        #     b_coords = np.reshape(b_coords, (batch_size, -1, 5, 2))
-        #     for i, (coords, img) in enumerate(zip(b_coords, b_img)):
-        #         mask = np.all(np.isfinite(coords), axis=-1)
-        #         coords = coords[mask]
-        #         coords = np.reshape(coords, (-1, 5, 2))
-        #         for kps in coords:
-        #             kps = kps.reshape((-1, 2))
-        #             for kp in kps[4:]:
-        #                 kp = kp.astype(int)[::-1]
-        #                 img = cv2.circle(img, tuple(kp), 1, (0, 255, 0), -1)
-        #         cv2.imwrite("./output_{}.jpg".format(i), img[..., ::-1])
+        #     b_coords = targets['b_coords'].numpy()
+        #     b_params = targets['params'].numpy()
+        #     b_origin_sizes = targets['b_origin_sizes'].numpy()
+        #     mask = np.all(np.isfinite(b_coords), axis=-1)
+        #     b_coords = b_coords[mask]
+        #     b_coords = np.reshape(b_coords, (36, -1, 2))
+        #     b_coords = b_coords.astype(np.float32)
+        #     mask = np.all(np.isfinite(b_params), axis=-1)
+        #     b_params = np.reshape(b_params[mask], (36, -1, b_params.shape[-1]))
+
+        #     for i, (img, origin_sizes, n_params, n_coords) in enumerate(
+        #             zip(b_img, b_origin_sizes, b_params, b_coords)):
+        #         for params, coords in zip(n_params, n_coords):
+        #             s, Rt, shp, exp = params[:1], params[1:12], params[
+        #                 12:62], params[62:]
+        #             Rt = np.concatenate([Rt, np.ones(shape=(1, ))], axis=0)
+        #             Rt = np.reshape(Rt, (3, 4))
+        #             R = Rt[..., :-1]
+        #             t = Rt[..., -1]
+        #             print('-' * 100)
+        #             print(t)
+        #             print(coords[::-1])
+
+        #             vertices = shapeMU + shapePC.dot(shp[:, None]) + expPC.dot(
+        #                 exp[:, None])
+        #             vertices = np.asarray(vertices)
+
+        #             vertices = vertices.reshape(68, 3)
+        #             vertices = s * vertices.dot(R.T)
+        #             resized = origin_sizes[::-1] / np.array([320., 192.])
+        #             lnmks = vertices[:, :2] + coords[::-1] * resized
+        #             img = cv2.resize(img,
+        #                              tuple(origin_sizes[::-1]),
+        #                              interpolation=cv2.INTER_AREA)
+        #             img = cv2.circle(img, tuple(coords[::-1].astype(np.int32)),
+        #                              3, (255, 0, 0), -1)
+        #             for j, kp in enumerate(lnmks):
+        #                 kp = kp.astype(np.int32)
+        #                 if j < 17:
+        #                     img = cv2.circle(img, tuple(kp), 2, (255, 0, 255),
+        #                                      -1)
+        #                 else:
+        #                     img = cv2.circle(img, tuple(kp), 2, (0, 255, 0), -1)
+        #             cv2.imwrite("./{}.jpg".format(i), img[..., ::-1])
         #     exit(1)
 
         datasets = datasets.map(

@@ -28,25 +28,24 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
                                                model,
                                                directory=checkpoint_dir,
                                                period=1)
+
+    loss_callback = LossAndErrorPrintingCallback(writers)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(
         log_dir=config.summary.log_dir,
         write_graph=False,
         write_images=False,
-        update_freq='batch',
-        histogram_freq=1,
-        profile_batch='500,520')
+        update_freq='epoch',
+        profile_batch='500, 520')
+
     # histogram = Histogram(config=config, writers=writers, update_freq=1000)
-    embedding_map = EmbeddingMap(config=config,
-                                 writers=writers,
-                                 train_datasets=train_datasets,
-                                 test_datasets=test_datasets,
-                                 update_freq=1000)
+    # embedding_map = EmbeddingMap(config=config,
+    #                              writers=writers,
+    #                              train_datasets=train_datasets,
+    #                              test_datasets=test_datasets,
+    #                              update_freq=1000)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
-    callbacks.append([
-        saver_callback, tensorboard_callback, embedding_map,
-        LossAndErrorPrintingCallback()
-    ])
+    callbacks.append([saver_callback, tensorboard_callback, loss_callback])
     return callbacks
 
 
@@ -67,13 +66,11 @@ def load_configger(config_path):
     config = AttrDict(config)
     config = set_data_config(config)
     config = set_model_config(config)
-    # model_config = config.set_immutable()
     return config
 
 
 def set_data_config(config):
     config.data_reader.epochs = config.epochs
-    # add tasks keys in data_reader
     config.data_reader.batch_size = config.batch_size
     config.data_reader.model_name = config.models.model_name
     return config

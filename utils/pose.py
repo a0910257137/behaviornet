@@ -68,18 +68,18 @@ class PoseEstimator:
         ]
         # correct to our facial landmarks
         model_points = model_points[lnmks_68]
-        lnmk_scheme = [
-            27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 42, 48, 50, 51,
-            52, 54, 56, 57, 58
-        ]
-        model_points = model_points[lnmk_scheme]
-        LE = np.mean(model_points[:6], axis=0, keepdims=True)
-        RE = np.mean(model_points[6:12], axis=0, keepdims=True)
-        N = model_points[13:14]  #13
-        LM = model_points[14:15]
-        RM = model_points[18:19]
-        model_points = np.concatenate([LE, RE, N, LM, RM], axis=0)
-        model_points = np.asarray(model_points)
+        # lnmk_scheme = [
+        #     27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 42, 48, 50, 51,
+        #     52, 54, 56, 57, 58
+        # ]
+        # model_points = model_points[lnmk_scheme]
+        # LE = np.mean(model_points[:6], axis=0, keepdims=True)
+        # RE = np.mean(model_points[6:12], axis=0, keepdims=True)
+        # N = model_points[13:14]  #13
+        # LM = model_points[14:15]
+        # RM = model_points[18:19]
+        # model_points = np.concatenate([LE, RE, N, LM, RM], axis=0)
+        # model_points = np.asarray(model_points)
         return model_points
 
     def solve_pose_by_68_points(self, image_points):

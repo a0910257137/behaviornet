@@ -124,20 +124,6 @@ class Head(tf.keras.Model):
                                   name=branch_name)
                     ]
 
-        # self.proj_1 = ConvBlock(filters=3,
-        #                         kernel_size=1,
-        #                         use_bias=True,
-        #                         norm_method=norm_method,
-        #                         activation='relu',
-        #                         name='project_1')
-
-        # self.proj_2 = ConvBlock(filters=32,
-        #                         kernel_size=1,
-        #                         use_bias=True,
-        #                         norm_method=norm_method,
-        #                         activation='relu',
-        #                         name='project_2')
-
     @tf.function
     def call(self, x):
         pred_branches = {}

@@ -4,6 +4,7 @@ from pprint import pprint
 
 
 class Histogram(tf.keras.callbacks.Callback):
+
     def __init__(self, config, writers, update_freq, feed_inputs_display=None):
         super(Histogram, self).__init__()
 
@@ -29,8 +30,6 @@ class Histogram(tf.keras.callbacks.Callback):
         if batch % self.update_freq == 0:
             with self.writers['train'].as_default():
                 for tf_var in self.model.model.trainable_weights:
-                    print('-' * 100)
-                    print(tf_var.name)
                     if tf_var.name in [
                             'hard_net/init_conv1/sp_conv/depthwise_kernel:0',
                             'hard_net/init_conv1/sp_conv/pointwise_kernel:0',
