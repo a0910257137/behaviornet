@@ -45,6 +45,7 @@ class GeneralDataset:
                 ds = tf.data.TFRecordDataset(filenames,
                                              num_parallel_reads=threads)
             datasets.append(ds)
+
         datasets = tf.data.TFRecordDataset.zip(tuple(datasets))
         if self.config.shuffle:
             datasets = datasets.shuffle(buffer_size=10000)
@@ -90,14 +91,10 @@ class GeneralDataset:
         #     for i, (img, origin_sizes, n_params, n_coords) in enumerate(
         #             zip(b_img, b_origin_sizes, b_params, b_coords)):
         #         for params, coords in zip(n_params, n_coords):
-        #             s, Rt, shp, exp = params[:1], params[1:12], params[
-        #                 12:62], params[62:]
-        #             Rt = np.concatenate([Rt, np.ones(shape=(1, ))], axis=0)
-        #             Rt = np.reshape(Rt, (3, 4))
-        #             R = Rt[..., :-1]
-        #             t = Rt[..., -1]
+        #             s, R, shp, exp = params[:1], params[1:10], params[
+        #                 10:60], params[60:]
+        #             R = np.reshape(R, (3, 3))
         #             print('-' * 100)
-        #             print(t)
         #             print(coords[::-1])
 
         #             vertices = shapeMU + shapePC.dot(shp[:, None]) + expPC.dot(
@@ -111,8 +108,8 @@ class GeneralDataset:
         #             img = cv2.resize(img,
         #                              tuple(origin_sizes[::-1]),
         #                              interpolation=cv2.INTER_AREA)
-        #             img = cv2.circle(img, tuple(coords[::-1].astype(np.int32)),
-        #                              3, (255, 0, 0), -1)
+        #             # img = cv2.circle(img, tuple(coords[::-1].astype(np.int32)),
+        #             #                  3, (255, 0, 0), -1)
         #             for j, kp in enumerate(lnmks):
         #                 kp = kp.astype(np.int32)
         #                 if j < 17:

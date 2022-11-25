@@ -91,12 +91,6 @@ class MorphabelModel:
         '''
         # -- init --
         n_objs, k = tf.shape(x)[1], tf.shape(x)[-2]
-        # x = tf.cast(x, tf.float64)
-        b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.constant(
-            [192., 320.], dtype=tf.float32)
-        x = tf.einsum('b n k c, b c -> b n k c', x, b_resized)
-        mean = tf.math.reduce_mean(x, axis=-2, keepdims=True)
-        x -= mean
         x = tf.cast(x[..., ::-1], tf.float64)
         sp = tf.zeros(shape=(self.n_shp, 1), dtype=tf.float64)
         ep = tf.zeros(shape=(self.n_exp, 1), dtype=tf.float64)
@@ -108,14 +102,6 @@ class MorphabelModel:
         mask_shp_eq_left = tf.tile(mask[:, :, None, None],
                                    (1, 1, self.n_shp, self.n_shp))
         # pre-process n_objs for shape, express
-        # shapeMU = tf.tile(self.shapeMU[:, None, :, :],
-        #                   [1, tf.shape(x)[1], 1, 1])
-        # shapePC = tf.tile(self.shapePC[:, None, :, :],
-        #                   [1, tf.shape(x)[1], 1, 1])
-        # expPC = tf.tile(self.expPC[:, None, :, :], [1, tf.shape(x)[1], 1, 1])
-        # expEV = tf.tile(self.expEV[:, None, :], [1, tf.shape(x)[1], 1])
-        # shapeEV = tf.tile(self.shapeEV[:, None, :], [1, tf.shape(x)[1], 1])
-
         for _ in range(self.max_iter):
             X = tf.math.add(
                 self.shapeMU,
@@ -124,6 +110,7 @@ class MorphabelModel:
 
             X = tf.reshape(
                 X, (self.batch_size, self.max_obj_num, tf.shape(X)[2] // 3, 3))
+
             P = self.estimate_affine_matrix_3d22d(X, x, mask_A, mask_T)
             s, R, t = self.P2sRt(P)
             #----- estimate shape
@@ -162,16 +149,11 @@ class MorphabelModel:
         angles = self.matrix2angle(R)
         R = self.angle2matrix(angles)
         sp, ep, s, R, t = self.valid_objs(sp, ep, s, R, t, mask)
-        Rt = tf.concat([R, t[..., None]], axis=-1)
-
         s = tf.reshape(s, (self.batch_size, n_objs, -1))
-        Rt = tf.reshape(Rt, (self.batch_size, n_objs, -1))
-        Rt = Rt[..., :-1]
-        # R = tf.reshape(R, (self.batch_size, n_objs, -1))
-        # t = tf.reshape(t, (self.batch_size, n_objs, -1))
+        R = tf.reshape(R, (self.batch_size, n_objs, -1))
         sp = tf.reshape(sp, (self.batch_size, n_objs, -1))
         ep = tf.reshape(ep, (self.batch_size, n_objs, -1))
-        params = tf.concat([s, Rt, sp, ep], axis=-1)
+        params = tf.concat([s, R, sp, ep], axis=-1)
         return params
 
     def estimate_affine_matrix_3d22d(self, X, x, mask_A, mask_T):
@@ -188,10 +170,6 @@ class MorphabelModel:
             P_Affine: [3, 4]. Affine camera matrix
             """
         #--- 1. normalization
-
-        # mean = tf.math.reduce_mean(X, axis=-2, keepdims=True)
-        # X -= mean
-
         x = tf.transpose(x, (0, 1, 3, 2))  # B, n_objs, 2, 68
         X = tf.transpose(X, (0, 1, 3, 2))  # B, 3, 68
 
@@ -206,9 +184,16 @@ class MorphabelModel:
                                                                        None,
                                                                        None]
         x = scale * x
+        # from matplotlib import pyplot as plt
+        # an_lnmks = tf.transpose(x[0, 0])
+        # an_lnmks = an_lnmks.numpy()
+        # # an_lnmks = an_lnmks.astype(np.int32)
+        # fig = plt.figure()
+        # for i, kp in enumerate(an_lnmks):
+        #     plt.scatter(kp[0], kp[1], color="green")
         # 2d points
-
         ms = -mean * scale
+
         row1 = tf.concat([
             tf.squeeze(scale, axis=2),
             tf.zeros(shape=(self.batch_size, n_objs, 1), dtype=tf.float64),
@@ -234,7 +219,6 @@ class MorphabelModel:
         T = tf.cast(T, dtype=tf.float64)
 
         # 3d points
-
         X_homo = tf.concat([
             X,
             tf.ones(shape=(self.batch_size, n_objs, 1, k), dtype=tf.float64)
@@ -251,6 +235,13 @@ class MorphabelModel:
                                                                        None,
                                                                        None]
         X = scale * X
+        # an_lnmks = tf.transpose(X[0, 0])
+        # an_lnmks = an_lnmks.numpy()[..., :2]
+        # for i, kp in enumerate(an_lnmks):
+        #     plt.scatter(kp[0], kp[1], marker='*', color="blue")
+        # plt.grid()
+        # plt.savefig("x.png")
+
         ms = -mean * scale
         row1 = tf.concat([
             tf.squeeze(scale, axis=2),

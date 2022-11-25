@@ -9,7 +9,6 @@ import copy
 from tqdm import tqdm
 from utils.io import load_BFM
 import random
-import tensorflow as tf
 from pprint import pprint
 
 lnmk_68 = [
@@ -83,6 +82,14 @@ lnmk_68 = [
     'inner_lip_lnmk_67',
 ]
 
+path_lists = glob("/aidata/anders/objects/3D-head/NIR/S1-10/sub1/*.png")
+for path in path_lists:
+    img = cv2.imread(path)
+    h, w, c = img.shape
+    for i in range(h):
+        for j in range(w):
+            print(img[i, j])
+xxxx
 annos = load_json("/aidata/anders/objects/3D-head/exp/annos/samples.json")
 img_root = "/aidata/anders/objects/3D-head/exp/imgs"
 for frame in annos["frame_list"]:
@@ -107,63 +114,3 @@ for frame in annos["frame_list"]:
                     img = cv2.circle(img, tuple(kp[::-1]), 3, (0, 255, 0), -1)
         cv2.imwrite("output.jpg", img)
         xxx
-    # for lb in frame["labels"]:
-    #     lb["category"] = "FACE"
-# dump_json(path="/aidata/anders/objects/3D-head/AFLW2000/annos/BDD_AFLW200.json",
-#           data=annos)
-# base_infos = {'dataset': '300W', 'sequence': None, 'name': "", 'labels': []}
-# bdd_results = {"frame_list": []}
-# root_path = "/aidata/anders/objects/3D-head/300W"
-# save_root = "/aidata/anders/objects/3D-head/300W/imgs"
-# head_model = load_BFM("/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat")
-# kpt_ind = head_model['kpt_ind']
-# X_ind_all = np.stack([kpt_ind * 3, kpt_ind * 3 + 1, kpt_ind * 3 + 2])
-# X_ind_all = np.concatenate([
-#     X_ind_all[:, :17], X_ind_all[:, 17:27], X_ind_all[:, 36:48],
-#     X_ind_all[:, 27:36], X_ind_all[:, 48:68]
-# ],
-#                            axis=-1)
-# valid_ind = np.reshape(np.transpose(X_ind_all), (-1))
-# dirs = os.listdir(root_path)
-# tmp_check = []
-# for dir in dirs:
-#     mat_root = os.path.join(root_path, dir)
-#     img_root = os.path.join("/aidata/anders/objects/3D-head/imgs", dir)
-#     mat_paths = glob(os.path.join(mat_root, "*mat"))
-#     for path in tqdm(mat_paths):
-#         img_path = path.replace('mat', 'jpg')
-#         img_name = img_path.split('/')[-1]
-#         tmp_check.append(img_name)
-#         img_path = os.path.join(img_root, img_name)
-#         img = cv2.imread(img_path)
-#         cv2.imwrite(os.path.join(save_root, img_name), img)
-#         h, w, c = img.shape
-#         infos = copy.deepcopy(base_infos)
-#         infos["sequence"] = dir
-#         infos["name"] = img_name
-#         mat_dict = sio.loadmat(path)
-#         vertices = mat_dict['Fitted_Face'].T
-#         vertices = vertices.reshape(-1)
-#         pt3d = vertices[valid_ind]
-#         pt3d = pt3d.reshape([68, 3])
-#         pt2d = pt3d[:, :2]
-#         pt2d[:, 1] = h - pt2d[:, 1]
-#         tmp = {"keypoints": {}}
-#         for key, lnmk in zip(lnmk_68, pt2d):
-#             # lnmk = lnmk[:2].astype(np.int32)
-#             # img = cv2.circle(img, tuple(lnmk), 3, (0, 255, 0), -1)
-#             # tmp["box2d"] =
-#             tl = np.min(pt2d, axis=0)
-#             br = np.max(pt2d, axis=0)
-#             tmp["box2d"] = {
-#                 "x1": int(tl[0]),
-#                 "y1": int(tl[1]),
-#                 "x2": int(br[0]),
-#                 "y2": int(br[1])
-#             }
-#             tmp["keypoints"][key] = lnmk[::-1].tolist()
-#         infos["labels"].append(tmp)
-#         bdd_results["frame_list"].append(infos)
-
-# dump_json(path="/aidata/anders/objects/3D-head/300W/annos/BDD_300W.json",
-#           data=bdd_results)

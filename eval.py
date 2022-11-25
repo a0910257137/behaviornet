@@ -189,9 +189,8 @@ class Eval:
                     data=report_results)
             else:
                 obj_level_results = dict(report_results['obj_level'])
-
                 df, mean_df = transform_pd_data(obj_level_results, True,
-                                                self.metric_type)
+                                                self.mode, self.metric_type)
                 pprint(mean_df)
         print('Finish evaluating')
         print('Totoal speding %5fs, With %i batch size, %i imgs' %

@@ -197,31 +197,50 @@ def tdmm_to_bdd(bdd_results, batches_preds, batches_frames, cates):
 
 def transform_pd_data(report_results,
                       is_post_cal,
+                      mode,
                       metric_type='keypoints',
                       eval_types=('accuracy', 'precision', 'recall')):
     mean_df = None
     if metric_type.lower() == 'keypoints' or metric_type.lower() == 'landmarks':
         # pd_headers = {'center_point': [], 'top_left': [], 'bottom_right': []}
+        # pd_headers = {
+        #     'left_eye_lnmk_27': [],
+        #     'right_eye_lnmk_33': [],
+        #     'nose_lnmk_42': [],
+        #     'outer_lip_lnmk_48': [],
+        #     'outer_lip_lnmk_54': []
+        # }
         pd_headers = {
-            'left_eye_lnmk_27': [],
-            'right_eye_lnmk_33': [],
-            'nose_lnmk_42': [],
-            'outer_lip_lnmk_48': [],
-            'outer_lip_lnmk_54': []
+            'countour': [],
+            'left_eye': [],
+            'right_eye': [],
+            'nose': [],
+            'lip': []
         }
-
     elif metric_type == 'IoU' or metric_type.lower() == 'box2d':
         pd_headers = {'IoU': []}
     data_frame = {'Eval_type': eval_types}
 
     for t in eval_types:
         type_results = report_results[t]
-        for key in pd_headers:
-            if key in list(type_results.keys()):
-                eval_vals = type_results[key]
-                pd_headers[key].append(eval_vals)
+
+        if mode == 'tdmm':
+
+            for k in pd_headers.keys():
+                tmp = []
+                for result_key in type_results.keys():
+                    if k in result_key:
+                        tmp.append(type_results[result_key])
+                pd_headers[k].append(np.mean(tmp))
+
+        else:
+            for key in pd_headers:
+                if key in list(type_results.keys()):
+                    eval_vals = type_results[key]
+                    pd_headers[key].append(eval_vals)
     if is_post_cal:
         post_mean_infos = {
+            'countour': [],
             'left_eye': [],
             'right_eye': [],
             'nose': [],
@@ -238,7 +257,9 @@ def transform_pd_data(report_results,
 
         mean_data_frame = copy.deepcopy(data_frame)
         mean_data_frame.update({k: post_mean_infos[k] for k in post_mean_infos})
+
         mean_df = pd.DataFrame(mean_data_frame)
+
     data_frame.update({k: pd_headers[k] for k in pd_headers})
     df = pd.DataFrame(data_frame)
     return df, mean_df

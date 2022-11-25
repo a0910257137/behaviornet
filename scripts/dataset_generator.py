@@ -97,16 +97,15 @@ def build_2d_obj(obj, obj_cates, img_info):
     return obj_kp
 
 
-def get_mean_std(tmp_s, tmp_Rt, tmp_sp, tmp_ep, num_train_files):
-    tmp_Rt = np.asarray(tmp_Rt)
-    N = tmp_Rt.shape[0]
+def get_mean_std(tmp_s, tmp_R, tmp_sp, tmp_ep, num_train_files):
+    tmp_R = np.asarray(tmp_R)
+    N = tmp_R.shape[0]
     tmp_s = np.expand_dims(np.stack(np.asarray(tmp_s)), axis=-1)
 
-    tmp_Rt = np.stack(np.asarray(tmp_Rt)).reshape([N, -1])
-    tmp_Rt = tmp_Rt[..., :-1]
+    tmp_R = np.stack(np.asarray(tmp_R)).reshape([N, -1])
     tmp_sp = np.squeeze(np.stack(np.asarray(tmp_sp)), axis=-1)
     tmp_ep = np.squeeze(np.stack(np.asarray(tmp_ep)), axis=-1)
-    params = np.concatenate([tmp_s, tmp_Rt, tmp_sp, tmp_ep], axis=-1)
+    params = np.concatenate([tmp_s, tmp_R, tmp_sp, tmp_ep], axis=-1)
     train_mean = np.mean(params[:num_train_files], axis=0)
     train_std = np.std(params[:num_train_files], axis=0)
     test_mean = np.mean(params[num_train_files:], axis=0)
@@ -180,7 +179,7 @@ def get_coors(img_root,
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
     # save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
-    save_root = os.path.join("/home2/user/anders/3D/exp", 'tf_records')
+    save_root = os.path.join("/home2/user/anders/3D/LS3D-W", 'tf_records')
     frame_count = 0
     mean_face = None
     bfm = MorphabelModel('/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat')
@@ -189,7 +188,7 @@ def get_coors(img_root,
             is_aug=False,
             data_root="/aidata/anders/objects/3D-head/PRNet/Data",
             model_root="/aidata/anders/objects/3D-head/PRNet/model")
-    tmp_s, tmp_Rt, tmp_sp, tmp_ep, = [], [], [], []
+    tmp_s, tmp_R, tmp_sp, tmp_ep, = [], [], [], []
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
         frame_kps = []
@@ -217,9 +216,7 @@ def get_coors(img_root,
                     obj_kps[:, ::-1], bfm.kpt_ind, max_iter=5)
                 R = angle2matrix(np.asarray(fitted_angles))
                 tmp_s.append(fitted_s)
-
-                Rt = np.concatenate([R, fitted_t[:, None]], axis=-1)
-                tmp_Rt.append(Rt)
+                tmp_R.append(R)
                 tmp_sp.append(fitted_sp)
                 tmp_ep.append(fitted_ep)
                 obj_kp = np.concatenate([obj_kp, obj_lnmks], axis=0)
@@ -276,7 +273,7 @@ def get_coors(img_root,
         frame_count += 1
 
     train_mean, train_std, test_mean, test_std = get_mean_std(
-        tmp_s, tmp_Rt, tmp_sp, tmp_ep, num_train_files)
+        tmp_s, tmp_R, tmp_sp, tmp_ep, num_train_files)
     save_dir = os.path.join(save_root, 'params')
     make_dir(save_dir)
 

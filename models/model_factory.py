@@ -5,7 +5,7 @@ from .loss import LOSS_FACTORY
 import tensorflow as tf
 from .network import Network
 from .backbone.hardnet import *
-
+from .utils.ops import Lookahead
 from pprint import pprint
 
 
@@ -38,6 +38,10 @@ class ModelFactory:
                           self.modules,
                           self._model_keys,
                           name='network')
+
+        # optimizers = Lookahead(optimizer=self._optimizer(),
+        #                        sync_period=5,
+        #                        slow_step_size=0.5)
         optimizers = self._optimizer()
         network.compile(optimizer=optimizers, loss=self.loss, run_eagerly=False)
         return network, optimizers

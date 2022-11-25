@@ -357,25 +357,25 @@ def offset_loss(b_idx, b_oms, tar_vals, batch_size, max_obj_num):
 
 
 def wpdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params,
-              gt_Z_params, pms, pred_opms, n_s, n_Rt, shp_base, exp_base):
+              gt_Z_params, pms, pred_opms, n_s, n_R, shp_base, exp_base):
 
     def get_Rt_weights(gt_vertices, pred_Rt, gt_Rt):
         pose_diffs = tf.reshape(tf.math.abs(pred_Rt - gt_Rt),
                                 (batch_size, max_obj_num, -1))
 
         pv_nomrs = tf.norm(gt_vertices, ord=2, axis=2)
-        N_vertices = tf.cast(tf.shape(gt_vertices)[-2], tf.float32)
-        offset_norm = tf.math.sqrt(N_vertices)
+        # N_vertices = tf.cast(tf.shape(gt_vertices)[-2], tf.float32)
+        # offset_norm = tf.math.sqrt(N_vertices)
         weights = []
-        for ind in range(11):
-            if ind in [0, 4, 8]:
+        for ind in range(9):
+            if ind in [0, 1, 2]:
                 w = pose_diffs[..., ind] * pv_nomrs[..., 0]
-            elif ind in [1, 5, 9]:
+            elif ind in [3, 4, 5]:
                 w = pose_diffs[..., ind] * pv_nomrs[..., 1]
-            elif ind in [2, 6, 10]:
+            elif ind in [6, 7, 8]:
                 w = pose_diffs[..., ind] * pv_nomrs[..., 2]
-            else:
-                w = pose_diffs[..., ind] * offset_norm
+            # else:
+            #     w = pose_diffs[..., ind] * offset_norm
             weights.append(w)
         return tf.stack(weights)
 
@@ -388,8 +388,8 @@ def wpdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params,
         return w_norm * shp_exp_diffs
 
     eps = 1e-6
-    gt_Rt, gt_shp_exp = gt_params[..., n_s:n_Rt + n_s], gt_params[...,
-                                                                  n_Rt + n_s:]
+    gt_Rt, gt_shp_exp = gt_params[..., n_s:n_R + n_s], gt_params[...,
+                                                                 n_R + n_s:]
     with tf.name_scope('wpdc_loss'):
         # B C N
         valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
@@ -403,7 +403,7 @@ def wpdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params,
         pred_params = pred_Z_params * pms[1][None, None, :] + pms[0][None,
                                                                      None, :]
         pred_Rt, pred_shp_exp = pred_params[..., n_s:n_s +
-                                            n_Rt], pred_params[..., n_s + n_Rt:]
+                                            n_R], pred_params[..., n_s + n_R:]
 
         Rt_weights = get_Rt_weights(gt_vertices, pred_Rt, gt_Rt)
         shp_exp_weights = get_shp_exp_weights(shp_base, exp_base, pred_shp_exp,
@@ -426,45 +426,22 @@ def wpdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params,
             0.)
         b_objs = tf.math.reduce_sum(tf.cast(valid_mask, tf.float32), axis=-1)
         loss = tf.reduce_sum(loss, axis=(-2, -1)) / b_objs
-    return tf.math.reduce_mean(loss)
+
+    return loss, pred_params
 
 
 def vdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params, pms,
-             b_opms, n_s, n_Rt, n_shp, u_base, shp_base, exp_base):
-    gt_s, gt_Rt = gt_params[..., :n_s], gt_params[..., n_s:n_s + n_Rt]
+             pred_params, n_s, n_R, n_shp, u_base, shp_base, exp_base):
+    gt_s, gt_R = gt_params[..., :n_s], gt_params[..., n_s:n_s + n_R]
     with tf.name_scope('vdc_loss'):
         # B C N
         valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
-        b_info_idx = tf.tile(
-            tf.range(batch_size, dtype=tf.int32)[:, None, None],
-            (1, max_obj_num, 1))
-        b_idx = tf.cast(b_idx, tf.int32)
-        b_idx = tf.concat([b_info_idx, b_idx], axis=-1)
-        pred_Z_params = tf.gather_nd(b_opms, b_idx)
-        # pred_params are reconstruct params
-        pred_params = pred_Z_params * pms[1][None, None, :] + pms[0][None,
-                                                                     None, :]
-        pred_s, pred_Rt = pred_params[..., :n_s], pred_params[...,
-                                                              n_s:n_s + n_Rt]
-        pred_shp, pred_exp = pred_params[..., n_s + n_Rt:n_s + n_Rt +
-                                         n_shp], pred_params[..., n_s + n_Rt +
-                                                             n_shp:]
-        # ERROR:
-
-        pred_Rt = tf.concat(
-            [pred_Rt, np.ones(shape=(batch_size, max_obj_num, 1))], axis=-1)
-        pred_Rt = tf.reshape(pred_Rt, (batch_size, max_obj_num, 3, 4))
-        pred_R = pred_Rt[..., :-1]
-        pred_t = pred_Rt[..., -1]
-        pred_t = pred_t[:, :, None, :]
-
-        gt_Rt = tf.concat(
-            [gt_Rt, np.ones(shape=(batch_size, max_obj_num, 1))], axis=-1)
-        gt_Rt = tf.reshape(gt_Rt, (batch_size, max_obj_num, 3, 4))
-        gt_R = gt_Rt[..., :-1]
-        gt_t = gt_Rt[..., -1]
-        gt_t = gt_t[:, :, None, :]
-
+        pred_s, pred_R = pred_params[..., :n_s], pred_params[..., n_s:n_s + n_R]
+        pred_shp, pred_exp = pred_params[..., n_s + n_R:n_s + n_R +
+                                         n_shp], pred_params[...,
+                                                             n_s + n_R + n_shp:]
+        pred_R = tf.reshape(pred_R, (batch_size, max_obj_num, 3, 3))
+        gt_R = tf.reshape(gt_R, (batch_size, max_obj_num, 3, 3))
         pred_vertices = u_base + tf.linalg.matmul(
             shp_base, pred_shp[..., None]) + tf.linalg.matmul(
                 exp_base, pred_exp[..., None])
@@ -473,68 +450,34 @@ def vdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params, pms,
             (batch_size, max_obj_num, tf.shape(pred_vertices)[2] // 3, 3))
         pred_R = tf.reshape(pred_R, (batch_size, max_obj_num, 3, 3))
         pred_vertices = pred_s[..., None] * tf.linalg.matmul(
-            pred_vertices, pred_R, transpose_b=(0, 1, 3, 2)) + pred_t
-
+            pred_vertices, pred_R, transpose_b=(0, 1, 3, 2))
+        pred_lnmks = pred_vertices[..., :68, :2]
         gt_R = tf.reshape(gt_R, (batch_size, max_obj_num, 3, 3))
+
         gt_vertices = gt_s[..., None] * tf.linalg.matmul(
-            gt_vertices, gt_R, transpose_b=(0, 1, 3, 2)) + gt_t
+            gt_vertices, gt_R, transpose_b=(0, 1, 3, 2))
         b_diffs = (gt_vertices - pred_vertices)**2
         b_loss = b_diffs[valid_mask]
-    return tf.math.reduce_mean(b_loss)
+    return b_loss, pred_lnmks
 
 
-def wpdc_vdc(batch_size, max_obj_num, b_idx, gt_params, gt_Z_params, pms,
-             pred_opms, n_s, n_Rt, n_shp, n_exp, kpt_ind, shapeMU, shapePC,
-             expPC, is_wpdc, is_vdc):
+def lrr_loss(batch, max_obj_num, pred_lnmks, gt_lnmks):
+    valid_mask = tf.math.reduce_all(tf.math.is_finite(gt_lnmks), axis=[-1, -2])
+    mask = gt_lnmks == np.inf
+    gt_lnmks = tf.where(tf.math.is_inf(gt_lnmks), 0., gt_lnmks)
+    mean = tf.math.reduce_mean(gt_lnmks, axis=-2, keepdims=True)
+    gt_lnmks -= mean
+    gt_lnmks = gt_lnmks[..., ::-1]
+    pred_lnmks = tf.reshape(pred_lnmks, [batch, max_obj_num, -1])
 
-    def resample(batch_size, shapeMU, shapePC, expPC, gt_params, kpt_ind):
-        # resmpale different vertices for 68 landmarks and 132 random samples
-        kpt_ind
-        xxx
-        index = tf.random.shuffle(tf.range(start=0, limit=53215,
-                                           dtype=tf.int32))[:132]
-        # index = tf.reshape(index, (-1, 1))
-        keypoints_resample = tf.stack([3 * index, 3 * index + 1, 3 * index + 2])
-        keypoints_mix = tf.concat([kpt_ind, keypoints_resample], axis=-1)
-        n_objs = tf.shape(gt_params)[1]
+    gt_lnmks = tf.reshape(gt_lnmks, [batch, max_obj_num, -1])
+    diff = pred_lnmks - gt_lnmks
+    loss = tf.math.sqrt(
+        tf.math.reduce_sum(tf.math.square(diff), axis=-1) + 1e-9)
 
-        keypoints_mix = tf.reshape(tf.transpose(keypoints_mix), [-1])
-        u_base = tf.tile(
-            tf.gather(shapeMU, keypoints_mix)[None, None, :, :],
-            [batch_size, n_objs, 1, 1])
-        shp_base = tf.tile(
-            tf.gather(shapePC, keypoints_mix)[None, None, :, :],
-            [batch_size, n_objs, 1, 1])
-        exp_base = tf.tile(
-            tf.gather(expPC, keypoints_mix)[None, None, :, :],
-            (batch_size, n_objs, 1, 1))
-        return u_base, shp_base, exp_base
-
-    u_base, shp_base, exp_base = resample(batch_size, shapeMU, shapePC, expPC,
-                                          gt_params, kpt_ind)
-
-    gt_shp_exp = gt_params[..., n_Rt + n_s:]
-    gt_vertices = u_base + tf.linalg.matmul(
-        shp_base, gt_shp_exp[:, :, :n_shp, None]) + tf.linalg.matmul(
-            exp_base, gt_shp_exp[:, :, n_shp:, None])
-
-    gt_vertices = tf.reshape(
-        gt_vertices,
-        [batch_size, max_obj_num,
-         tf.shape(gt_vertices)[2] // 3, 3])
-
-    w_loss, v_loss = None, None
-    if is_wpdc:
-        w_loss = wpdc_loss(batch_size, max_obj_num, b_idx, gt_vertices,
-                           gt_params, gt_Z_params, pms, pred_opms, n_s, n_Rt,
-                           shp_base, exp_base)
-
-    if is_vdc:
-        v_loss = vdc_loss(batch_size, max_obj_num, b_idx, gt_vertices,
-                          gt_params, pms, pred_opms, n_s, n_Rt, n_shp, u_base,
-                          shp_base, exp_base)
-    if w_loss != None and v_loss != None:
-        loss = (w_loss + v_loss)
-    else:
-        loss = w_loss
+    valid_mask = tf.cast(valid_mask, tf.float32)
+    loss = loss * valid_mask
+    loss = tf.math.reduce_sum(loss, axis=-1) / tf.math.reduce_sum(valid_mask,
+                                                                  axis=-1)
+    
     return loss

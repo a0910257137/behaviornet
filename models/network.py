@@ -12,16 +12,22 @@ class Network(tf.keras.Model):
         self.model = model
         self.config = config
         self._model_keys = _model_keys
+
+        num_test = len(os.listdir(self.config.tasks[0]["test_folder"]))
+        self.test_steps = num_test // self.config.batch_size
+
+        self.config["num_test"] = num_test
+
         pms = np.load(self.config['3dmm']['pms_path'])
-        n_s, n_Rt, n_shp, n_exp = self.config['3dmm']["n_s"], self.config[
-            '3dmm']["n_Rt"], self.config['3dmm']["n_shp"], self.config['3dmm'][
+        n_s, n_R, n_shp, n_exp = self.config['3dmm']["n_s"], self.config[
+            '3dmm']["n_R"], self.config['3dmm']["n_shp"], self.config['3dmm'][
                 "n_exp"]
 
         s = pms[:, :n_s]
-        Rt = pms[:, n_s:n_s + n_Rt]
+        Rt = pms[:, n_s:n_s + n_R]
 
-        shp, exp = pms[:, n_s + n_Rt:n_s + n_Rt +
-                       n_shp], pms[:, 199 + n_s + n_Rt:199 + n_s + n_Rt + n_exp]
+        shp, exp = pms[:, n_s + n_R:n_s + n_R +
+                       n_shp], pms[:, 199 + n_s + n_R:199 + n_s + n_R + n_exp]
         pms = np.concatenate([s, Rt, shp, exp], axis=-1)
         self.train_mean_std = tf.cast(pms[:2, ], tf.float32)
         self.test_mean_std = tf.cast(pms[2:, ], tf.float32)
@@ -46,7 +52,6 @@ class Network(tf.keras.Model):
         labels['Z_params'] = (labels['params'] -
                               self.train_mean_std[0][None, None, :]
                               ) / self.train_mean_std[1][None, None, :]
-
         labels['mean_std'] = self.train_mean_std
         with tf.GradientTape() as tape:
             preds = self.model(imgs, training=training)
@@ -106,6 +111,14 @@ class Network(tf.keras.Model):
             self.optimizer[key].apply_gradients(
                 zip(gradients[:num_vars], train_vars))
             gradients = gradients[num_vars:]
+
+    def _get_wpdc(self, x):
+        x['total'] = x['obj_heat_map'] + x['wpdc']
+        return x
+
+    def _get_vdc(self, x):
+        x['total'] = x['obj_heat_map'] + x['vdc']
+        return x
 
     def get_config(self):
         return super().get_config()

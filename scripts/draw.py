@@ -81,9 +81,6 @@ def draw_tdmm(b_orig_imgs, b_rets):
         n_lnmks = np.reshape(n_lnmks[mask], (-1, 68, 2))
         mask = np.all(np.isfinite(n_poses), axis=-1)
         n_poses = np.reshape(n_poses[mask], (-1, 3))
-
-        # resized = np.asarray(img.shape[:2]) / np.array([192., 320.])
-        # n_lnmks = np.einsum('n k c, c -> n k c', n_lnmks, resized[::-1])
         for (bbox, lnmks, pose) in zip(n_bboxes, n_lnmks, n_poses):
             tl, br, scores = bbox[:2][::-1], bbox[2:4][::-1], bbox[-2]
             tl, br = tuple(tl.astype(np.int32)), tuple(br.astype(np.int32))
@@ -92,11 +89,8 @@ def draw_tdmm(b_orig_imgs, b_rets):
             for j, kp in enumerate(lnmks):
                 kp = kp.astype(np.int32)
                 if j < 17:
-                    img = cv2.circle(img, tuple(kp), 3, (255, 0, 255), -1)
+                    img = cv2.circle(img, tuple(kp), 2, (255, 0, 255), -1)
                 else:
-                    img = cv2.circle(img, tuple(kp), 3, (0, 255, 255), -1)
-            cv2.imwrite("output_{}.jpg".format(i), img)
-        xxxx
+                    img = cv2.circle(img, tuple(kp), 2, (0, 255, 255), -1)
         outputs_imgs.append(img)
-
     return outputs_imgs

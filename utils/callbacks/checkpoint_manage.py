@@ -60,6 +60,6 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
             return
         if self._last_save != self._epoch_count:
             # save per epoch
-            if self._epoch_count % 5 == 0:
+            if self._epoch_count % 10 == 0:
                 tf.keras.models.save_model(self.model.model, self.directory)
             self._last_save = self._epoch_count

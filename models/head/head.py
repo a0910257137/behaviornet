@@ -123,6 +123,20 @@ class Head(tf.keras.Model):
                                   activation=None,
                                   name=branch_name)
                     ]
+                elif 'lnmk' in branch_name:
+                    self.conv[branch_name] = [
+                        ConvBlock(filters=self.out_tran_dims,
+                                  kernel_size=3,
+                                  use_bias=True,
+                                  conv_mode=conv_mode,
+                                  norm_method='bn',
+                                  activation='relu'),
+                        ConvBlock(filters=pred_out_dims,
+                                  kernel_size=3,
+                                  norm_method=None,
+                                  activation=None,
+                                  name=branch_name)
+                    ]
 
     @tf.function
     def call(self, x):
@@ -138,7 +152,7 @@ class Head(tf.keras.Model):
                 elif 'size' in branch_name:
                     z = self.conv[branch_name][0](x)
                     pred_branches[branch_name] = self.conv[branch_name][1](z)
-                elif 'param' in branch_name:
+                elif 'param' in branch_name or 'lnmk' in branch_name:
                     z = self.conv[branch_name][0](x)
                     pred_branches[branch_name] = self.conv[branch_name][1](z)
                 elif 'heat' in branch_name:

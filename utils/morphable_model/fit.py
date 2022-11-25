@@ -173,7 +173,7 @@ def estimate_expression(x, shapeMU, expPC, expEV, shape, s, R, t2d, lamb=2000):
 
 
 # ---------------- fit
-def fit_points(x, X_ind, model, n_sp, n_ep, max_iter=4):
+def fit_points(x, X_ind, model, idxs, n_sp, n_ep, max_iter=4):
     '''
     Args:
         x: (n, 2) image points
@@ -200,11 +200,18 @@ def fit_points(x, X_ind, model, n_sp, n_ep, max_iter=4):
     # X_ind_all[:, 27:36]  # nose
     # X_ind_all[:, 36:48]  # eyes
     # X_ind_all[:, 48:68]  # mouse
+
+    # TODO: resmpale
     X_ind_all = np.concatenate([
         X_ind_all[:, :17], X_ind_all[:, 17:27], X_ind_all[:, 36:48],
         X_ind_all[:, 27:36], X_ind_all[:, 48:68]
     ],
                                axis=-1)
+    if idxs != None:
+        tmp = []
+        for k in idxs:
+            tmp += idxs[k]
+        X_ind_all = X_ind_all[:, tmp]
 
     # X_idxs = [8, 17, 19, 21, 22, 24, 26, 27, 30, 33, 36, 42, 48, 54]
     # X_ind_all = X_ind_all[:, X_idxs]

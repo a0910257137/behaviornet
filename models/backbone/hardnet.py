@@ -8,6 +8,7 @@ norm_method = 'bn'
 
 
 class HardBlock(tf.keras.layers.Layer):
+
     def __init__(self,
                  in_channels,
                  growth_rate,
@@ -82,6 +83,7 @@ class HardBlock(tf.keras.layers.Layer):
 
 
 class AvgPoolConcat(tf.keras.layers.Layer):
+
     def __init__(self, **kwargs):
         self.avg9x9 = tf.keras.layers.AveragePooling2D(pool_size=(7, 7),
                                                        strides=1,
@@ -97,7 +99,9 @@ class AvgPoolConcat(tf.keras.layers.Layer):
 
 
 class HardNet(tf.keras.Model):
+
     def __init__(self, pooling, arch, kernel_initializer, *args, **kwargs):
+
         def get_downsampling(down_method, name):
             if down_method == "avg_pool":
                 return tf.keras.layers.AveragePooling2D(strides=2,

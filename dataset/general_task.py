@@ -38,6 +38,7 @@ class GeneralTasks:
             self.num_lnmks = task_infos.num_lnmks
             task, m_cates = task_infos['preprocess'], len(task_infos['cates'])
             b_coords, b_imgs, b_origin_sizes = self._parse_TFrecord(task, infos)
+
             b_imgs, b_coords = self._multi_aug_funcs(b_imgs, b_coords,
                                                      self.num_lnmks, task)
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
@@ -67,15 +68,21 @@ class GeneralTasks:
                 targets['offset_idxs'] = b_coords[:, :, 3, :]
 
             elif task == "tdmm":
-                # b_keypoints = b_coords[:, :, 3:4, :]
                 mean = tf.math.reduce_mean(b_lnmks[:, :, 2:, :2],
                                            axis=-2,
                                            keepdims=True)
                 b_keypoints = mean
-                # targets['b_coords'] = b_coords[:, :, 3, :]
                 targets['b_coords'] = tf.squeeze(mean, axis=-2)
-                params = self.MorphabelModel.fit_points(b_lnmks[:, :, 2:, :2],
-                                                        b_origin_sizes)
+
+                b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.constant(
+                    [192., 320.], dtype=tf.float32)
+                b_lnmks = tf.einsum('b n k c, b c -> b n k c',
+                                    b_lnmks[:, :, 2:, :2], b_resized)
+                mean = tf.math.reduce_mean(b_lnmks, axis=-2, keepdims=True)
+                b_lnmks -= mean
+                b_lnmks = tf.where(tf.math.is_nan(b_lnmks), np.inf, b_lnmks)
+                targets['b_lnmks'] = b_lnmks
+                params = self.MorphabelModel.fit_points(b_lnmks, b_origin_sizes)
                 targets['obj_heat_map'] = tf.py_function(self._draw_kps,
                                                          inp=[
                                                              b_keypoints,
@@ -87,6 +94,7 @@ class GeneralTasks:
                                                          Tout=tf.float32)
                 targets['b_origin_sizes'] = b_origin_sizes
                 targets['params'] = tf.cast(params, tf.float32)
+
         return tf.cast(b_imgs, dtype=tf.float32), targets
 
     def _draw_mask(self, b_objs_kps, b_cates, h, w, flip_probs, is_do_filp):
@@ -159,47 +167,27 @@ class GeneralTasks:
 
     def _draw_kps(self, b_round_kps, b_obj_sizes, h, w, m, b_cates):
 
-        def draw(kps, sigmas, cates):
-            mask = ~tf.math.is_inf(kps)[:, 0, 0]
-            kps, sigmas, cates = kps[mask], sigmas[mask], cates[mask]
-            m = 1
-            shape = [int(m), int(h), int(w)]
-            # shape = [1, 192, 320]
-            hms = np.zeros(shape=shape)
-            for kp, sigma, cate in zip(kps, sigmas, cates):
-                if tf.math.is_inf(sigma) or tf.math.reduce_any(
-                        tf.math.is_inf(kp)):
-                    continue
-                for i, i_kp in enumerate(kp):
-                    hms[int(i)] = draw_msra_gaussian(hms[int(i)], i_kp, sigma)
-            return hms
-
         b_sigmas = gaussian_radius(b_obj_sizes)
-        b_hms = tf.map_fn(lambda x: draw(x[0], x[1], x[2]),
-                          (b_round_kps, b_sigmas, b_cates),
-                          swap_memory=True,
-                          back_prop=False,
-                          fn_output_signature=tf.float32)
-        # b_hms = []
-        # with tf.device('CPU'):
-        #     b_round_kps = b_round_kps.numpy()
-        #     b_sigmas = b_sigmas.numpy()
-        #     b_cates = b_cates.numpy()
-        #     for kps, sigmas, cates in zip(b_round_kps, b_sigmas, b_cates):
-        #         mask = np.all(np.isfinite(kps), axis=-1)[:, 0]
-        #         kps, sigmas, cates = kps[mask], sigmas[mask], cates[mask]
-        #         m = 1
-        #         shape = [int(m), int(h), int(w)]
-        #         hms = np.zeros(shape=shape, dtype=np.float32)
-        #         for kp, sigma, cate in zip(kps, sigmas, cates):
-        #             if np.isinf(sigma) or np.any(np.isinf(kp)):
-        #                 continue
-        #             for i, i_kp in enumerate(kp):
-        #                 hms[int(i)] = draw_msra_gaussian(
-        #                     hms[int(i)], np.asarray(i_kp, dtype=np.float32),
-        #                     np.asarray(sigma, dtype=np.float32))
-        #         b_hms.append(hms)
-        #     b_hms = np.stack(b_hms)
+        b_hms = []
+        with tf.device('CPU'):
+            b_round_kps = b_round_kps.numpy()
+            b_sigmas = b_sigmas.numpy()
+            b_cates = b_cates.numpy()
+            for kps, sigmas, cates in zip(b_round_kps, b_sigmas, b_cates):
+                mask = np.all(np.isfinite(kps), axis=-1)[:, 0]
+                kps, sigmas, cates = kps[mask], sigmas[mask], cates[mask]
+                m = 1
+                shape = [int(m), int(h), int(w)]
+                hms = np.zeros(shape=shape, dtype=np.float32)
+                for kp, sigma, cate in zip(kps, sigmas, cates):
+                    if np.isinf(sigma) or np.any(np.isinf(kp)):
+                        continue
+                    for i, i_kp in enumerate(kp):
+                        hms[int(i)] = draw_msra_gaussian(
+                            hms[int(i)], np.asarray(i_kp, dtype=np.float32),
+                            np.asarray(sigma, dtype=np.float32))
+                b_hms.append(hms)
+            b_hms = np.stack(b_hms)
         return np.transpose(b_hms, [0, 2, 3, 1])
 
     def _parse_TFrecord(self, task, infos):

@@ -34,7 +34,7 @@ def img_gen(config_path, img_path_root, save_root):
     print('Restore model')
     predictor = BehaviorPredictor(config)
     print(predictor)
-    img_names = list(filter(lambda x: 'jpg' in x, os.listdir(img_path_root)))
+    img_names = list(filter(lambda x: 'png' in x, os.listdir(img_path_root)))
     img_paths = list(map(lambda x: os.path.join(img_path_root, x), img_names))
     img_path_batchs = [
         img_paths[idx:idx + BATCH_SIZE]
@@ -44,11 +44,14 @@ def img_gen(config_path, img_path_root, save_root):
         img_names[idx:idx + BATCH_SIZE]
         for idx in range(0, len(img_names), BATCH_SIZE)
     ]
+    video_maker = cv2.VideoWriter('demo.avi', cv2.VideoWriter_fourcc(*'DIVX'),
+                                  30, (640, 480))
 
     for i, (img_paths,
             img_names) in enumerate(zip(img_path_batchs, img_name_batchs)):
         imgs, origin_shapes, orig_imgs = [], [], []
         for img_path in img_paths:
+            print(img_path)
             img = cv2.imread(img_path)
             h, w = img.shape[:2]
             origin_shapes.append((h, w))
@@ -61,15 +64,16 @@ def img_gen(config_path, img_path_root, save_root):
             imgs = draw_box2d(orig_imgs, rets, target_dict)
         elif config['predictor']['mode'] == "tdmm":
             imgs = draw_tdmm(orig_imgs, rets)
-        # for img_name, img in zip(img_names, imgs):
-        #     cv2.imwrite("output.jpg", img)
-        #     exit(1)
-        #     name = img_name.split('_')[-1]
-        #     save_path = os.path.join(save_root, 'det_results')
-        #     if not os.path.exists(save_path):
-        #         os.mkdir(save_path)
-        #     print('writing %s' % os.path.join(save_path, img_name))
-        #     cv2.imwrite(os.path.join(save_path, img_name), img)
+        for img_name, img in zip(img_names, imgs):
+            # video_maker.write(img)
+            # cv2.imwrite("output.jpg", img)
+            # exit(1)
+            name = img_name.split('_')[-1]
+            save_path = os.path.join(save_root, 'det_results')
+            if not os.path.exists(save_path):
+                os.mkdir(save_path)
+            print('writing %s' % os.path.join(save_path, img_name))
+            cv2.imwrite(os.path.join(save_path, img_name), img)
 
 
 def parse_config():

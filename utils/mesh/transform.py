@@ -243,7 +243,6 @@ def estimate_affine_matrix_3d22d(X, x):
     '''
     X = X.T
     x = x.T
-
     assert (x.shape[1] == X.shape[1])
     n = x.shape[1]
     assert (n >= 4)
@@ -278,7 +277,7 @@ def estimate_affine_matrix_3d22d(X, x):
     U[0, 0] = U[1, 1] = U[2, 2] = scale
     U[:3, 3] = -mean * scale
     U[3, 3] = 1
-    
+
     # --- 2. equations
     A = np.zeros((n * 2, 8), dtype=np.float32)
     X_homo = np.vstack((X, np.ones((1, n)))).T
