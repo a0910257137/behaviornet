@@ -67,7 +67,9 @@ def tdmm(annos_path, img_root, save_path):
             tmp_kps = []
             keypoints = lb["keypoints"]
             for key in keypoints.keys():
+
                 kp = keypoints[key]
+                print(kp)
                 tmp_kps.append(kp)
             tmp_kps = np.stack(tmp_kps)
             kps = tmp_kps

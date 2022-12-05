@@ -4,10 +4,7 @@ import time
 import numpy as np
 import cv2
 from pprint import pprint
-import copy
 from utils.io import load_BFM
-from utils.mesh.render import render_colors
-from utils.mesh.transform import to_image
 import random
 
 
@@ -159,40 +156,4 @@ class EmbeddingMap(tf.keras.callbacks.Callback):
                                          data=pred_hm,
                                          step=saved_step,
                                          max_outputs=2)
-        writer.flush()
-
-    def _summary_3dmm(self, writer, batch_images, b_coords, gt_params,
-                      pred_params, saved_step):
-        mask = tf.math.reduce_all(tf.math.is_finite(gt_params), axis=-1)
-        b_coords = tf.reshape(b_coords[mask],
-                              (self.batch_size, -1, tf.shape(b_coords)[-1]))
-        gt_params = tf.reshape(gt_params[mask],
-                               (self.batch_size, -1, tf.shape(gt_params)[-1]))
-        idx = 0
-        img = batch_images[0].numpy() * 255
-        coords = tf.cast(b_coords[idx], tf.int32)
-        gt_params = gt_params[idx]
-        pred_params = pred_params[idx]
-        pred_params = tf.gather_nd(pred_params, coords)
-        for gt_param, pred_param in zip(gt_params, pred_params):
-            gt_s, gt_Rt, gt_shp, gt_exp = gt_param[0], gt_param[1:12], gt_param[
-                12:62, tf.newaxis], gt_param[62:, tf.newaxis]
-            gt_Rt = tf.concat([gt_Rt, tf.ones(shape=(1))], axis=-1)
-            gt_Rt = np.reshape(gt_Rt, (3, 4))
-            gt_R = gt_Rt[:, :-1]
-            gt_t = gt_Rt[:, -1]
-            vertices = self.shapeMU + tf.linalg.matmul(
-                self.shapePC, gt_shp) + tf.linalg.matmul(self.expPC, gt_exp)
-            vertices = tf.reshape(vertices, [tf.shape(vertices)[0] // 3, 3])
-            lnmks = gt_s * tf.linalg.matmul(
-                vertices, gt_R, transpose_b=True) + gt_t[tf.newaxis, :]
-            lnmks = lnmks.numpy()[:, :2]
-            lnmks = lnmks.astype(np.int32)
-            for lnmk in lnmks:
-                img = cv2.circle(img, tuple(lnmk), 2, (0, 255, 0), -1)
-        with writer.as_default():
-            tf.summary.image(name='params',
-                             data=np.expand_dims(img, axis=0),
-                             step=saved_step,
-                             max_outputs=2)
         writer.flush()

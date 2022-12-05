@@ -106,11 +106,13 @@ def get_mean_std(tmp_s, tmp_R, tmp_sp, tmp_ep, num_train_files):
     tmp_sp = np.squeeze(np.stack(np.asarray(tmp_sp)), axis=-1)
     tmp_ep = np.squeeze(np.stack(np.asarray(tmp_ep)), axis=-1)
     params = np.concatenate([tmp_s, tmp_R, tmp_sp, tmp_ep], axis=-1)
-    train_mean = np.mean(params[:num_train_files], axis=0)
-    train_std = np.std(params[:num_train_files], axis=0)
-    test_mean = np.mean(params[num_train_files:], axis=0)
-    test_std = np.std(params[num_train_files:], axis=0)
-    return train_mean, train_std, test_mean, test_std
+    mean = np.mean(params, axis=0)
+    std = np.std(params, axis=0)
+    # train_mean = np.mean(params[:num_train_files], axis=0)
+    # train_std = np.std(params[:num_train_files], axis=0)
+    # test_mean = np.mean(params[num_train_files:], axis=0)
+    # test_std = np.std(params[num_train_files:], axis=0)
+    return mean, std
 
 
 def make_dir(path):
@@ -175,11 +177,12 @@ def get_coors(img_root,
     obj_counts = Box({'total_2d': 0, 'total_kps': 0})
     if obj_classes is not None:
         obj_cates = {k: i for i, k in enumerate(obj_classes)}
+
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
     # save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
-    save_root = os.path.join("/home2/user/anders/3D/LS3D-W", 'tf_records')
+    save_root = os.path.join("/home2/user/anders/3D/total", 'tf_records')
     frame_count = 0
     mean_face = None
     bfm = MorphabelModel('/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat')
@@ -194,8 +197,8 @@ def get_coors(img_root,
         frame_kps = []
         img_name = frame['name']
         dataset = frame['dataset']
-        # img_path = os.path.join(img_root, dataset, "imgs", img_name)
-        img_path = os.path.join(img_root, img_name)
+        img_path = os.path.join(img_root, dataset, "imgs", img_name)
+        # img_path = os.path.join(img_root, img_name)
         template_name = "{}.png".format(random.randint(0, 8 - 1))
         img, img_info = is_img_valid(img_path)
         if not img_info or len(frame['labels']) == 0 or img is None:
@@ -272,13 +275,11 @@ def get_coors(img_root,
         writer.close()
         frame_count += 1
 
-    train_mean, train_std, test_mean, test_std = get_mean_std(
-        tmp_s, tmp_R, tmp_sp, tmp_ep, num_train_files)
+    mean, std = get_mean_std(tmp_s, tmp_R, tmp_sp, tmp_ep, num_train_files)
     save_dir = os.path.join(save_root, 'params')
     make_dir(save_dir)
 
-    np.save(os.path.join(save_dir, 'param_mean_std.npy'),
-            np.stack([train_mean, train_std, test_mean, test_std]))
+    np.save(os.path.join(save_dir, 'param_mean_std.npy'), np.stack([mean, std]))
     output = {
         'total_2d': obj_counts.total_2d,
         'total_kps': obj_counts.total_kps,

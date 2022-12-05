@@ -16,6 +16,8 @@ from pathlib import Path
 from pprint import pprint
 from tqdm import tqdm
 from box import Box
+from matplotlib import pyplot as plt
+from render import Renderer
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -443,6 +445,27 @@ class Augmentation:
         self.flame = FLAME(self.config.photometric).to(self.device)
         self.flametex = FLAMETex(self.config.photometric).to(self.device)
 
+        eye = (2.0, 16.0)
+        mouth = (2.0, 16.0)
+        w68 = [(1.0, 1.0)] * 68
+        for i in range(36, 48):
+            w68[i] = eye
+        for i in range(48, 68):
+            w68[i] = mouth
+        self.weights68 = torch.tensor(w68, requires_grad=False).to(self.device)
+
+        w51 = [(1.0, 1.0)] * 51
+        for i in range(36 - 17, 48 - 17):
+            w51[i] = eye
+        for i in range(48 - 17, 68 - 17):
+            w51[i] = mouth
+        self.weights51 = torch.tensor(w51, requires_grad=False).to(self.device)
+
+        # mesh_file = './data/head_template_mesh.obj'
+        self.render = Renderer(self.config.photometric.image_size,
+                               obj_filename=self.config.photometric.mesh_path,
+                               config=self.config).to(self.device)
+
     def __call__(self):
         annos = load_json(self.anno_path)
 
@@ -497,8 +520,10 @@ class Augmentation:
             batch_imgs = torch.cat(batch_imgs, dim=0)
             batch_img_masks = torch.cat(batch_img_masks, dim=0)
             batch_lnmks = torch.cat(batch_lnmks, dim=0)
-            self.run_photometric(batch_imgs, batch_img_masks, batch_lnmks)
-        return
+            single_params = self.run_photometric(batch_imgs, batch_img_masks,
+                                                 batch_lnmks)
+
+        return single_params
 
     def run_seg(self, cropped_imgs):
         seg_imgs = cv2.resize(cropped_imgs, (512, 512))
@@ -591,12 +616,77 @@ class Augmentation:
         shape = shape.expand(bsize, -1)
         return pose, exp, shape, cam
 
+    def tensor_vis_landmarks(self,
+                             images,
+                             landmarks,
+                             gt_landmarks=None,
+                             color='g',
+                             isScale=True):
+
+        def plot_kpts(image, kpts, color='r'):
+            ''' Draw 68 key points
+            Args:
+                image: the input image
+                kpt: (68, 3).
+            '''
+            if color == 'r':
+                c = (255, 0, 0)
+            elif color == 'g':
+                c = (0, 255, 0)
+            elif color == 'b':
+                c = (255, 0, 0)
+            image = image.copy()
+            kpts = kpts.copy().astype(np.int)
+
+            for i in range(kpts.shape[0]):
+                st = kpts[i, :2]
+                if kpts.shape[1] == 4:
+                    if kpts[i, 3] > 0.5:
+                        c = (0, 255, 0)
+                    else:
+                        c = (0, 0, 255)
+                image = cv2.circle(image, (st[0], st[1]), 1, c, 2)
+                if i in end_list:
+                    continue
+                ed = kpts[i + 1, :2]
+                image = cv2.line(image, (st[0], st[1]), (ed[0], ed[1]),
+                                 (255, 255, 255), 1)
+            return image
+
+        end_list = np.array([17, 22, 27, 42, 48, 31, 36, 68],
+                            dtype=np.int32) - 1
+        # visualize landmarks
+        vis_landmarks = []
+        images = images.cpu().numpy()
+        predicted_landmarks = landmarks.detach().cpu().numpy()
+
+        for i in range(images.shape[0]):
+            image = images[i]
+            image = image.transpose(1, 2, 0)[:, :, [2, 1, 0]].copy()
+            image = (image * 255)
+            if isScale:
+                predicted_landmark = predicted_landmarks[i] * image.shape[
+                    0] / 2 + image.shape[0] / 2
+            else:
+                predicted_landmark = predicted_landmarks[i]
+
+            if predicted_landmark.shape[0] == 68:
+                image_landmarks = plot_kpts(image, predicted_landmark, color)
+
+            vis_landmarks.append(image_landmarks)
+
+        vis_landmarks = np.stack(vis_landmarks)
+        vis_landmarks = torch.from_numpy(
+            vis_landmarks[:, :, :, [2, 1, 0]].transpose(
+                0, 3, 1, 2)) / 255.  # , dtype=torch.float32)
+        return vis_landmarks
+
     def run_photometric(self, batch_imgs, batch_img_masks, batch_lnmks):
         b, c, h, w = batch_imgs.shape
-        batch_imgs = F.interpolate(batch_imgs, [224, 224])
+        batch_imgs = F.interpolate(batch_imgs, [224, 224]) / 255
         batch_img_masks = F.interpolate(batch_img_masks, [224, 224])
-        batch_img_masks = batch_img_masks.detach().cpu().numpy()
-        batch_img_masks = np.transpose(batch_img_masks[0], (1, 2, 0))
+        # batch_img_masks = batch_img_masks.detach().cpu().numpy()
+        # batch_img_masks = np.transpose(batch_img_masks[0], (1, 2, 0))
         shape = nn.Parameter(torch.zeros(1, 100).float().to(self.device))
         shape = nn.Parameter(shape)
         tex = nn.Parameter(torch.zeros(b, 50).float().to(self.device))
@@ -618,12 +708,18 @@ class Augmentation:
             [cam],
             lr=self.config.photometric.e_lr,
             weight_decay=self.config.photometric.e_wd)
+        idxs = np.concatenate([
+            list(range(0, 17)),
+            list(range(17, 27)),
+            list(range(36, 48)),
+            list(range(27, 36)),
+            list(range(48, 68))
+        ],
+                              axis=-1)
 
+        batch_lnmks = batch_lnmks[:, idxs, :]
         batch_gt_landmark = batch_lnmks
 
-        # TODO: others rigid
-        print(batch_gt_landmark.shape)
-        xxx
         # rigid fitting of pose and camera with 51 static face landmarks,
         # this is due to the non-differentiable attribute of contour landmarks trajectory
         for k in range(200):
@@ -643,7 +739,7 @@ class Augmentation:
 
             losses['landmark'] = self.weighted_l2_distance(
                 landmarks2d[:, 17:, :2], batch_gt_landmark[:, 17:, :2],
-                self.weights51) * self.config.w_lmks
+                self.weights51) * self.config.photometric.w_lmks
 
             all_loss = 0.
             for key in losses.keys():
@@ -652,8 +748,7 @@ class Augmentation:
             e_opt_rigid.zero_grad()
             all_loss.backward()
             e_opt_rigid.step()
-            self.config.post_param(pose, exp, shape, cam)
-
+            # self.config.photometric.post_param(pose, exp, shape, cam)
             loss_info = '----iter: {}, time: {}\n'.format(
                 k,
                 datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'))
@@ -665,17 +760,17 @@ class Augmentation:
 
             if k % 50 == 0:
                 grids = {}
-                visind = range(bz)  # [0]
+                visind = range(b)  # [0]
                 grids['images'] = torchvision.utils.make_grid(
-                    images[visind]).detach().cpu()
+                    batch_imgs[visind]).detach().cpu()
                 grids['landmarks_gt'] = torchvision.utils.make_grid(
-                    util.tensor_vis_landmarks(images[visind],
-                                              landmarks[visind]))
+                    self.tensor_vis_landmarks(batch_imgs[visind],
+                                              batch_lnmks[visind]))
                 grids['landmarks2d'] = torchvision.utils.make_grid(
-                    util.tensor_vis_landmarks(images[visind],
+                    self.tensor_vis_landmarks(batch_imgs[visind],
                                               landmarks2d[visind]))
                 grids['landmarks3d'] = torchvision.utils.make_grid(
-                    util.tensor_vis_landmarks(images[visind],
+                    self.tensor_vis_landmarks(batch_imgs[visind],
                                               landmarks3d[visind]))
 
                 grid = torch.cat(list(grids.values()), 1)
@@ -683,15 +778,117 @@ class Augmentation:
                               255)[:, :, [2, 1, 0]]
                 grid_image = np.minimum(np.maximum(grid_image, 0),
                                         255).astype(np.uint8)
-                print(savefolder)
-                cv2.imwrite('{}/{}.jpg'.format(savefolder, k), grid_image)
 
-        return
+                cv2.imwrite('{}/{}.jpg'.format("./test_results", k), grid_image)
+
+        # non-rigid fitting of all the parameters with 68 face landmarks, photometric loss and regularization terms.
+        for k in range(200, 1000):
+            losses = {}
+            p, e, s, c = self.prep_param(pose, exp, shape, cam)
+            vertices, landmarks2d, landmarks3d = self.flame(shape_params=s,
+                                                            expression_params=e,
+                                                            pose_params=p,
+                                                            cam_params=c)
+            trans_vertices = self.batch_orth_proj(vertices, cam)
+            trans_vertices[..., 1:] = -trans_vertices[..., 1:]
+            landmarks2d = self.batch_orth_proj(landmarks2d, cam)
+            landmarks2d[..., 1:] = -landmarks2d[..., 1:]
+            landmarks3d = self.batch_orth_proj(landmarks3d, cam)
+            landmarks3d[..., 1:] = -landmarks3d[..., 1:]
+
+            losses['landmark'] = self.weighted_l2_distance(
+                landmarks2d[:, :, :2], batch_gt_landmark[:, :, :2],
+                self.weights68) * self.config.photometric.w_lmks
+            losses['shape_reg'] = (torch.sum(
+                shape**2) / 2) * self.config.photometric.w_shape_reg  # *1e-4
+            losses['expression_reg'] = (torch.sum(
+                exp**2) / 2) * self.config.photometric.w_expr_reg  # *1e-4
+            losses['pose_reg'] = (torch.sum(pose**2) /
+                                  2) * self.config.photometric.w_pose_reg
+
+            ## render
+            albedos = self.flametex(tex) / 255.
+            ops = self.render(vertices, trans_vertices, albedos, lights)
+            predicted_images = ops['images']
+
+            losses['photometric_texture'] = (
+                batch_img_masks * (ops['images'] - batch_imgs).abs()
+            ).mean() * self.config.photometric.w_pho
+
+            all_loss = 0.
+            for key in losses.keys():
+                all_loss = all_loss + losses[key]
+            losses['all_loss'] = all_loss
+            e_opt.zero_grad()
+            all_loss.backward()
+            e_opt.step()
+            # self.config.post_param(pose, exp, shape, cam)
+
+            loss_info = '----iter: {}, time: {}\n'.format(
+                k,
+                datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S'))
+            for key in losses.keys():
+                loss_info = loss_info + '{}: {}, '.format(
+                    key, float(losses[key]))
+
+            if k % 10 == 0:
+                print(loss_info)
+
+            # visualize
+            if k % 50 == 0:
+                grids = {}
+                visind = range(b)  # [0]
+                grids['images'] = torchvision.utils.make_grid(
+                    batch_imgs[visind]).detach().cpu()
+                grids['landmarks_gt'] = torchvision.utils.make_grid(
+                    self.tensor_vis_landmarks(batch_imgs[visind],
+                                              batch_lnmks[visind]))
+                grids['landmarks2d'] = torchvision.utils.make_grid(
+                    self.tensor_vis_landmarks(batch_imgs[visind],
+                                              landmarks2d[visind]))
+                grids['landmarks3d'] = torchvision.utils.make_grid(
+                    self.tensor_vis_landmarks(batch_imgs[visind],
+                                              landmarks3d[visind]))
+                grids['albedoimage'] = torchvision.utils.make_grid(
+                    (ops['albedo_images'])[visind].detach().cpu())
+                grids['render'] = torchvision.utils.make_grid(
+                    predicted_images[visind].detach().float().cpu())
+
+                shape_images = self.render.render_shape(vertices,
+                                                        trans_vertices,
+                                                        batch_imgs)
+
+                grids['shape'] = torchvision.utils.make_grid(
+                    F.interpolate(shape_images[visind],
+                                  [224, 224])).detach().float().cpu()
+                grids['tex'] = torchvision.utils.make_grid(
+                    F.interpolate(albedos[visind], [224, 224])).detach().cpu()
+                grid = torch.cat(list(grids.values()), 1)
+                grid_image = (grid.numpy().transpose(1, 2, 0).copy() *
+                              255)[:, :, [2, 1, 0]]
+                grid_image = np.minimum(np.maximum(grid_image, 0),
+                                        255).astype(np.uint8)
+
+                cv2.imwrite('{}/{}.jpg'.format("./test_results", k), grid_image)
+
+        single_params = {
+            'shape': shape.detach().cpu().numpy(),
+            'exp': exp.detach().cpu().numpy(),
+            'pose': pose.detach().cpu().numpy(),
+            'cam': cam.detach().cpu().numpy(),
+            'verts': trans_vertices.detach().cpu().numpy(),
+            'verts0': vertices.detach().cpu().numpy(),
+            'albedos': albedos.detach().cpu().numpy(),
+            'tex': tex.detach().cpu().numpy(),
+            'lit': lights.detach().cpu().numpy()
+        }
+        return single_params
 
 
 def parse_config():
     parser = argparse.ArgumentParser('Argparser for model image generate')
     parser.add_argument('--config', type=str)
+    parser.add_argument('--is_cuda', type=bool)
     return parser.parse_args()
 
 
@@ -700,4 +897,4 @@ if __name__ == "__main__":
     print('Result imgs generating')
     print(f"Use following config to produce tensorflow graph: {args.config}.")
     config = Box(load_json(args.config))
-    aug = Augmentation(config)()
+    aug = Augmentation(config, args.is_cuda)()

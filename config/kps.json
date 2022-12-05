@@ -1,7 +1,7 @@
 {
     "predictor": {
-        "visible_gpu": "0",
-        "pb_path": "/home2/user/anders/3D/archive_model/vanilla_meta_joint/",
+        "visible_gpu": "-1",
+        "pb_path": "/home2/user/anders/3D/archive_model/data/",
         "weight_root":"/aidata/anders/objects/landmarks/AFLW/archive_model/add_dataset/concat", 
         "top_k_n": 15,
         "nms_iou_thres": 0.5,
@@ -23,7 +23,7 @@
     },
     "tdmm":{
         "model_path":"/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
-        "pms_path":"/home2/user/anders/3D/exp/tf_records/params/param_mean_std.npy",
+        "pms_path":"/home2/user/anders/3D/total/tf_records/params/param_mean_std.npy",
         "n_s":1,
         "n_R":9,
         "n_shp":50,

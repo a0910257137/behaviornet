@@ -26,8 +26,8 @@
             "read_img": true,
             "num_lnmks": 70,
             "category_path": "./config/face.txt",
-            "train_folder": "/home2/user/anders/3D/LS3D-W/tf_records/train",
-            "test_folder": "/home2/user/anders/3D/LS3D-W/tf_records/test"
+            "train_folder": "/home2/user/anders/3D/total/tf_records/train",
+            "test_folder": "/home2/user/anders/3D/total/tf_records/test"
         }],
         "augments": {
             "color_chains": [
@@ -52,7 +52,7 @@
         },
         "3dmm":{
             "model_path":"/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
-            "pms_path":"/home2/user/anders/3D/LS3D-W/tf_records/params/param_mean_std.npy",
+            "pms_path":"/home2/user/anders/3D/total/tf_records/params/param_mean_std.npy",
             "n_s":1,
             "n_R":9,
             "n_shp":50,

@@ -69,9 +69,9 @@ class Network(tf.keras.Model):
         training = False
         imgs, labels = data
         labels['Z_params'] = (labels['params'] -
-                              self.test_mean_std[0][None, None, :]
-                              ) / self.test_mean_std[1][None, None, :]
-        labels['mean_std'] = self.test_mean_std
+                              self.train_mean_std[0][None, None, :]
+                              ) / self.train_mean_std[1][None, None, :]
+        labels['mean_std'] = self.train_mean_std
         preds = self.model(imgs, training=training)
         loss = self._loss(preds, labels, self.config.batch_size, training)
         return loss

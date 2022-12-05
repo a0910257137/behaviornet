@@ -211,7 +211,8 @@ def to_image(vertices, coors, h):
     '''
     image_vertices = vertices.copy()
     image_vertices[:, 0] = image_vertices[:, 0].astype(np.float32) + coors[0]
-    image_vertices[:, 1] = image_vertices[:, 1].astype(np.float32) + coors[1]
+    image_vertices[:,
+                   1] = h - (image_vertices[:, 1].astype(np.float32) + coors[1])
     return image_vertices
 
 
