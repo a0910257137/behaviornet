@@ -13,6 +13,7 @@ import io
 import PIL.ExifTags
 import PIL.Image
 import PIL.ImageOps
+import copy
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.io import dump_json, load_text, load_json
@@ -149,6 +150,7 @@ def img_gen(config_path, img_root):
         img_path = os.path.join(img_root, img_name)
         box2d_lbs = box2d_annos[img_name]
         img = cv2.imread(img_path)
+
         img = np.asarray(img)[..., ::-1]
         encData = encodeImageForJson(img)
 

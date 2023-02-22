@@ -9,11 +9,9 @@ class CenterHeadLoss(LossBase):
 
     def __init__(self, config):
         self.config = config
-
         self.loss_cfg = self.config.loss
         self.meta_joint = self.loss_cfg.meta_joint
         # self.is_wpdc = self.loss_cfg["wpdc"]
-
         self.head_cfg = self.config.head
         self.max_obj_num = self.config.max_obj_num
         self.keys = ["obj_heat_map", "param"]
@@ -36,9 +34,6 @@ class CenterHeadLoss(LossBase):
                                  axis=-1)
 
     def build_loss(self, logits, targets, batch, training):
-
-        def fn_loss(x):
-            return x
 
         with tf.name_scope("losses_collections"):
             losses = {k: None for k in self.keys}
@@ -103,8 +98,6 @@ class CenterHeadLoss(LossBase):
 
     def resample(self, batch_size, max_obj_num, shapeMU, shapePC, expPC,
                  gt_params, kpt_ind):
-        # resmpale different vertices for 68 landmarks and 132 random samples
-        # NOTE: randomly sampling method
         index = tf.random.shuffle(tf.range(start=0, limit=53215,
                                            dtype=tf.int32))[:396]
         keypoints_resample = tf.stack([3 * index, 3 * index + 1, 3 * index + 2])

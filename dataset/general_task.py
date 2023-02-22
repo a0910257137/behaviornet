@@ -25,7 +25,8 @@ class GeneralTasks:
             "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
             "origin_width": tf.io.FixedLenFeature([], dtype=tf.int64),
             "b_images": tf.io.FixedLenFeature([], dtype=tf.string),
-            "b_coords": tf.io.FixedLenFeature([], dtype=tf.string)
+            "b_coords": tf.io.FixedLenFeature([], dtype=tf.string),
+            "is_masks": tf.io.FixedLenFeature([], dtype=tf.string)
         }
         self._multi_aug_funcs = Augmentation(self.config, self.batch_size,
                                              self.img_resize_size)
@@ -37,7 +38,8 @@ class GeneralTasks:
         for task_infos, infos in zip(self.task_configs, task_infos):
             self.num_lnmks = task_infos.num_lnmks
             task, m_cates = task_infos['preprocess'], len(task_infos['cates'])
-            b_coords, b_imgs, b_origin_sizes = self._parse_TFrecord(task, infos)
+            b_coords, b_face_masks, b_imgs, b_origin_sizes = self._parse_TFrecord(
+                task, infos)
 
             b_imgs, b_coords = self._multi_aug_funcs(b_imgs, b_coords,
                                                      self.num_lnmks, task)
@@ -83,15 +85,13 @@ class GeneralTasks:
                 b_lnmks = tf.where(tf.math.is_nan(b_lnmks), np.inf, b_lnmks)
                 targets['b_lnmks'] = b_lnmks
                 params = self.MorphabelModel.fit_points(b_lnmks, b_origin_sizes)
-                targets['obj_heat_map'] = tf.py_function(self._draw_kps,
-                                                         inp=[
-                                                             b_keypoints,
-                                                             b_obj_sizes,
-                                                             self.map_height,
-                                                             self.map_width,
-                                                             m_cates, b_cates
-                                                         ],
-                                                         Tout=tf.float32)
+                targets['obj_heat_map'] = tf.py_function(
+                    self._draw_kps,
+                    inp=[
+                        b_keypoints, b_face_masks, b_obj_sizes, self.map_height,
+                        self.map_width, m_cates, b_cates
+                    ],
+                    Tout=tf.float32)
                 targets['b_origin_sizes'] = b_origin_sizes
                 targets['params'] = tf.cast(params, tf.float32)
 
@@ -165,27 +165,38 @@ class GeneralTasks:
                                                    tf.ones(shape=valid_counts))
         return one_hot_code
 
-    def _draw_kps(self, b_round_kps, b_obj_sizes, h, w, m, b_cates):
+    def _draw_kps(self, b_round_kps, b_face_masks, b_obj_sizes, h, w, m,
+                  b_cates):
 
         b_sigmas = gaussian_radius(b_obj_sizes)
         b_hms = []
         with tf.device('CPU'):
             b_round_kps = b_round_kps.numpy()
+            b_face_masks = b_face_masks.numpy()
+
             b_sigmas = b_sigmas.numpy()
             b_cates = b_cates.numpy()
-            for kps, sigmas, cates in zip(b_round_kps, b_sigmas, b_cates):
+            m = 2
+            for kps, face_masks, sigmas, cates in zip(b_round_kps, b_face_masks,
+                                                      b_sigmas, b_cates):
                 mask = np.all(np.isfinite(kps), axis=-1)[:, 0]
                 kps, sigmas, cates = kps[mask], sigmas[mask], cates[mask]
-                m = 1
+                face_masks = face_masks[mask]
                 shape = [int(m), int(h), int(w)]
                 hms = np.zeros(shape=shape, dtype=np.float32)
-                for kp, sigma, cate in zip(kps, sigmas, cates):
+                for kp, face_mask, sigma, cate in zip(kps, face_masks, sigmas,
+                                                      cates):
                     if np.isinf(sigma) or np.any(np.isinf(kp)):
                         continue
-                    for i, i_kp in enumerate(kp):
+                    i = int(face_mask)
+                    for i_kp in kp:
                         hms[int(i)] = draw_msra_gaussian(
                             hms[int(i)], np.asarray(i_kp, dtype=np.float32),
                             np.asarray(sigma, dtype=np.float32))
+                    # for i, i_kp in enumerate(kp):
+                    #     hms[int(i)] = draw_msra_gaussian(
+                    #         hms[int(i)], np.asarray(i_kp, dtype=np.float32),
+                    #         np.asarray(sigma, dtype=np.float32))
                 b_hms.append(hms)
             b_hms = np.stack(b_hms)
         return np.transpose(b_hms, [0, 2, 3, 1])
@@ -199,9 +210,12 @@ class GeneralTasks:
         b_images = tf.reshape(
             b_images, [-1, self.map_height, self.map_width, self.img_channel])
         b_coords = tf.io.decode_raw(parse_vals['b_coords'], tf.float32)
+
         b_coords = tf.reshape(b_coords, anno_shape)
+        b_face_masks = tf.io.decode_raw(parse_vals['is_masks'], tf.float32)
+        b_face_masks = tf.reshape(b_face_masks, [-1, self.max_obj_num])
         origin_height = tf.reshape(parse_vals['origin_height'], (-1, 1))
         origin_width = tf.reshape(parse_vals['origin_width'], (-1, 1))
         b_origin_sizes = tf.concat([origin_height, origin_width], axis=-1)
         b_origin_sizes = tf.cast(b_origin_sizes, tf.int32)
-        return b_coords, b_images, b_origin_sizes
+        return b_coords, b_face_masks, b_images, b_origin_sizes

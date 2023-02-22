@@ -6,6 +6,7 @@ class UncertaintyLoss(tf.keras.layers.Layer):
     The adaptive loss
     Multi-Task Learning Using Uncertainty to Weigh Losses for Scene Geometry and Semantics
     '''
+
     def __init__(self, loss_keys, **kwargs):
         self.is_placeholder = True
         self.loss_keys = loss_keys
@@ -40,6 +41,7 @@ class CoVWeightingLoss(tf.keras.layers.Layer):
     MULTI-LOSS WEIGHTING WITH COEFFICIENT OF VARIATIONS
     https://arxiv.org/abs/2009.01717
     '''
+
     def __init__(self, loss_keys, mean_decay_param=None):
         self.is_placeholder = True
         # use mean decay for more robust from paper section 2.1
@@ -49,7 +51,7 @@ class CoVWeightingLoss(tf.keras.layers.Layer):
         self.num_losses = len(self.loss_keys)
         self.current_iter = -1
         self.running_std_l = None
-        super(CoVWeightingLoss, self).__init__(**kwargs)
+        super(CoVWeightingLoss, self).__init__()
 
     def build(self, input_shape=None):
         # Initialize all running statistics at 0.
@@ -76,7 +78,7 @@ class CoVWeightingLoss(tf.keras.layers.Layer):
             shape=(self.num_losses, ),
             initializer=tf.keras.initializers.Constant(0.),
             trainable=False)
-        self.alphas = torch.zeros(
+        self.alphas = tf.zeros(
             (self.num_losses, ),
             requires_grad=False).type(torch.FloatTensor).to(self.device)
 

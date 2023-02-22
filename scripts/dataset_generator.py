@@ -101,17 +101,12 @@ def get_mean_std(tmp_s, tmp_R, tmp_sp, tmp_ep, num_train_files):
     tmp_R = np.asarray(tmp_R)
     N = tmp_R.shape[0]
     tmp_s = np.expand_dims(np.stack(np.asarray(tmp_s)), axis=-1)
-
     tmp_R = np.stack(np.asarray(tmp_R)).reshape([N, -1])
     tmp_sp = np.squeeze(np.stack(np.asarray(tmp_sp)), axis=-1)
     tmp_ep = np.squeeze(np.stack(np.asarray(tmp_ep)), axis=-1)
     params = np.concatenate([tmp_s, tmp_R, tmp_sp, tmp_ep], axis=-1)
     mean = np.mean(params, axis=0)
     std = np.std(params, axis=0)
-    # train_mean = np.mean(params[:num_train_files], axis=0)
-    # train_std = np.std(params[:num_train_files], axis=0)
-    # test_mean = np.mean(params[num_train_files:], axis=0)
-    # test_std = np.std(params[num_train_files:], axis=0)
     return mean, std
 
 
@@ -141,11 +136,26 @@ def complement(annos, max_num):
     return annos
 
 
+def complement_masks(annos, max_num):
+    annos = np.asarray([x for x in annos if x.size != 0])
+    if len(annos) < max_num:
+        complement = max_num - len(annos)
+        complement = np.empty([complement])
+        complement.fill(np.inf)
+        complement = complement.astype(np.float32)
+        if len(annos) == 0:
+            annos = complement
+        else:
+            annos = np.concatenate([annos, complement])
+    else:
+        annos = annos[:max_num, ...]
+    return annos
+
+
 def get_coors(img_root,
               img_size,
               anno_path,
               min_num,
-              is_mask=False,
               max_obj=None,
               obj_classes=None,
               train_ratio=0.8,
@@ -181,36 +191,30 @@ def get_coors(img_root,
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
-    # save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
-    save_root = os.path.join("/home2/user/anders/3D/total", 'tf_records')
+    save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
+    # save_root = os.path.join("/home2/user/anders/3D/total", 'tf_records')
     frame_count = 0
-    mean_face = None
-    bfm = MorphabelModel('/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat')
-    if is_mask:
-        face_masker = FaceMasker(
-            is_aug=False,
-            data_root="/aidata/anders/objects/3D-head/PRNet/Data",
-            model_root="/aidata/anders/objects/3D-head/PRNet/model")
+    bfm = MorphabelModel('/home3/user/anders/objects/3D-head/3DDFA/BFM/BFM.mat')
     tmp_s, tmp_R, tmp_sp, tmp_ep, = [], [], [], []
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
-        frame_kps = []
+        is_masks, frame_kps = [], []
         img_name = frame['name']
         dataset = frame['dataset']
-        img_path = os.path.join(img_root, dataset, "imgs", img_name)
-        # img_path = os.path.join(img_root, img_name)
-        template_name = "{}.png".format(random.randint(0, 8 - 1))
+        # img_path = os.path.join(img_root, dataset, "imgs", img_name)
+        img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
         if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
         for obj in frame['labels']:
             if obj_classes is not None and task == 'obj_det':
+                attributes = obj['attributes']
+                is_masks.append(attributes['mask'])
                 obj_kp = build_2d_obj(obj, obj_cates, img_info)
                 obj_lnmks, flag_68_case = build_keypoints(
                     obj, obj_cates, img_info)
-                if frame_count == 0 and mean_face is None:
-                    mean_face = obj_lnmks[:, :2]
+
                 obj_kps = obj_lnmks[:, :2]
                 resized = np.array([192., 320.]) / np.array(
                     [img_info['height'], img_info['width']])
@@ -234,22 +238,22 @@ def get_coors(img_root,
             # fill in keypoints
             frame_kps = complement(np.asarray(frame_kps, dtype=np.float32),
                                    max_obj)
+            is_masks = complement_masks(np.asarray(is_masks, dtype=np.float32),
+                                        max_obj)
+
         imgT = img[..., ::-1]
-        if random.random() < 0.35 and is_mask:
-            imgT = face_masker.add_mask_one(imgT, frame_kps[:,
-                                                            2:, :2][..., ::-1],
-                                            template_name)
         imgT = np.asarray(imgT).astype(np.uint8)
         imgT = cv2.resize(imgT, img_size, interpolation=cv2.INTER_NEAREST)
         resized_shape = np.array(img_size) / np.array(
             [img_info['width'], img_info['height']])
         obj_kps, cates = frame_kps[..., :2], frame_kps[..., -1:]
+
         mask = obj_kps == -1
         obj_kps = np.einsum('n c d, d -> n c d', obj_kps, resized_shape[::-1])
         obj_kps[mask] = -1
-        frame_kps = np.concatenate([obj_kps, cates], axis=-1)
-        frame_kps = frame_kps.astype(np.float32)
+        frame_kps = np.concatenate([obj_kps, cates], axis=-1).astype(np.float32)
         frame_kps = frame_kps.tostring()
+        is_masks = is_masks.tostring()
         imgT = imgT.tostring()
         if img_path.split('/')[-1].split('.')[-1] == 'png':
             filename = img_path.split('/')[-1].replace('png', 'tfrecords')
@@ -260,7 +264,8 @@ def get_coors(img_root,
                 'origin_height': _int64_feature(img_info['height']),
                 'origin_width': _int64_feature(img_info['width']),
                 'b_images': _bytes_feature(imgT),
-                'b_coords': _bytes_feature(frame_kps)
+                'b_coords': _bytes_feature(frame_kps),
+                'is_masks': _bytes_feature(is_masks)
             }))
         if num_train_files > 0:
             save_dir = os.path.join(save_root, 'train')
@@ -299,7 +304,6 @@ def parse_config():
     parser.add_argument('--anno_file_names', default=None, nargs='+')
     parser.add_argument('--img_root', type=str)
     parser.add_argument('--obj_cate_file', type=str)
-    parser.add_argument('--is_mask', action='store_true')
     parser.add_argument('--img_size', default=(320, 192), type=tuple)
     parser.add_argument('--max_obj', default=15, type=int)
     parser.add_argument('--min_num', default=1, type=int)
@@ -339,7 +343,6 @@ if __name__ == '__main__':
                            args.img_size,
                            anno_path,
                            args.min_num,
-                           is_mask=args.is_mask,
                            max_obj=args.max_obj,
                            obj_classes=obj_cates,
                            train_ratio=args.train_ratio,

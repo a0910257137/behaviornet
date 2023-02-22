@@ -1,0 +1,17 @@
+{
+    "anno_path":"/aidata/anders/objects/relabels/FFHQ_yaw.json",
+    "img_root":"/aidata/anders/objects/relabels/FFHQ/yaw",
+    "save_root":"/home3/user/anders/objects/3D-head/exp/aug_imgs2",
+    "BFM":{
+        "BFM_PATH":"/home3/user/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
+        "BFM_UV_PATH":"/home3/user/anders/objects/3D-head/3DDFA/BFM/BFM_UV.mat"
+    },
+    "MASK":
+    {
+        "data_root":"/home3/user/anders/objects/3D-head/PRNet/Data",
+        "uv_face_path": "/home3/user/anders/objects/3D-head/PRNet/Data/uv-data/uv_face_mask.png",
+        "mask_template_folder":"/home3/user/anders/objects/3D-head/PRNet/Data/mask-data"
+    },
+    "uv_size": [256, 256],
+    "img_size":[256, 256]
+}

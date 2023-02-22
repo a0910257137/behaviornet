@@ -1,8 +1,8 @@
 {
     "predictor": {
-        "visible_gpu": "-1",
-        "pb_path": "/home2/user/anders/3D/archive_model/data/",
-        "weight_root":"/aidata/anders/objects/landmarks/AFLW/archive_model/add_dataset/concat", 
+        "visible_gpu": "0",
+        "pb_path": "/home2/user/anders/3D/archive_model/mask",
+        "weight_root":"/home3/user/anders/objects/landmarks/AFLW/archive_model/add_dataset/concat", 
         "top_k_n": 15,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,
@@ -22,8 +22,8 @@
         "cat_path": "./config/face.txt"
     },
     "tdmm":{
-        "model_path":"/aidata/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
-        "pms_path":"/home2/user/anders/3D/total/tf_records/params/param_mean_std.npy",
+        "model_path":"/home3/user/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
+        "pms_path":"/home2/user/anders/3D/exp/tf_records/params/param_mean_std.npy",
         "n_s":1,
         "n_R":9,
         "n_shp":50,
@@ -31,7 +31,7 @@
         "is_render":true
     },
     "metric":{
-        "metric_type":"LandMarks",
+        "metric_type":"IoU",
         "conditions": 
             {
                 "transformer_method":"LandMarks",

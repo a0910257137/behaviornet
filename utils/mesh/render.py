@@ -77,9 +77,9 @@ def render_colors(vertices, triangles, colors, h, w, c=3, BG=None):
     depth_buffer = np.zeros([h, w], dtype=np.float32, order='C') - 999999.
 
     # change orders. --> C-contiguous order(column major)
-    vertices = vertices.astype(np.float32).copy()
-    triangles = triangles.astype(np.int32).copy()
-    colors = colors.astype(np.float32).copy()
+    vertices = vertices.astype(np.float32)
+    triangles = triangles.astype(np.int32)
+    colors = colors.astype(np.float32)
     ###
     st = time()
     mesh_core_cython.render_colors_core(image, vertices, triangles, colors,

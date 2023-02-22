@@ -19,6 +19,7 @@ def channel_shuffle(x, groups):
 
 
 class ShuffleV2Block(tf.keras.layers.Layer):
+
     def __init__(self, inp, oup, stride, *args, **kwargs):
         super(ShuffleV2Block, self).__init__(*args, **kwargs)
 
@@ -105,6 +106,7 @@ def get_downsampling(down_method):
 
 
 class Stem(tf.keras.layers.Layer):
+
     def __init__(self, out_chs, *args, **kwargs):
         super(Stem, self).__init__(*args, **kwargs)
         self.out_chs = out_chs
@@ -158,6 +160,7 @@ class Stem(tf.keras.layers.Layer):
 
 
 class ShuffleNetV2(tf.keras.Model):
+
     def __init__(self, arch, kernel_initializer, *args, **kwargs):
         super(ShuffleNetV2, self).__init__(*args, **kwargs)
 
@@ -245,8 +248,7 @@ class ShuffleNetV2(tf.keras.Model):
                         mean=0, stddev=.1),
                     use_bias=False))
             self.last_module.add(tf.keras.layers.BatchNormalization())
-            self.last_module.add(
-                tf.keras.layers.Activation(activation="swish"))
+            self.last_module.add(tf.keras.layers.Activation(activation="swish"))
 
         self.skip_layers = [
             "stage_0",

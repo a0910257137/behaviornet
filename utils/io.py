@@ -90,3 +90,15 @@ def load_BFM(model_path):
     model['kpt_ind'] = (np.squeeze(model['kpt_ind']) - 1).astype(np.int32)
 
     return model
+
+
+def load_uv_coords(path='BFM_UV.mat'):
+    ''' load uv coords of BFM
+    Args:
+        path: path to data.
+    Returns:  
+        uv_coords: [nver, 2]. range: 0-1
+    '''
+    C = sio.loadmat(path)
+    uv_coords = C['UV'].copy(order='C')
+    return uv_coords

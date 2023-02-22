@@ -5,6 +5,7 @@ from .conv_module import ConvBlock
 
 class SE(tf.keras.layers.Layer):
     """Squeeze-and-excitation layer."""
+
     def __init__(self, se_filters, output_filters, name=None):
         super().__init__(name=name)
 
@@ -51,6 +52,7 @@ class MBConvBlock(tf.keras.layers.Layer):
   Attributes:
     endpoints: dict. A list of internal tensors.
   """
+
     def __init__(self,
                  input_filter,
                  output_filter,
@@ -111,8 +113,7 @@ class MBConvBlock(tf.keras.layers.Layer):
 
         #TODO: for debug
         if self._has_se:
-            num_reduced_filters = max(1,
-                                      int(self.input_filter * self.se_ratio))
+            num_reduced_filters = max(1, int(self.input_filter * self.se_ratio))
             self._se = SE(num_reduced_filters, filters, name='se')
 
         else:
@@ -172,8 +173,7 @@ class MBConvBlock(tf.keras.layers.Layer):
             x = self._expand_conv(x)
         x = self._depthwise_conv(x)
         if self.conv_dropout and self.expand_ratio > 1:
-            x = tf.keras.layers.Dropout(self.conv_dropout)(x,
-                                                           training=training)
+            x = tf.keras.layers.Dropout(self.conv_dropout)(x, training=training)
         if self._se:
             x = self._se(x)
         self.endpoints = {'expansion_output': x}
@@ -184,6 +184,7 @@ class MBConvBlock(tf.keras.layers.Layer):
 
 class FusedMBConvBlock(MBConvBlock):
     """Fusing the proj conv1x1 and depthwise_conv into a conv2d."""
+
     def _build(self):
         """Builds block according to the arguments."""
         # pylint: disable=g-long-lambda
@@ -255,8 +256,7 @@ class FusedMBConvBlock(MBConvBlock):
         self.endpoints = {'expansion_output': x}
 
         if self._mconfig.conv_dropout and self._block_args.expand_ratio > 1:
-            x = tf.keras.layers.Dropout(self._mconfig.conv_dropout)(x,
-                                                                    training)
+            x = tf.keras.layers.Dropout(self._mconfig.conv_dropout)(x, training)
 
         if self._se:
             x = self._se(x)
@@ -271,6 +271,7 @@ class FusedMBConvBlock(MBConvBlock):
 
 
 class ASPP(tf.keras.layers.Layer):
+
     def __init__(self, out_dims, **kwargs):
         super().__init__(**kwargs)
         conv_mode = 'sp_conv2d'

@@ -1,2 +1,4 @@
 from .fpn import FPN
-NECK_FACTORY = dict(fpn=FPN)
+from .pafpn import PAFPN
+
+NECK_FACTORY = dict(fpn=FPN, pafpn=PAFPN)

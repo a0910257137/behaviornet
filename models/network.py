@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import os
 from pprint import pprint
 from keras_flops import get_flops
 
@@ -12,25 +11,16 @@ class Network(tf.keras.Model):
         self.model = model
         self.config = config
         self._model_keys = _model_keys
-
-        num_test = len(os.listdir(self.config.tasks[0]["test_folder"]))
-        self.test_steps = num_test // self.config.batch_size
-
-        self.config["num_test"] = num_test
-
         pms = np.load(self.config['3dmm']['pms_path'])
         n_s, n_R, n_shp, n_exp = self.config['3dmm']["n_s"], self.config[
             '3dmm']["n_R"], self.config['3dmm']["n_shp"], self.config['3dmm'][
                 "n_exp"]
-
         s = pms[:, :n_s]
         Rt = pms[:, n_s:n_s + n_R]
-
         shp, exp = pms[:, n_s + n_R:n_s + n_R +
                        n_shp], pms[:, 199 + n_s + n_R:199 + n_s + n_R + n_exp]
         pms = np.concatenate([s, Rt, shp, exp], axis=-1)
         self.train_mean_std = tf.cast(pms[:2, ], tf.float32)
-        self.test_mean_std = tf.cast(pms[2:, ], tf.float32)
 
     def compile(self, optimizer, loss, run_eagerly=None):
         super(Network, self).compile(optimizer=optimizer,

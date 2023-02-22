@@ -82,15 +82,61 @@ def draw_tdmm(b_orig_imgs, b_rets):
         mask = np.all(np.isfinite(n_poses), axis=-1)
         n_poses = np.reshape(n_poses[mask], (-1, 3))
         for (bbox, lnmks, pose) in zip(n_bboxes, n_lnmks, n_poses):
-            tl, br, scores = bbox[:2][::-1], bbox[2:4][::-1], bbox[-2]
+            tl, br, scores, cate = bbox[:2][::-1], bbox[2:4][::-1], bbox[
+                -2], bbox[-1]
+            up_center = (int((tl[0] + br[0]) / 2 - 30), int(tl[1] - 15))
             tl, br = tuple(tl.astype(np.int32)), tuple(br.astype(np.int32))
             img = cv2.rectangle(img, tl, br, (0, 255, 255), 2)
-            lnmks = lnmks[:, ::-1]
-            for j, kp in enumerate(lnmks):
-                kp = kp.astype(np.int32)
-                if j < 17:
-                    img = cv2.circle(img, tuple(kp), 2, (255, 0, 255), -1)
-                else:
-                    img = cv2.circle(img, tuple(kp), 2, (0, 255, 255), -1)
+            lnmks = lnmks[:, ::-1].astype(np.int32)
+            for l in range(lnmks.shape[0]):
+                if 17 <= l < 27:
+                    lnmks[l][1] -= 15
+                elif 27 <= l < 39:
+                    lnmks[l][1] -= 15
+
+            for l, kp in enumerate(lnmks):
+
+                if 0 <= l < 17:
+                    color = [205, 133, 63]
+                elif 17 <= l < 27:
+                    # eyebrows
+                    color = [205, 186, 150]
+                elif 27 <= l < 39:
+                    # eyes
+                    color = [238, 130, 98]
+                elif 39 <= l < 48:
+                    # nose
+                    color = [205, 96, 144]
+                elif 48 <= l < 68:
+                    color = [0, 191, 255]
+
+                cv2.circle(img, (lnmks[l][0], lnmks[l][1]), 3, color, -1)
+                cv2.circle(img, (lnmks[l][0], lnmks[l][1]), 2, (255, 255, 255),
+                           -1)
+
+                line_width = 1
+                if l not in [16, 21, 26, 32, 38, 42, 47, 59, 67]:
+                    start_point = (lnmks[l][0], lnmks[l][1])
+                    end_point = (lnmks[l + 1][0], lnmks[l + 1][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                elif l == 32:
+                    start_point = (lnmks[l][0], lnmks[l][1])
+                    end_point = (lnmks[27][0], lnmks[27][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                elif l == 38:
+                    start_point = (lnmks[l][0], lnmks[l][1])
+                    end_point = (lnmks[33][0], lnmks[33][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                elif l == 59:
+                    start_point = (lnmks[l][0], lnmks[l][1])
+                    end_point = (lnmks[48][0], lnmks[48][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                elif l == 67:
+                    start_point = (lnmks[l][0], lnmks[l][1])
+                    end_point = (lnmks[60][0], lnmks[60][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+            text = 'mask' if cate == 1 else 'not mask'
+            img = cv2.putText(img, text, up_center, cv2.FONT_HERSHEY_SIMPLEX, 1,
+                              (0, 0, 225), 2, cv2.LINE_AA)
         outputs_imgs.append(img)
     return outputs_imgs

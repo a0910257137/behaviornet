@@ -8,6 +8,7 @@ norm_method = 'bn'
 
 
 class FPN(tf.keras.Model):
+
     def __init__(self, config, **kwargs):
         super(FPN, self).__init__(**kwargs)
         self.config = config

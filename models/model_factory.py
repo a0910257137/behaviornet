@@ -5,7 +5,9 @@ from .loss import LOSS_FACTORY
 import tensorflow as tf
 from .network import Network
 from .backbone.hardnet import *
-from .utils.ops import Lookahead
+from .backbone.mobilenet import *
+
+from .loss.core.anchor_generator import AnchorGenerator
 from pprint import pprint
 
 
@@ -15,19 +17,30 @@ class ModelFactory:
         self.config = config
         self._model_keys = ['backbone', 'neck', 'head']
         self.img_channel = 3
-        self.backbone = HardNet39(input_shape=(self.config.resize_size[0],
+        self.backbone = mobilenet(self.config.backbone,
+                                  input_shape=(self.config.resize_size[0],
                                                self.config.resize_size[1],
                                                self.img_channel),
-                                  pooling='avg_pool',
                                   kernel_initializer='he_uniform')
+
+        # self.backbone = HardNet39(input_shape=(self.config.resize_size[0],
+        #                                        self.config.resize_size[1],
+        #                                        self.img_channel),
+        #                           pooling='avg_pool',
+        #                           kernel_initializer='he_uniform')
+        anchor_generator = self.build_anchor_generator(
+            self.config.anchor_generator)
+        self.config.head["anchor_generator"] = anchor_generator
+        self.config.loss["anchor_generator"] = anchor_generator
+
         self.neck = None
         if self.config.neck.module_name is not None:
             self.neck = NECK_FACTORY.get(self.config.neck.module_name)(
-                self.config, name='neck')
-        self.head = HEAD_FACTORY.get(self.config.head.module_name)(self.config,
-                                                                   name='head')
-        self.loss = LOSS_FACTORY.get(self.config.loss.type)(
-            self.config).build_loss
+                self.config.neck, name='neck')
+        self.head = HEAD_FACTORY.get(self.config.head.module_name)(
+            self.config.head, name='head')
+        self.loss = LOSS_FACTORY.get(self.config.loss.module_name)(
+            self.config.loss).build_loss
         self.modules = MODULE_FACTORY.get(self.config.model_name)(self.config,
                                                                   self.backbone,
                                                                   self.neck,
@@ -38,12 +51,8 @@ class ModelFactory:
                           self.modules,
                           self._model_keys,
                           name='network')
-
-        # optimizers = Lookahead(optimizer=self._optimizer(),
-        #                        sync_period=5,
-        #                        slow_step_size=0.5)
         optimizers = self._optimizer()
-        network.compile(optimizer=optimizers, loss=self.loss, run_eagerly=False)
+        network.compile(optimizer=optimizers, loss=self.loss, run_eagerly=True)
         return network, optimizers
 
     def _optimizer(self):
@@ -78,3 +87,9 @@ class ModelFactory:
                 return tf.train.MomentumOptimizer(learning_rate=lr,
                                                   momentum=0.9,
                                                   use_nesterov=True)
+
+    def build_anchor_generator(self, anchor_generator):
+        return AnchorGenerator(strides=anchor_generator['strides'],
+                               ratios=anchor_generator['ratios'],
+                               scales=anchor_generator['scales'],
+                               base_sizes=anchor_generator['base_sizes'])
