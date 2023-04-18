@@ -956,7 +956,6 @@ static const char *__pyx_filename;
 static const char *__pyx_f[] = {
   "mesh_core_cython.pyx",
   "__init__.pxd",
-  "stringsource",
   "type.pxd",
 };
 /* BufferFormatStructs.proto */
@@ -996,7 +995,7 @@ typedef struct {
 } __Pyx_BufFmt_Context;
 
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":690
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":689
  * # in Cython to enable them only on the right systems.
  * 
  * ctypedef npy_int8       int8_t             # <<<<<<<<<<<<<<
@@ -1005,7 +1004,7 @@ typedef struct {
  */
 typedef npy_int8 __pyx_t_5numpy_int8_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":691
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":690
  * 
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t             # <<<<<<<<<<<<<<
@@ -1014,7 +1013,7 @@ typedef npy_int8 __pyx_t_5numpy_int8_t;
  */
 typedef npy_int16 __pyx_t_5numpy_int16_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":692
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":691
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t             # <<<<<<<<<<<<<<
@@ -1023,7 +1022,7 @@ typedef npy_int16 __pyx_t_5numpy_int16_t;
  */
 typedef npy_int32 __pyx_t_5numpy_int32_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":693
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":692
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t
  * ctypedef npy_int64      int64_t             # <<<<<<<<<<<<<<
@@ -1032,7 +1031,7 @@ typedef npy_int32 __pyx_t_5numpy_int32_t;
  */
 typedef npy_int64 __pyx_t_5numpy_int64_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":697
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":696
  * #ctypedef npy_int128     int128_t
  * 
  * ctypedef npy_uint8      uint8_t             # <<<<<<<<<<<<<<
@@ -1041,7 +1040,7 @@ typedef npy_int64 __pyx_t_5numpy_int64_t;
  */
 typedef npy_uint8 __pyx_t_5numpy_uint8_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":698
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":697
  * 
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t             # <<<<<<<<<<<<<<
@@ -1050,7 +1049,7 @@ typedef npy_uint8 __pyx_t_5numpy_uint8_t;
  */
 typedef npy_uint16 __pyx_t_5numpy_uint16_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":699
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":698
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t             # <<<<<<<<<<<<<<
@@ -1059,7 +1058,7 @@ typedef npy_uint16 __pyx_t_5numpy_uint16_t;
  */
 typedef npy_uint32 __pyx_t_5numpy_uint32_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":700
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":699
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t
  * ctypedef npy_uint64     uint64_t             # <<<<<<<<<<<<<<
@@ -1068,7 +1067,7 @@ typedef npy_uint32 __pyx_t_5numpy_uint32_t;
  */
 typedef npy_uint64 __pyx_t_5numpy_uint64_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":704
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":703
  * #ctypedef npy_uint128    uint128_t
  * 
  * ctypedef npy_float32    float32_t             # <<<<<<<<<<<<<<
@@ -1077,7 +1076,7 @@ typedef npy_uint64 __pyx_t_5numpy_uint64_t;
  */
 typedef npy_float32 __pyx_t_5numpy_float32_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":705
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":704
  * 
  * ctypedef npy_float32    float32_t
  * ctypedef npy_float64    float64_t             # <<<<<<<<<<<<<<
@@ -1086,7 +1085,7 @@ typedef npy_float32 __pyx_t_5numpy_float32_t;
  */
 typedef npy_float64 __pyx_t_5numpy_float64_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":714
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":713
  * # The int types are mapped a bit surprising --
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t             # <<<<<<<<<<<<<<
@@ -1095,7 +1094,7 @@ typedef npy_float64 __pyx_t_5numpy_float64_t;
  */
 typedef npy_long __pyx_t_5numpy_int_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":715
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":714
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t             # <<<<<<<<<<<<<<
@@ -1104,7 +1103,7 @@ typedef npy_long __pyx_t_5numpy_int_t;
  */
 typedef npy_longlong __pyx_t_5numpy_long_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":716
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":715
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t
  * ctypedef npy_longlong   longlong_t             # <<<<<<<<<<<<<<
@@ -1113,7 +1112,7 @@ typedef npy_longlong __pyx_t_5numpy_long_t;
  */
 typedef npy_longlong __pyx_t_5numpy_longlong_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":718
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":717
  * ctypedef npy_longlong   longlong_t
  * 
  * ctypedef npy_ulong      uint_t             # <<<<<<<<<<<<<<
@@ -1122,7 +1121,7 @@ typedef npy_longlong __pyx_t_5numpy_longlong_t;
  */
 typedef npy_ulong __pyx_t_5numpy_uint_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":719
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":718
  * 
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t             # <<<<<<<<<<<<<<
@@ -1131,7 +1130,7 @@ typedef npy_ulong __pyx_t_5numpy_uint_t;
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":720
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":719
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t
  * ctypedef npy_ulonglong  ulonglong_t             # <<<<<<<<<<<<<<
@@ -1140,7 +1139,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":722
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":721
  * ctypedef npy_ulonglong  ulonglong_t
  * 
  * ctypedef npy_intp       intp_t             # <<<<<<<<<<<<<<
@@ -1149,7 +1148,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
  */
 typedef npy_intp __pyx_t_5numpy_intp_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":723
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":722
  * 
  * ctypedef npy_intp       intp_t
  * ctypedef npy_uintp      uintp_t             # <<<<<<<<<<<<<<
@@ -1158,7 +1157,7 @@ typedef npy_intp __pyx_t_5numpy_intp_t;
  */
 typedef npy_uintp __pyx_t_5numpy_uintp_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":725
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":724
  * ctypedef npy_uintp      uintp_t
  * 
  * ctypedef npy_double     float_t             # <<<<<<<<<<<<<<
@@ -1167,7 +1166,7 @@ typedef npy_uintp __pyx_t_5numpy_uintp_t;
  */
 typedef npy_double __pyx_t_5numpy_float_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":726
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":725
  * 
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t             # <<<<<<<<<<<<<<
@@ -1176,7 +1175,7 @@ typedef npy_double __pyx_t_5numpy_float_t;
  */
 typedef npy_double __pyx_t_5numpy_double_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":727
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":726
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t
  * ctypedef npy_longdouble longdouble_t             # <<<<<<<<<<<<<<
@@ -1211,7 +1210,7 @@ static CYTHON_INLINE __pyx_t_double_complex __pyx_t_double_complex_from_parts(do
 
 /*--- Type declarations ---*/
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":729
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":728
  * ctypedef npy_longdouble longdouble_t
  * 
  * ctypedef npy_cfloat      cfloat_t             # <<<<<<<<<<<<<<
@@ -1220,7 +1219,7 @@ static CYTHON_INLINE __pyx_t_double_complex __pyx_t_double_complex_from_parts(do
  */
 typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":730
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":729
  * 
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t             # <<<<<<<<<<<<<<
@@ -1229,7 +1228,7 @@ typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
  */
 typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":731
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":730
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t
  * ctypedef npy_clongdouble clongdouble_t             # <<<<<<<<<<<<<<
@@ -1238,7 +1237,7 @@ typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
  */
 typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":733
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":732
  * ctypedef npy_clongdouble clongdouble_t
  * 
  * ctypedef npy_cdouble     complex_t             # <<<<<<<<<<<<<<
@@ -1701,7 +1700,6 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void); /*proto*/
 /* Module declarations from 'libcpp.string' */
 
 /* Module declarations from 'mesh_core_cython' */
-static std::string __pyx_convert_string_from_py_std__in_string(PyObject *); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_float = { "float", NULL, sizeof(float), { 0 }, 0, 'R', 0, 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_int = { "int", NULL, sizeof(int), { 0 }, 0, IS_UNSIGNED(int) ? 'U' : 'I', IS_UNSIGNED(int), 0 };
 #define __Pyx_MODULE_NAME "mesh_core_cython"
@@ -1726,41 +1724,30 @@ static const char __pyx_k_tex_h[] = "tex_h";
 static const char __pyx_k_tex_w[] = "tex_w";
 static const char __pyx_k_colors[] = "colors";
 static const char __pyx_k_import[] = "__import__";
-static const char __pyx_k_normal[] = "normal";
-static const char __pyx_k_ntexver[] = "ntexver";
 static const char __pyx_k_texture[] = "texture";
-static const char __pyx_k_filename[] = "filename";
-static const char __pyx_k_mtl_name[] = "mtl_name";
 static const char __pyx_k_tex_nver[] = "tex_nver";
 static const char __pyx_k_vertices[] = "vertices";
 static const char __pyx_k_triangles[] = "triangles";
-static const char __pyx_k_uv_coords[] = "uv_coords";
 static const char __pyx_k_tex_coords[] = "tex_coords";
-static const char __pyx_k_tri_normal[] = "tri_normal";
 static const char __pyx_k_ImportError[] = "ImportError";
 static const char __pyx_k_depth_buffer[] = "depth_buffer";
 static const char __pyx_k_mapping_type[] = "mapping_type";
 static const char __pyx_k_tex_triangles[] = "tex_triangles";
-static const char __pyx_k_get_normal_core[] = "get_normal_core";
-static const char __pyx_k_triangle_buffer[] = "triangle_buffer";
+static const char __pyx_k_triangle_depth[] = "triangle_depth";
 static const char __pyx_k_mesh_core_cython[] = "mesh_core_cython";
-static const char __pyx_k_barycentric_weight[] = "barycentric_weight";
+static const char __pyx_k_triangle_texture[] = "triangle_texture";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_render_colors_core[] = "render_colors_core";
 static const char __pyx_k_render_texture_core[] = "render_texture_core";
 static const char __pyx_k_mesh_core_cython_pyx[] = "mesh_core_cython.pyx";
-static const char __pyx_k_rasterize_triangles_core[] = "rasterize_triangles_core";
+static const char __pyx_k_render_mask_texture_core[] = "render_mask_texture_core";
 static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multiarray failed to import";
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
-static const char __pyx_k_write_obj_with_colors_texture_co[] = "write_obj_with_colors_texture_core";
 static PyObject *__pyx_n_s_ImportError;
-static PyObject *__pyx_n_s_barycentric_weight;
 static PyObject *__pyx_n_s_c;
 static PyObject *__pyx_n_s_cline_in_traceback;
 static PyObject *__pyx_n_s_colors;
 static PyObject *__pyx_n_s_depth_buffer;
-static PyObject *__pyx_n_s_filename;
-static PyObject *__pyx_n_s_get_normal_core;
 static PyObject *__pyx_n_s_h;
 static PyObject *__pyx_n_s_image;
 static PyObject *__pyx_n_s_import;
@@ -1768,18 +1755,15 @@ static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_mapping_type;
 static PyObject *__pyx_n_s_mesh_core_cython;
 static PyObject *__pyx_kp_s_mesh_core_cython_pyx;
-static PyObject *__pyx_n_s_mtl_name;
 static PyObject *__pyx_n_s_name;
-static PyObject *__pyx_n_s_normal;
 static PyObject *__pyx_n_s_np;
-static PyObject *__pyx_n_s_ntexver;
 static PyObject *__pyx_n_s_ntri;
 static PyObject *__pyx_n_s_numpy;
 static PyObject *__pyx_kp_s_numpy_core_multiarray_failed_to;
 static PyObject *__pyx_kp_s_numpy_core_umath_failed_to_impor;
 static PyObject *__pyx_n_s_nver;
-static PyObject *__pyx_n_s_rasterize_triangles_core;
 static PyObject *__pyx_n_s_render_colors_core;
+static PyObject *__pyx_n_s_render_mask_texture_core;
 static PyObject *__pyx_n_s_render_texture_core;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_tex_c;
@@ -1789,487 +1773,26 @@ static PyObject *__pyx_n_s_tex_nver;
 static PyObject *__pyx_n_s_tex_triangles;
 static PyObject *__pyx_n_s_tex_w;
 static PyObject *__pyx_n_s_texture;
-static PyObject *__pyx_n_s_tri_normal;
-static PyObject *__pyx_n_s_triangle_buffer;
+static PyObject *__pyx_n_s_triangle_depth;
+static PyObject *__pyx_n_s_triangle_texture;
 static PyObject *__pyx_n_s_triangles;
-static PyObject *__pyx_n_s_uv_coords;
 static PyObject *__pyx_n_s_vertices;
 static PyObject *__pyx_n_s_w;
-static PyObject *__pyx_n_s_write_obj_with_colors_texture_co;
-static PyObject *__pyx_pf_16mesh_core_cython_get_normal_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_normal, PyArrayObject *__pyx_v_tri_normal, PyArrayObject *__pyx_v_triangles, int __pyx_v_ntri); /* proto */
-static PyObject *__pyx_pf_16mesh_core_cython_2rasterize_triangles_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_depth_buffer, PyArrayObject *__pyx_v_triangle_buffer, PyArrayObject *__pyx_v_barycentric_weight, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w); /* proto */
-static PyObject *__pyx_pf_16mesh_core_cython_4render_colors_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_colors, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c); /* proto */
-static PyObject *__pyx_pf_16mesh_core_cython_6render_texture_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_texture, PyArrayObject *__pyx_v_tex_coords, PyArrayObject *__pyx_v_tex_triangles, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_tex_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c, int __pyx_v_tex_h, int __pyx_v_tex_w, int __pyx_v_tex_c, int __pyx_v_mapping_type); /* proto */
-static PyObject *__pyx_pf_16mesh_core_cython_8write_obj_with_colors_texture_core(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_filename, std::string __pyx_v_mtl_name, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_colors, PyArrayObject *__pyx_v_uv_coords, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_ntexver); /* proto */
+static PyObject *__pyx_pf_16mesh_core_cython_render_colors_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_colors, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c); /* proto */
+static PyObject *__pyx_pf_16mesh_core_cython_2render_mask_texture_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_triangle_texture, PyArrayObject *__pyx_v_triangle_depth, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c); /* proto */
+static PyObject *__pyx_pf_16mesh_core_cython_4render_texture_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_texture, PyArrayObject *__pyx_v_tex_coords, PyArrayObject *__pyx_v_tex_triangles, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_tex_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c, int __pyx_v_tex_h, int __pyx_v_tex_w, int __pyx_v_tex_c, int __pyx_v_mapping_type); /* proto */
 static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__2;
 static PyObject *__pyx_tuple__3;
 static PyObject *__pyx_tuple__5;
 static PyObject *__pyx_tuple__7;
-static PyObject *__pyx_tuple__9;
-static PyObject *__pyx_tuple__11;
 static PyObject *__pyx_codeobj__4;
 static PyObject *__pyx_codeobj__6;
 static PyObject *__pyx_codeobj__8;
-static PyObject *__pyx_codeobj__10;
-static PyObject *__pyx_codeobj__12;
 /* Late includes */
 
-/* "mesh_core_cython.pyx":40
- *         int nver, int ntri, int ntexver)
+/* "mesh_core_cython.pyx":43
  * 
- * def get_normal_core(np.ndarray[float, ndim=2, mode = "c"] normal not None,             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] tri_normal not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_16mesh_core_cython_1get_normal_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_16mesh_core_cython_1get_normal_core = {"get_normal_core", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_16mesh_core_cython_1get_normal_core, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_16mesh_core_cython_1get_normal_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyArrayObject *__pyx_v_normal = 0;
-  PyArrayObject *__pyx_v_tri_normal = 0;
-  PyArrayObject *__pyx_v_triangles = 0;
-  int __pyx_v_ntri;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("get_normal_core (wrapper)", 0);
-  {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_normal,&__pyx_n_s_tri_normal,&__pyx_n_s_triangles,&__pyx_n_s_ntri,0};
-    PyObject* values[4] = {0,0,0,0};
-    if (unlikely(__pyx_kwds)) {
-      Py_ssize_t kw_args;
-      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
-      switch (pos_args) {
-        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
-        CYTHON_FALLTHROUGH;
-        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
-        CYTHON_FALLTHROUGH;
-        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
-        CYTHON_FALLTHROUGH;
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        CYTHON_FALLTHROUGH;
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-      kw_args = PyDict_Size(__pyx_kwds);
-      switch (pos_args) {
-        case  0:
-        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_normal)) != 0)) kw_args--;
-        else goto __pyx_L5_argtuple_error;
-        CYTHON_FALLTHROUGH;
-        case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_tri_normal)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("get_normal_core", 1, 4, 4, 1); __PYX_ERR(0, 40, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  2:
-        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_triangles)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("get_normal_core", 1, 4, 4, 2); __PYX_ERR(0, 40, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  3:
-        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ntri)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("get_normal_core", 1, 4, 4, 3); __PYX_ERR(0, 40, __pyx_L3_error)
-        }
-      }
-      if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "get_normal_core") < 0)) __PYX_ERR(0, 40, __pyx_L3_error)
-      }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
-      goto __pyx_L5_argtuple_error;
-    } else {
-      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
-      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
-      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
-    }
-    __pyx_v_normal = ((PyArrayObject *)values[0]);
-    __pyx_v_tri_normal = ((PyArrayObject *)values[1]);
-    __pyx_v_triangles = ((PyArrayObject *)values[2]);
-    __pyx_v_ntri = __Pyx_PyInt_As_int(values[3]); if (unlikely((__pyx_v_ntri == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 43, __pyx_L3_error)
-  }
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("get_normal_core", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 40, __pyx_L3_error)
-  __pyx_L3_error:;
-  __Pyx_AddTraceback("mesh_core_cython.get_normal_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return NULL;
-  __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_normal), __pyx_ptype_5numpy_ndarray, 0, "normal", 0))) __PYX_ERR(0, 40, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_tri_normal), __pyx_ptype_5numpy_ndarray, 0, "tri_normal", 0))) __PYX_ERR(0, 41, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangles), __pyx_ptype_5numpy_ndarray, 0, "triangles", 0))) __PYX_ERR(0, 42, __pyx_L1_error)
-  __pyx_r = __pyx_pf_16mesh_core_cython_get_normal_core(__pyx_self, __pyx_v_normal, __pyx_v_tri_normal, __pyx_v_triangles, __pyx_v_ntri);
-
-  /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_16mesh_core_cython_get_normal_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_normal, PyArrayObject *__pyx_v_tri_normal, PyArrayObject *__pyx_v_triangles, int __pyx_v_ntri) {
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_normal;
-  __Pyx_Buffer __pyx_pybuffer_normal;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_tri_normal;
-  __Pyx_Buffer __pyx_pybuffer_tri_normal;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_triangles;
-  __Pyx_Buffer __pyx_pybuffer_triangles;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("get_normal_core", 0);
-  __pyx_pybuffer_normal.pybuffer.buf = NULL;
-  __pyx_pybuffer_normal.refcount = 0;
-  __pyx_pybuffernd_normal.data = NULL;
-  __pyx_pybuffernd_normal.rcbuffer = &__pyx_pybuffer_normal;
-  __pyx_pybuffer_tri_normal.pybuffer.buf = NULL;
-  __pyx_pybuffer_tri_normal.refcount = 0;
-  __pyx_pybuffernd_tri_normal.data = NULL;
-  __pyx_pybuffernd_tri_normal.rcbuffer = &__pyx_pybuffer_tri_normal;
-  __pyx_pybuffer_triangles.pybuffer.buf = NULL;
-  __pyx_pybuffer_triangles.refcount = 0;
-  __pyx_pybuffernd_triangles.data = NULL;
-  __pyx_pybuffernd_triangles.rcbuffer = &__pyx_pybuffer_triangles;
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_normal.rcbuffer->pybuffer, (PyObject*)__pyx_v_normal, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 40, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_normal.diminfo[0].strides = __pyx_pybuffernd_normal.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_normal.diminfo[0].shape = __pyx_pybuffernd_normal.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_normal.diminfo[1].strides = __pyx_pybuffernd_normal.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_normal.diminfo[1].shape = __pyx_pybuffernd_normal.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_tri_normal.rcbuffer->pybuffer, (PyObject*)__pyx_v_tri_normal, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 40, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_tri_normal.diminfo[0].strides = __pyx_pybuffernd_tri_normal.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_tri_normal.diminfo[0].shape = __pyx_pybuffernd_tri_normal.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_tri_normal.diminfo[1].strides = __pyx_pybuffernd_tri_normal.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_tri_normal.diminfo[1].shape = __pyx_pybuffernd_tri_normal.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 40, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_triangles.diminfo[0].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_triangles.diminfo[0].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_triangles.diminfo[1].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_triangles.diminfo[1].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[1];
-
-  /* "mesh_core_cython.pyx":45
- *                 int ntri
- *                 ):
- *     _get_normal_core(             # <<<<<<<<<<<<<<
- *         <float*> np.PyArray_DATA(normal), <float*> np.PyArray_DATA(tri_normal), <int*> np.PyArray_DATA(triangles),
- *         ntri)
- */
-  _get_normal_core(((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_normal))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_tri_normal))), ((int *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangles))), __pyx_v_ntri);
-
-  /* "mesh_core_cython.pyx":40
- *         int nver, int ntri, int ntexver)
- * 
- * def get_normal_core(np.ndarray[float, ndim=2, mode = "c"] normal not None,             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] tri_normal not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-
-  /* function exit code */
-  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
-    __Pyx_PyThreadState_declare
-    __Pyx_PyThreadState_assign
-    __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_normal.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_tri_normal.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer);
-  __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("mesh_core_cython.get_normal_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  goto __pyx_L2;
-  __pyx_L0:;
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_normal.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_tri_normal.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer);
-  __pyx_L2:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "mesh_core_cython.pyx":49
- *         ntri)
- * 
- * def rasterize_triangles_core(             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_16mesh_core_cython_3rasterize_triangles_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_16mesh_core_cython_3rasterize_triangles_core = {"rasterize_triangles_core", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_16mesh_core_cython_3rasterize_triangles_core, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_16mesh_core_cython_3rasterize_triangles_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyArrayObject *__pyx_v_vertices = 0;
-  PyArrayObject *__pyx_v_triangles = 0;
-  PyArrayObject *__pyx_v_depth_buffer = 0;
-  PyArrayObject *__pyx_v_triangle_buffer = 0;
-  PyArrayObject *__pyx_v_barycentric_weight = 0;
-  int __pyx_v_nver;
-  int __pyx_v_ntri;
-  int __pyx_v_h;
-  int __pyx_v_w;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("rasterize_triangles_core (wrapper)", 0);
-  {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_vertices,&__pyx_n_s_triangles,&__pyx_n_s_depth_buffer,&__pyx_n_s_triangle_buffer,&__pyx_n_s_barycentric_weight,&__pyx_n_s_nver,&__pyx_n_s_ntri,&__pyx_n_s_h,&__pyx_n_s_w,0};
-    PyObject* values[9] = {0,0,0,0,0,0,0,0,0};
-    if (unlikely(__pyx_kwds)) {
-      Py_ssize_t kw_args;
-      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
-      switch (pos_args) {
-        case  9: values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
-        CYTHON_FALLTHROUGH;
-        case  8: values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
-        CYTHON_FALLTHROUGH;
-        case  7: values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
-        CYTHON_FALLTHROUGH;
-        case  6: values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
-        CYTHON_FALLTHROUGH;
-        case  5: values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
-        CYTHON_FALLTHROUGH;
-        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
-        CYTHON_FALLTHROUGH;
-        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
-        CYTHON_FALLTHROUGH;
-        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
-        CYTHON_FALLTHROUGH;
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        CYTHON_FALLTHROUGH;
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-      kw_args = PyDict_Size(__pyx_kwds);
-      switch (pos_args) {
-        case  0:
-        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_vertices)) != 0)) kw_args--;
-        else goto __pyx_L5_argtuple_error;
-        CYTHON_FALLTHROUGH;
-        case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_triangles)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("rasterize_triangles_core", 1, 9, 9, 1); __PYX_ERR(0, 49, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  2:
-        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_depth_buffer)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("rasterize_triangles_core", 1, 9, 9, 2); __PYX_ERR(0, 49, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  3:
-        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_triangle_buffer)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("rasterize_triangles_core", 1, 9, 9, 3); __PYX_ERR(0, 49, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  4:
-        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_barycentric_weight)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("rasterize_triangles_core", 1, 9, 9, 4); __PYX_ERR(0, 49, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  5:
-        if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_nver)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("rasterize_triangles_core", 1, 9, 9, 5); __PYX_ERR(0, 49, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  6:
-        if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ntri)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("rasterize_triangles_core", 1, 9, 9, 6); __PYX_ERR(0, 49, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  7:
-        if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_h)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("rasterize_triangles_core", 1, 9, 9, 7); __PYX_ERR(0, 49, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  8:
-        if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_w)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("rasterize_triangles_core", 1, 9, 9, 8); __PYX_ERR(0, 49, __pyx_L3_error)
-        }
-      }
-      if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "rasterize_triangles_core") < 0)) __PYX_ERR(0, 49, __pyx_L3_error)
-      }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 9) {
-      goto __pyx_L5_argtuple_error;
-    } else {
-      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
-      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
-      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
-      values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
-      values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
-      values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
-      values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
-      values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
-    }
-    __pyx_v_vertices = ((PyArrayObject *)values[0]);
-    __pyx_v_triangles = ((PyArrayObject *)values[1]);
-    __pyx_v_depth_buffer = ((PyArrayObject *)values[2]);
-    __pyx_v_triangle_buffer = ((PyArrayObject *)values[3]);
-    __pyx_v_barycentric_weight = ((PyArrayObject *)values[4]);
-    __pyx_v_nver = __Pyx_PyInt_As_int(values[5]); if (unlikely((__pyx_v_nver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 55, __pyx_L3_error)
-    __pyx_v_ntri = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_ntri == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 55, __pyx_L3_error)
-    __pyx_v_h = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_h == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 56, __pyx_L3_error)
-    __pyx_v_w = __Pyx_PyInt_As_int(values[8]); if (unlikely((__pyx_v_w == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 56, __pyx_L3_error)
-  }
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("rasterize_triangles_core", 1, 9, 9, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 49, __pyx_L3_error)
-  __pyx_L3_error:;
-  __Pyx_AddTraceback("mesh_core_cython.rasterize_triangles_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return NULL;
-  __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_vertices), __pyx_ptype_5numpy_ndarray, 0, "vertices", 0))) __PYX_ERR(0, 50, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangles), __pyx_ptype_5numpy_ndarray, 0, "triangles", 0))) __PYX_ERR(0, 51, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_depth_buffer), __pyx_ptype_5numpy_ndarray, 0, "depth_buffer", 0))) __PYX_ERR(0, 52, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangle_buffer), __pyx_ptype_5numpy_ndarray, 0, "triangle_buffer", 0))) __PYX_ERR(0, 53, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_barycentric_weight), __pyx_ptype_5numpy_ndarray, 0, "barycentric_weight", 0))) __PYX_ERR(0, 54, __pyx_L1_error)
-  __pyx_r = __pyx_pf_16mesh_core_cython_2rasterize_triangles_core(__pyx_self, __pyx_v_vertices, __pyx_v_triangles, __pyx_v_depth_buffer, __pyx_v_triangle_buffer, __pyx_v_barycentric_weight, __pyx_v_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w);
-
-  /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_16mesh_core_cython_2rasterize_triangles_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_depth_buffer, PyArrayObject *__pyx_v_triangle_buffer, PyArrayObject *__pyx_v_barycentric_weight, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w) {
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_barycentric_weight;
-  __Pyx_Buffer __pyx_pybuffer_barycentric_weight;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_depth_buffer;
-  __Pyx_Buffer __pyx_pybuffer_depth_buffer;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_triangle_buffer;
-  __Pyx_Buffer __pyx_pybuffer_triangle_buffer;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_triangles;
-  __Pyx_Buffer __pyx_pybuffer_triangles;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_vertices;
-  __Pyx_Buffer __pyx_pybuffer_vertices;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("rasterize_triangles_core", 0);
-  __pyx_pybuffer_vertices.pybuffer.buf = NULL;
-  __pyx_pybuffer_vertices.refcount = 0;
-  __pyx_pybuffernd_vertices.data = NULL;
-  __pyx_pybuffernd_vertices.rcbuffer = &__pyx_pybuffer_vertices;
-  __pyx_pybuffer_triangles.pybuffer.buf = NULL;
-  __pyx_pybuffer_triangles.refcount = 0;
-  __pyx_pybuffernd_triangles.data = NULL;
-  __pyx_pybuffernd_triangles.rcbuffer = &__pyx_pybuffer_triangles;
-  __pyx_pybuffer_depth_buffer.pybuffer.buf = NULL;
-  __pyx_pybuffer_depth_buffer.refcount = 0;
-  __pyx_pybuffernd_depth_buffer.data = NULL;
-  __pyx_pybuffernd_depth_buffer.rcbuffer = &__pyx_pybuffer_depth_buffer;
-  __pyx_pybuffer_triangle_buffer.pybuffer.buf = NULL;
-  __pyx_pybuffer_triangle_buffer.refcount = 0;
-  __pyx_pybuffernd_triangle_buffer.data = NULL;
-  __pyx_pybuffernd_triangle_buffer.rcbuffer = &__pyx_pybuffer_triangle_buffer;
-  __pyx_pybuffer_barycentric_weight.pybuffer.buf = NULL;
-  __pyx_pybuffer_barycentric_weight.refcount = 0;
-  __pyx_pybuffernd_barycentric_weight.data = NULL;
-  __pyx_pybuffernd_barycentric_weight.rcbuffer = &__pyx_pybuffer_barycentric_weight;
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer, (PyObject*)__pyx_v_vertices, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 49, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_vertices.diminfo[0].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vertices.diminfo[0].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_vertices.diminfo[1].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_vertices.diminfo[1].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 49, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_triangles.diminfo[0].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_triangles.diminfo[0].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_triangles.diminfo[1].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_triangles.diminfo[1].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer, (PyObject*)__pyx_v_depth_buffer, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 49, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_depth_buffer.diminfo[0].strides = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_depth_buffer.diminfo[0].shape = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_depth_buffer.diminfo[1].strides = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_depth_buffer.diminfo[1].shape = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangle_buffer.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangle_buffer, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 49, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_triangle_buffer.diminfo[0].strides = __pyx_pybuffernd_triangle_buffer.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_triangle_buffer.diminfo[0].shape = __pyx_pybuffernd_triangle_buffer.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_triangle_buffer.diminfo[1].strides = __pyx_pybuffernd_triangle_buffer.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_triangle_buffer.diminfo[1].shape = __pyx_pybuffernd_triangle_buffer.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_barycentric_weight.rcbuffer->pybuffer, (PyObject*)__pyx_v_barycentric_weight, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 49, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_barycentric_weight.diminfo[0].strides = __pyx_pybuffernd_barycentric_weight.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_barycentric_weight.diminfo[0].shape = __pyx_pybuffernd_barycentric_weight.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_barycentric_weight.diminfo[1].strides = __pyx_pybuffernd_barycentric_weight.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_barycentric_weight.diminfo[1].shape = __pyx_pybuffernd_barycentric_weight.rcbuffer->pybuffer.shape[1];
-
-  /* "mesh_core_cython.pyx":58
- *                 int h, int w
- *                 ):
- *     _rasterize_triangles_core(             # <<<<<<<<<<<<<<
- *         <float*> np.PyArray_DATA(vertices), <int*> np.PyArray_DATA(triangles),
- *         <float*> np.PyArray_DATA(depth_buffer), <int*> np.PyArray_DATA(triangle_buffer), <float*> np.PyArray_DATA(barycentric_weight),
- */
-  _rasterize_triangles_core(((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_vertices))), ((int *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangles))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_depth_buffer))), ((int *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangle_buffer))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_barycentric_weight))), __pyx_v_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w);
-
-  /* "mesh_core_cython.pyx":49
- *         ntri)
- * 
- * def rasterize_triangles_core(             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-
-  /* function exit code */
-  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
-    __Pyx_PyThreadState_declare
-    __Pyx_PyThreadState_assign
-    __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_barycentric_weight.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangle_buffer.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer);
-  __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("mesh_core_cython.rasterize_triangles_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  goto __pyx_L2;
-  __pyx_L0:;
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_barycentric_weight.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangle_buffer.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer);
-  __pyx_L2:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "mesh_core_cython.pyx":64
- *         h, w)
  * 
  * def render_colors_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
  *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
@@ -2277,9 +1800,9 @@ static PyObject *__pyx_pf_16mesh_core_cython_2rasterize_triangles_core(CYTHON_UN
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_16mesh_core_cython_5render_colors_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_16mesh_core_cython_5render_colors_core = {"render_colors_core", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_16mesh_core_cython_5render_colors_core, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_16mesh_core_cython_5render_colors_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_16mesh_core_cython_1render_colors_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_16mesh_core_cython_1render_colors_core = {"render_colors_core", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_16mesh_core_cython_1render_colors_core, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_16mesh_core_cython_1render_colors_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_image = 0;
   PyArrayObject *__pyx_v_vertices = 0;
   PyArrayObject *__pyx_v_triangles = 0;
@@ -2335,59 +1858,59 @@ static PyObject *__pyx_pw_16mesh_core_cython_5render_colors_core(PyObject *__pyx
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_vertices)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 1); __PYX_ERR(0, 64, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 1); __PYX_ERR(0, 43, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_triangles)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 2); __PYX_ERR(0, 64, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 2); __PYX_ERR(0, 43, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_colors)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 3); __PYX_ERR(0, 64, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 3); __PYX_ERR(0, 43, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_depth_buffer)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 4); __PYX_ERR(0, 64, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 4); __PYX_ERR(0, 43, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_nver)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 5); __PYX_ERR(0, 64, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 5); __PYX_ERR(0, 43, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ntri)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 6); __PYX_ERR(0, 64, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 6); __PYX_ERR(0, 43, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_h)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 7); __PYX_ERR(0, 64, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 7); __PYX_ERR(0, 43, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_w)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 8); __PYX_ERR(0, 64, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 8); __PYX_ERR(0, 43, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
         if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_c)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 9); __PYX_ERR(0, 64, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, 9); __PYX_ERR(0, 43, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "render_colors_core") < 0)) __PYX_ERR(0, 64, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "render_colors_core") < 0)) __PYX_ERR(0, 43, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 10) {
       goto __pyx_L5_argtuple_error;
@@ -2408,26 +1931,26 @@ static PyObject *__pyx_pw_16mesh_core_cython_5render_colors_core(PyObject *__pyx
     __pyx_v_triangles = ((PyArrayObject *)values[2]);
     __pyx_v_colors = ((PyArrayObject *)values[3]);
     __pyx_v_depth_buffer = ((PyArrayObject *)values[4]);
-    __pyx_v_nver = __Pyx_PyInt_As_int(values[5]); if (unlikely((__pyx_v_nver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 69, __pyx_L3_error)
-    __pyx_v_ntri = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_ntri == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 69, __pyx_L3_error)
-    __pyx_v_h = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_h == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 70, __pyx_L3_error)
-    __pyx_v_w = __Pyx_PyInt_As_int(values[8]); if (unlikely((__pyx_v_w == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 70, __pyx_L3_error)
-    __pyx_v_c = __Pyx_PyInt_As_int(values[9]); if (unlikely((__pyx_v_c == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 70, __pyx_L3_error)
+    __pyx_v_nver = __Pyx_PyInt_As_int(values[5]); if (unlikely((__pyx_v_nver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 48, __pyx_L3_error)
+    __pyx_v_ntri = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_ntri == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 48, __pyx_L3_error)
+    __pyx_v_h = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_h == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 49, __pyx_L3_error)
+    __pyx_v_w = __Pyx_PyInt_As_int(values[8]); if (unlikely((__pyx_v_w == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 49, __pyx_L3_error)
+    __pyx_v_c = __Pyx_PyInt_As_int(values[9]); if (unlikely((__pyx_v_c == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 49, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 64, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("render_colors_core", 1, 10, 10, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 43, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("mesh_core_cython.render_colors_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_image), __pyx_ptype_5numpy_ndarray, 0, "image", 0))) __PYX_ERR(0, 64, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_vertices), __pyx_ptype_5numpy_ndarray, 0, "vertices", 0))) __PYX_ERR(0, 65, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangles), __pyx_ptype_5numpy_ndarray, 0, "triangles", 0))) __PYX_ERR(0, 66, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_colors), __pyx_ptype_5numpy_ndarray, 0, "colors", 0))) __PYX_ERR(0, 67, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_depth_buffer), __pyx_ptype_5numpy_ndarray, 0, "depth_buffer", 0))) __PYX_ERR(0, 68, __pyx_L1_error)
-  __pyx_r = __pyx_pf_16mesh_core_cython_4render_colors_core(__pyx_self, __pyx_v_image, __pyx_v_vertices, __pyx_v_triangles, __pyx_v_colors, __pyx_v_depth_buffer, __pyx_v_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w, __pyx_v_c);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_image), __pyx_ptype_5numpy_ndarray, 0, "image", 0))) __PYX_ERR(0, 43, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_vertices), __pyx_ptype_5numpy_ndarray, 0, "vertices", 0))) __PYX_ERR(0, 44, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangles), __pyx_ptype_5numpy_ndarray, 0, "triangles", 0))) __PYX_ERR(0, 45, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_colors), __pyx_ptype_5numpy_ndarray, 0, "colors", 0))) __PYX_ERR(0, 46, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_depth_buffer), __pyx_ptype_5numpy_ndarray, 0, "depth_buffer", 0))) __PYX_ERR(0, 47, __pyx_L1_error)
+  __pyx_r = __pyx_pf_16mesh_core_cython_render_colors_core(__pyx_self, __pyx_v_image, __pyx_v_vertices, __pyx_v_triangles, __pyx_v_colors, __pyx_v_depth_buffer, __pyx_v_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w, __pyx_v_c);
 
   /* function exit code */
   goto __pyx_L0;
@@ -2438,7 +1961,7 @@ static PyObject *__pyx_pw_16mesh_core_cython_5render_colors_core(PyObject *__pyx
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_16mesh_core_cython_4render_colors_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_colors, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c) {
+static PyObject *__pyx_pf_16mesh_core_cython_render_colors_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_colors, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c) {
   __Pyx_LocalBuf_ND __pyx_pybuffernd_colors;
   __Pyx_Buffer __pyx_pybuffer_colors;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_depth_buffer;
@@ -2477,41 +2000,41 @@ static PyObject *__pyx_pf_16mesh_core_cython_4render_colors_core(CYTHON_UNUSED P
   __pyx_pybuffernd_depth_buffer.rcbuffer = &__pyx_pybuffer_depth_buffer;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_image, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 3, 0, __pyx_stack) == -1)) __PYX_ERR(0, 64, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_image, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 3, 0, __pyx_stack) == -1)) __PYX_ERR(0, 43, __pyx_L1_error)
   }
   __pyx_pybuffernd_image.diminfo[0].strides = __pyx_pybuffernd_image.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_image.diminfo[0].shape = __pyx_pybuffernd_image.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_image.diminfo[1].strides = __pyx_pybuffernd_image.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_image.diminfo[1].shape = __pyx_pybuffernd_image.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_image.diminfo[2].strides = __pyx_pybuffernd_image.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_image.diminfo[2].shape = __pyx_pybuffernd_image.rcbuffer->pybuffer.shape[2];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer, (PyObject*)__pyx_v_vertices, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 64, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer, (PyObject*)__pyx_v_vertices, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 43, __pyx_L1_error)
   }
   __pyx_pybuffernd_vertices.diminfo[0].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vertices.diminfo[0].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_vertices.diminfo[1].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_vertices.diminfo[1].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 64, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 43, __pyx_L1_error)
   }
   __pyx_pybuffernd_triangles.diminfo[0].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_triangles.diminfo[0].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_triangles.diminfo[1].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_triangles.diminfo[1].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_colors.rcbuffer->pybuffer, (PyObject*)__pyx_v_colors, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 64, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_colors.rcbuffer->pybuffer, (PyObject*)__pyx_v_colors, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 43, __pyx_L1_error)
   }
   __pyx_pybuffernd_colors.diminfo[0].strides = __pyx_pybuffernd_colors.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_colors.diminfo[0].shape = __pyx_pybuffernd_colors.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_colors.diminfo[1].strides = __pyx_pybuffernd_colors.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_colors.diminfo[1].shape = __pyx_pybuffernd_colors.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer, (PyObject*)__pyx_v_depth_buffer, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 64, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer, (PyObject*)__pyx_v_depth_buffer, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 43, __pyx_L1_error)
   }
   __pyx_pybuffernd_depth_buffer.diminfo[0].strides = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_depth_buffer.diminfo[0].shape = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_depth_buffer.diminfo[1].strides = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_depth_buffer.diminfo[1].shape = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.shape[1];
 
-  /* "mesh_core_cython.pyx":72
+  /* "mesh_core_cython.pyx":51
  *                 int h, int w, int c
  *                 ):
  *     _render_colors_core(             # <<<<<<<<<<<<<<
- *         <float*> np.PyArray_DATA(image), <float*> np.PyArray_DATA(vertices), <int*> np.PyArray_DATA(triangles),
- *         <float*> np.PyArray_DATA(colors),
+ *         <float*> np.PyArray_DATA(image),
+ *         <float*> np.PyArray_DATA(vertices),
  */
-  _render_colors_core(((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_image))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_vertices))), ((int *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangles))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_colors))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_depth_buffer))), __pyx_v_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w, __pyx_v_c);
+  _render_colors_core(((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_image))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_vertices))), ((int *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangles))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_colors))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_depth_buffer))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_image))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_depth_buffer))), __pyx_v_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w, __pyx_v_c);
 
-  /* "mesh_core_cython.pyx":64
- *         h, w)
+  /* "mesh_core_cython.pyx":43
+ * 
  * 
  * def render_colors_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
  *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
@@ -2547,7 +2070,311 @@ static PyObject *__pyx_pf_16mesh_core_cython_4render_colors_core(CYTHON_UNUSED P
   return __pyx_r;
 }
 
-/* "mesh_core_cython.pyx":79
+/* "mesh_core_cython.pyx":62
+ *         h, w, c)
+ * 
+ * def render_mask_texture_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
+ *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
+ *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_16mesh_core_cython_3render_mask_texture_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_16mesh_core_cython_3render_mask_texture_core = {"render_mask_texture_core", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_16mesh_core_cython_3render_mask_texture_core, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_16mesh_core_cython_3render_mask_texture_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyArrayObject *__pyx_v_image = 0;
+  PyArrayObject *__pyx_v_vertices = 0;
+  PyArrayObject *__pyx_v_triangles = 0;
+  PyArrayObject *__pyx_v_triangle_texture = 0;
+  PyArrayObject *__pyx_v_triangle_depth = 0;
+  PyArrayObject *__pyx_v_depth_buffer = 0;
+  int __pyx_v_nver;
+  int __pyx_v_ntri;
+  int __pyx_v_h;
+  int __pyx_v_w;
+  int __pyx_v_c;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("render_mask_texture_core (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_image,&__pyx_n_s_vertices,&__pyx_n_s_triangles,&__pyx_n_s_triangle_texture,&__pyx_n_s_triangle_depth,&__pyx_n_s_depth_buffer,&__pyx_n_s_nver,&__pyx_n_s_ntri,&__pyx_n_s_h,&__pyx_n_s_w,&__pyx_n_s_c,0};
+    PyObject* values[11] = {0,0,0,0,0,0,0,0,0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case 11: values[10] = PyTuple_GET_ITEM(__pyx_args, 10);
+        CYTHON_FALLTHROUGH;
+        case 10: values[9] = PyTuple_GET_ITEM(__pyx_args, 9);
+        CYTHON_FALLTHROUGH;
+        case  9: values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
+        CYTHON_FALLTHROUGH;
+        case  8: values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
+        CYTHON_FALLTHROUGH;
+        case  7: values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
+        CYTHON_FALLTHROUGH;
+        case  6: values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
+        CYTHON_FALLTHROUGH;
+        case  5: values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
+        CYTHON_FALLTHROUGH;
+        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+        CYTHON_FALLTHROUGH;
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_image)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_vertices)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 1); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_triangles)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 2); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  3:
+        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_triangle_texture)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 3); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  4:
+        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_triangle_depth)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 4); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  5:
+        if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_depth_buffer)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 5); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  6:
+        if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_nver)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 6); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  7:
+        if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ntri)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 7); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  8:
+        if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_h)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 8); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  9:
+        if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_w)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 9); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case 10:
+        if (likely((values[10] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_c)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, 10); __PYX_ERR(0, 62, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "render_mask_texture_core") < 0)) __PYX_ERR(0, 62, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 11) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+      values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
+      values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
+      values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
+      values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
+      values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
+      values[9] = PyTuple_GET_ITEM(__pyx_args, 9);
+      values[10] = PyTuple_GET_ITEM(__pyx_args, 10);
+    }
+    __pyx_v_image = ((PyArrayObject *)values[0]);
+    __pyx_v_vertices = ((PyArrayObject *)values[1]);
+    __pyx_v_triangles = ((PyArrayObject *)values[2]);
+    __pyx_v_triangle_texture = ((PyArrayObject *)values[3]);
+    __pyx_v_triangle_depth = ((PyArrayObject *)values[4]);
+    __pyx_v_depth_buffer = ((PyArrayObject *)values[5]);
+    __pyx_v_nver = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_nver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 68, __pyx_L3_error)
+    __pyx_v_ntri = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_ntri == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 68, __pyx_L3_error)
+    __pyx_v_h = __Pyx_PyInt_As_int(values[8]); if (unlikely((__pyx_v_h == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 69, __pyx_L3_error)
+    __pyx_v_w = __Pyx_PyInt_As_int(values[9]); if (unlikely((__pyx_v_w == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 69, __pyx_L3_error)
+    __pyx_v_c = __Pyx_PyInt_As_int(values[10]); if (unlikely((__pyx_v_c == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 69, __pyx_L3_error)
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("render_mask_texture_core", 1, 11, 11, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 62, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("mesh_core_cython.render_mask_texture_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_image), __pyx_ptype_5numpy_ndarray, 0, "image", 0))) __PYX_ERR(0, 62, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_vertices), __pyx_ptype_5numpy_ndarray, 0, "vertices", 0))) __PYX_ERR(0, 63, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangles), __pyx_ptype_5numpy_ndarray, 0, "triangles", 0))) __PYX_ERR(0, 64, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangle_texture), __pyx_ptype_5numpy_ndarray, 0, "triangle_texture", 0))) __PYX_ERR(0, 65, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangle_depth), __pyx_ptype_5numpy_ndarray, 0, "triangle_depth", 0))) __PYX_ERR(0, 66, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_depth_buffer), __pyx_ptype_5numpy_ndarray, 0, "depth_buffer", 0))) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_r = __pyx_pf_16mesh_core_cython_2render_mask_texture_core(__pyx_self, __pyx_v_image, __pyx_v_vertices, __pyx_v_triangles, __pyx_v_triangle_texture, __pyx_v_triangle_depth, __pyx_v_depth_buffer, __pyx_v_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w, __pyx_v_c);
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_16mesh_core_cython_2render_mask_texture_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_triangle_texture, PyArrayObject *__pyx_v_triangle_depth, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c) {
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_depth_buffer;
+  __Pyx_Buffer __pyx_pybuffer_depth_buffer;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_image;
+  __Pyx_Buffer __pyx_pybuffer_image;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_triangle_depth;
+  __Pyx_Buffer __pyx_pybuffer_triangle_depth;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_triangle_texture;
+  __Pyx_Buffer __pyx_pybuffer_triangle_texture;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_triangles;
+  __Pyx_Buffer __pyx_pybuffer_triangles;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_vertices;
+  __Pyx_Buffer __pyx_pybuffer_vertices;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("render_mask_texture_core", 0);
+  __pyx_pybuffer_image.pybuffer.buf = NULL;
+  __pyx_pybuffer_image.refcount = 0;
+  __pyx_pybuffernd_image.data = NULL;
+  __pyx_pybuffernd_image.rcbuffer = &__pyx_pybuffer_image;
+  __pyx_pybuffer_vertices.pybuffer.buf = NULL;
+  __pyx_pybuffer_vertices.refcount = 0;
+  __pyx_pybuffernd_vertices.data = NULL;
+  __pyx_pybuffernd_vertices.rcbuffer = &__pyx_pybuffer_vertices;
+  __pyx_pybuffer_triangles.pybuffer.buf = NULL;
+  __pyx_pybuffer_triangles.refcount = 0;
+  __pyx_pybuffernd_triangles.data = NULL;
+  __pyx_pybuffernd_triangles.rcbuffer = &__pyx_pybuffer_triangles;
+  __pyx_pybuffer_triangle_texture.pybuffer.buf = NULL;
+  __pyx_pybuffer_triangle_texture.refcount = 0;
+  __pyx_pybuffernd_triangle_texture.data = NULL;
+  __pyx_pybuffernd_triangle_texture.rcbuffer = &__pyx_pybuffer_triangle_texture;
+  __pyx_pybuffer_triangle_depth.pybuffer.buf = NULL;
+  __pyx_pybuffer_triangle_depth.refcount = 0;
+  __pyx_pybuffernd_triangle_depth.data = NULL;
+  __pyx_pybuffernd_triangle_depth.rcbuffer = &__pyx_pybuffer_triangle_depth;
+  __pyx_pybuffer_depth_buffer.pybuffer.buf = NULL;
+  __pyx_pybuffer_depth_buffer.refcount = 0;
+  __pyx_pybuffernd_depth_buffer.data = NULL;
+  __pyx_pybuffernd_depth_buffer.rcbuffer = &__pyx_pybuffer_depth_buffer;
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_image, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 3, 0, __pyx_stack) == -1)) __PYX_ERR(0, 62, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_image.diminfo[0].strides = __pyx_pybuffernd_image.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_image.diminfo[0].shape = __pyx_pybuffernd_image.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_image.diminfo[1].strides = __pyx_pybuffernd_image.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_image.diminfo[1].shape = __pyx_pybuffernd_image.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_image.diminfo[2].strides = __pyx_pybuffernd_image.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_image.diminfo[2].shape = __pyx_pybuffernd_image.rcbuffer->pybuffer.shape[2];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer, (PyObject*)__pyx_v_vertices, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 62, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_vertices.diminfo[0].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vertices.diminfo[0].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_vertices.diminfo[1].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_vertices.diminfo[1].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[1];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 62, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_triangles.diminfo[0].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_triangles.diminfo[0].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_triangles.diminfo[1].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_triangles.diminfo[1].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[1];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangle_texture.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangle_texture, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 62, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_triangle_texture.diminfo[0].strides = __pyx_pybuffernd_triangle_texture.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_triangle_texture.diminfo[0].shape = __pyx_pybuffernd_triangle_texture.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_triangle_texture.diminfo[1].strides = __pyx_pybuffernd_triangle_texture.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_triangle_texture.diminfo[1].shape = __pyx_pybuffernd_triangle_texture.rcbuffer->pybuffer.shape[1];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangle_depth.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangle_depth, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 62, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_triangle_depth.diminfo[0].strides = __pyx_pybuffernd_triangle_depth.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_triangle_depth.diminfo[0].shape = __pyx_pybuffernd_triangle_depth.rcbuffer->pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer, (PyObject*)__pyx_v_depth_buffer, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 62, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_depth_buffer.diminfo[0].strides = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_depth_buffer.diminfo[0].shape = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_depth_buffer.diminfo[1].strides = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_depth_buffer.diminfo[1].shape = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.shape[1];
+
+  /* "mesh_core_cython.pyx":71
+ *                 int h, int w, int c
+ *                 ):
+ *     _render_mask_texture_core(             # <<<<<<<<<<<<<<
+ *         <float*> np.PyArray_DATA(image),
+ *         <float*> np.PyArray_DATA(vertices),
+ */
+  _render_mask_texture_core(((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_image))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_vertices))), ((int *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangles))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangle_texture))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangle_depth))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_depth_buffer))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_image))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_depth_buffer))), __pyx_v_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w, __pyx_v_c);
+
+  /* "mesh_core_cython.pyx":62
+ *         h, w, c)
+ * 
+ * def render_mask_texture_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
+ *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
+ *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
+    __Pyx_PyThreadState_declare
+    __Pyx_PyThreadState_assign
+    __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_image.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangle_depth.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangle_texture.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer);
+  __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
+  __Pyx_AddTraceback("mesh_core_cython.render_mask_texture_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  goto __pyx_L2;
+  __pyx_L0:;
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_image.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangle_depth.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangle_texture.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer);
+  __pyx_L2:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "mesh_core_cython.pyx":83
  *         h, w, c)
  * 
  * def render_texture_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
@@ -2556,9 +2383,9 @@ static PyObject *__pyx_pf_16mesh_core_cython_4render_colors_core(CYTHON_UNUSED P
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_16mesh_core_cython_7render_texture_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_16mesh_core_cython_7render_texture_core = {"render_texture_core", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_16mesh_core_cython_7render_texture_core, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_16mesh_core_cython_7render_texture_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_16mesh_core_cython_5render_texture_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_16mesh_core_cython_5render_texture_core = {"render_texture_core", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_16mesh_core_cython_5render_texture_core, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_16mesh_core_cython_5render_texture_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_image = 0;
   PyArrayObject *__pyx_v_vertices = 0;
   PyArrayObject *__pyx_v_triangles = 0;
@@ -2635,101 +2462,101 @@ static PyObject *__pyx_pw_16mesh_core_cython_7render_texture_core(PyObject *__py
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_vertices)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 1); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 1); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_triangles)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 2); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 2); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_texture)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 3); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 3); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_tex_coords)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 4); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 4); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_tex_triangles)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 5); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 5); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_depth_buffer)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 6); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 6); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_nver)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 7); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 7); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_tex_nver)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 8); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 8); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
         if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ntri)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 9); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 9); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 10:
         if (likely((values[10] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_h)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 10); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 10); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 11:
         if (likely((values[11] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_w)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 11); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 11); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 12:
         if (likely((values[12] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_c)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 12); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 12); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 13:
         if (likely((values[13] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_tex_h)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 13); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 13); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 14:
         if (likely((values[14] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_tex_w)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 14); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 14); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 15:
         if (likely((values[15] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_tex_c)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 15); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 15); __PYX_ERR(0, 83, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 16:
         if (likely((values[16] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_mapping_type)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 16); __PYX_ERR(0, 79, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, 16); __PYX_ERR(0, 83, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "render_texture_core") < 0)) __PYX_ERR(0, 79, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "render_texture_core") < 0)) __PYX_ERR(0, 83, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 17) {
       goto __pyx_L5_argtuple_error;
@@ -2759,33 +2586,33 @@ static PyObject *__pyx_pw_16mesh_core_cython_7render_texture_core(PyObject *__py
     __pyx_v_tex_coords = ((PyArrayObject *)values[4]);
     __pyx_v_tex_triangles = ((PyArrayObject *)values[5]);
     __pyx_v_depth_buffer = ((PyArrayObject *)values[6]);
-    __pyx_v_nver = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_nver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 86, __pyx_L3_error)
-    __pyx_v_tex_nver = __Pyx_PyInt_As_int(values[8]); if (unlikely((__pyx_v_tex_nver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 86, __pyx_L3_error)
-    __pyx_v_ntri = __Pyx_PyInt_As_int(values[9]); if (unlikely((__pyx_v_ntri == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 86, __pyx_L3_error)
-    __pyx_v_h = __Pyx_PyInt_As_int(values[10]); if (unlikely((__pyx_v_h == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 87, __pyx_L3_error)
-    __pyx_v_w = __Pyx_PyInt_As_int(values[11]); if (unlikely((__pyx_v_w == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 87, __pyx_L3_error)
-    __pyx_v_c = __Pyx_PyInt_As_int(values[12]); if (unlikely((__pyx_v_c == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 87, __pyx_L3_error)
-    __pyx_v_tex_h = __Pyx_PyInt_As_int(values[13]); if (unlikely((__pyx_v_tex_h == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 88, __pyx_L3_error)
-    __pyx_v_tex_w = __Pyx_PyInt_As_int(values[14]); if (unlikely((__pyx_v_tex_w == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 88, __pyx_L3_error)
-    __pyx_v_tex_c = __Pyx_PyInt_As_int(values[15]); if (unlikely((__pyx_v_tex_c == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 88, __pyx_L3_error)
-    __pyx_v_mapping_type = __Pyx_PyInt_As_int(values[16]); if (unlikely((__pyx_v_mapping_type == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 89, __pyx_L3_error)
+    __pyx_v_nver = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_nver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 90, __pyx_L3_error)
+    __pyx_v_tex_nver = __Pyx_PyInt_As_int(values[8]); if (unlikely((__pyx_v_tex_nver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 90, __pyx_L3_error)
+    __pyx_v_ntri = __Pyx_PyInt_As_int(values[9]); if (unlikely((__pyx_v_ntri == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 90, __pyx_L3_error)
+    __pyx_v_h = __Pyx_PyInt_As_int(values[10]); if (unlikely((__pyx_v_h == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 91, __pyx_L3_error)
+    __pyx_v_w = __Pyx_PyInt_As_int(values[11]); if (unlikely((__pyx_v_w == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 91, __pyx_L3_error)
+    __pyx_v_c = __Pyx_PyInt_As_int(values[12]); if (unlikely((__pyx_v_c == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 91, __pyx_L3_error)
+    __pyx_v_tex_h = __Pyx_PyInt_As_int(values[13]); if (unlikely((__pyx_v_tex_h == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 92, __pyx_L3_error)
+    __pyx_v_tex_w = __Pyx_PyInt_As_int(values[14]); if (unlikely((__pyx_v_tex_w == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 92, __pyx_L3_error)
+    __pyx_v_tex_c = __Pyx_PyInt_As_int(values[15]); if (unlikely((__pyx_v_tex_c == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 92, __pyx_L3_error)
+    __pyx_v_mapping_type = __Pyx_PyInt_As_int(values[16]); if (unlikely((__pyx_v_mapping_type == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 93, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 79, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("render_texture_core", 1, 17, 17, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 83, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("mesh_core_cython.render_texture_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_image), __pyx_ptype_5numpy_ndarray, 0, "image", 0))) __PYX_ERR(0, 79, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_vertices), __pyx_ptype_5numpy_ndarray, 0, "vertices", 0))) __PYX_ERR(0, 80, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangles), __pyx_ptype_5numpy_ndarray, 0, "triangles", 0))) __PYX_ERR(0, 81, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_texture), __pyx_ptype_5numpy_ndarray, 0, "texture", 0))) __PYX_ERR(0, 82, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_tex_coords), __pyx_ptype_5numpy_ndarray, 0, "tex_coords", 0))) __PYX_ERR(0, 83, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_tex_triangles), __pyx_ptype_5numpy_ndarray, 0, "tex_triangles", 0))) __PYX_ERR(0, 84, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_depth_buffer), __pyx_ptype_5numpy_ndarray, 0, "depth_buffer", 0))) __PYX_ERR(0, 85, __pyx_L1_error)
-  __pyx_r = __pyx_pf_16mesh_core_cython_6render_texture_core(__pyx_self, __pyx_v_image, __pyx_v_vertices, __pyx_v_triangles, __pyx_v_texture, __pyx_v_tex_coords, __pyx_v_tex_triangles, __pyx_v_depth_buffer, __pyx_v_nver, __pyx_v_tex_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w, __pyx_v_c, __pyx_v_tex_h, __pyx_v_tex_w, __pyx_v_tex_c, __pyx_v_mapping_type);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_image), __pyx_ptype_5numpy_ndarray, 0, "image", 0))) __PYX_ERR(0, 83, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_vertices), __pyx_ptype_5numpy_ndarray, 0, "vertices", 0))) __PYX_ERR(0, 84, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangles), __pyx_ptype_5numpy_ndarray, 0, "triangles", 0))) __PYX_ERR(0, 85, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_texture), __pyx_ptype_5numpy_ndarray, 0, "texture", 0))) __PYX_ERR(0, 86, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_tex_coords), __pyx_ptype_5numpy_ndarray, 0, "tex_coords", 0))) __PYX_ERR(0, 87, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_tex_triangles), __pyx_ptype_5numpy_ndarray, 0, "tex_triangles", 0))) __PYX_ERR(0, 88, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_depth_buffer), __pyx_ptype_5numpy_ndarray, 0, "depth_buffer", 0))) __PYX_ERR(0, 89, __pyx_L1_error)
+  __pyx_r = __pyx_pf_16mesh_core_cython_4render_texture_core(__pyx_self, __pyx_v_image, __pyx_v_vertices, __pyx_v_triangles, __pyx_v_texture, __pyx_v_tex_coords, __pyx_v_tex_triangles, __pyx_v_depth_buffer, __pyx_v_nver, __pyx_v_tex_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w, __pyx_v_c, __pyx_v_tex_h, __pyx_v_tex_w, __pyx_v_tex_c, __pyx_v_mapping_type);
 
   /* function exit code */
   goto __pyx_L0;
@@ -2796,7 +2623,7 @@ static PyObject *__pyx_pw_16mesh_core_cython_7render_texture_core(PyObject *__py
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_16mesh_core_cython_6render_texture_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_texture, PyArrayObject *__pyx_v_tex_coords, PyArrayObject *__pyx_v_tex_triangles, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_tex_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c, int __pyx_v_tex_h, int __pyx_v_tex_w, int __pyx_v_tex_c, int __pyx_v_mapping_type) {
+static PyObject *__pyx_pf_16mesh_core_cython_4render_texture_core(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_image, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_texture, PyArrayObject *__pyx_v_tex_coords, PyArrayObject *__pyx_v_tex_triangles, PyArrayObject *__pyx_v_depth_buffer, int __pyx_v_nver, int __pyx_v_tex_nver, int __pyx_v_ntri, int __pyx_v_h, int __pyx_v_w, int __pyx_v_c, int __pyx_v_tex_h, int __pyx_v_tex_w, int __pyx_v_tex_c, int __pyx_v_mapping_type) {
   __Pyx_LocalBuf_ND __pyx_pybuffernd_depth_buffer;
   __Pyx_Buffer __pyx_pybuffer_depth_buffer;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_image;
@@ -2847,41 +2674,41 @@ static PyObject *__pyx_pf_16mesh_core_cython_6render_texture_core(CYTHON_UNUSED 
   __pyx_pybuffernd_depth_buffer.rcbuffer = &__pyx_pybuffer_depth_buffer;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_image, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 3, 0, __pyx_stack) == -1)) __PYX_ERR(0, 79, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_image, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 3, 0, __pyx_stack) == -1)) __PYX_ERR(0, 83, __pyx_L1_error)
   }
   __pyx_pybuffernd_image.diminfo[0].strides = __pyx_pybuffernd_image.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_image.diminfo[0].shape = __pyx_pybuffernd_image.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_image.diminfo[1].strides = __pyx_pybuffernd_image.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_image.diminfo[1].shape = __pyx_pybuffernd_image.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_image.diminfo[2].strides = __pyx_pybuffernd_image.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_image.diminfo[2].shape = __pyx_pybuffernd_image.rcbuffer->pybuffer.shape[2];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer, (PyObject*)__pyx_v_vertices, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 79, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer, (PyObject*)__pyx_v_vertices, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 83, __pyx_L1_error)
   }
   __pyx_pybuffernd_vertices.diminfo[0].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vertices.diminfo[0].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_vertices.diminfo[1].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_vertices.diminfo[1].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 79, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 83, __pyx_L1_error)
   }
   __pyx_pybuffernd_triangles.diminfo[0].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_triangles.diminfo[0].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_triangles.diminfo[1].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_triangles.diminfo[1].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_texture.rcbuffer->pybuffer, (PyObject*)__pyx_v_texture, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 3, 0, __pyx_stack) == -1)) __PYX_ERR(0, 79, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_texture.rcbuffer->pybuffer, (PyObject*)__pyx_v_texture, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 3, 0, __pyx_stack) == -1)) __PYX_ERR(0, 83, __pyx_L1_error)
   }
   __pyx_pybuffernd_texture.diminfo[0].strides = __pyx_pybuffernd_texture.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_texture.diminfo[0].shape = __pyx_pybuffernd_texture.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_texture.diminfo[1].strides = __pyx_pybuffernd_texture.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_texture.diminfo[1].shape = __pyx_pybuffernd_texture.rcbuffer->pybuffer.shape[1]; __pyx_pybuffernd_texture.diminfo[2].strides = __pyx_pybuffernd_texture.rcbuffer->pybuffer.strides[2]; __pyx_pybuffernd_texture.diminfo[2].shape = __pyx_pybuffernd_texture.rcbuffer->pybuffer.shape[2];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_tex_coords.rcbuffer->pybuffer, (PyObject*)__pyx_v_tex_coords, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 79, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_tex_coords.rcbuffer->pybuffer, (PyObject*)__pyx_v_tex_coords, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 83, __pyx_L1_error)
   }
   __pyx_pybuffernd_tex_coords.diminfo[0].strides = __pyx_pybuffernd_tex_coords.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_tex_coords.diminfo[0].shape = __pyx_pybuffernd_tex_coords.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_tex_coords.diminfo[1].strides = __pyx_pybuffernd_tex_coords.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_tex_coords.diminfo[1].shape = __pyx_pybuffernd_tex_coords.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_tex_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_tex_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 79, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_tex_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_tex_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 83, __pyx_L1_error)
   }
   __pyx_pybuffernd_tex_triangles.diminfo[0].strides = __pyx_pybuffernd_tex_triangles.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_tex_triangles.diminfo[0].shape = __pyx_pybuffernd_tex_triangles.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_tex_triangles.diminfo[1].strides = __pyx_pybuffernd_tex_triangles.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_tex_triangles.diminfo[1].shape = __pyx_pybuffernd_tex_triangles.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer, (PyObject*)__pyx_v_depth_buffer, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 79, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer, (PyObject*)__pyx_v_depth_buffer, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 83, __pyx_L1_error)
   }
   __pyx_pybuffernd_depth_buffer.diminfo[0].strides = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_depth_buffer.diminfo[0].shape = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_depth_buffer.diminfo[1].strides = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_depth_buffer.diminfo[1].shape = __pyx_pybuffernd_depth_buffer.rcbuffer->pybuffer.shape[1];
 
-  /* "mesh_core_cython.pyx":91
+  /* "mesh_core_cython.pyx":95
  *                 int mapping_type
  *                 ):
  *     _render_texture_core(             # <<<<<<<<<<<<<<
@@ -2890,7 +2717,7 @@ static PyObject *__pyx_pf_16mesh_core_cython_6render_texture_core(CYTHON_UNUSED 
  */
   _render_texture_core(((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_image))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_vertices))), ((int *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangles))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_texture))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_tex_coords))), ((int *)PyArray_DATA(((PyArrayObject *)__pyx_v_tex_triangles))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_depth_buffer))), __pyx_v_nver, __pyx_v_tex_nver, __pyx_v_ntri, __pyx_v_h, __pyx_v_w, __pyx_v_c, __pyx_v_tex_h, __pyx_v_tex_w, __pyx_v_tex_c, __pyx_v_mapping_type);
 
-  /* "mesh_core_cython.pyx":79
+  /* "mesh_core_cython.pyx":83
  *         h, w, c)
  * 
  * def render_texture_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
@@ -2931,261 +2758,7 @@ static PyObject *__pyx_pf_16mesh_core_cython_6render_texture_core(CYTHON_UNUSED 
   return __pyx_r;
 }
 
-/* "mesh_core_cython.pyx":100
- *         mapping_type)
- * 
- * def write_obj_with_colors_texture_core(string filename, string mtl_name,             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-
-/* Python wrapper */
-static PyObject *__pyx_pw_16mesh_core_cython_9write_obj_with_colors_texture_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_16mesh_core_cython_9write_obj_with_colors_texture_core = {"write_obj_with_colors_texture_core", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_16mesh_core_cython_9write_obj_with_colors_texture_core, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_16mesh_core_cython_9write_obj_with_colors_texture_core(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  std::string __pyx_v_filename;
-  std::string __pyx_v_mtl_name;
-  PyArrayObject *__pyx_v_vertices = 0;
-  PyArrayObject *__pyx_v_triangles = 0;
-  PyArrayObject *__pyx_v_colors = 0;
-  PyArrayObject *__pyx_v_uv_coords = 0;
-  int __pyx_v_nver;
-  int __pyx_v_ntri;
-  int __pyx_v_ntexver;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  PyObject *__pyx_r = 0;
-  __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("write_obj_with_colors_texture_core (wrapper)", 0);
-  {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_filename,&__pyx_n_s_mtl_name,&__pyx_n_s_vertices,&__pyx_n_s_triangles,&__pyx_n_s_colors,&__pyx_n_s_uv_coords,&__pyx_n_s_nver,&__pyx_n_s_ntri,&__pyx_n_s_ntexver,0};
-    PyObject* values[9] = {0,0,0,0,0,0,0,0,0};
-    if (unlikely(__pyx_kwds)) {
-      Py_ssize_t kw_args;
-      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
-      switch (pos_args) {
-        case  9: values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
-        CYTHON_FALLTHROUGH;
-        case  8: values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
-        CYTHON_FALLTHROUGH;
-        case  7: values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
-        CYTHON_FALLTHROUGH;
-        case  6: values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
-        CYTHON_FALLTHROUGH;
-        case  5: values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
-        CYTHON_FALLTHROUGH;
-        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
-        CYTHON_FALLTHROUGH;
-        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
-        CYTHON_FALLTHROUGH;
-        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
-        CYTHON_FALLTHROUGH;
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        CYTHON_FALLTHROUGH;
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-      kw_args = PyDict_Size(__pyx_kwds);
-      switch (pos_args) {
-        case  0:
-        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_filename)) != 0)) kw_args--;
-        else goto __pyx_L5_argtuple_error;
-        CYTHON_FALLTHROUGH;
-        case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_mtl_name)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("write_obj_with_colors_texture_core", 1, 9, 9, 1); __PYX_ERR(0, 100, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  2:
-        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_vertices)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("write_obj_with_colors_texture_core", 1, 9, 9, 2); __PYX_ERR(0, 100, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  3:
-        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_triangles)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("write_obj_with_colors_texture_core", 1, 9, 9, 3); __PYX_ERR(0, 100, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  4:
-        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_colors)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("write_obj_with_colors_texture_core", 1, 9, 9, 4); __PYX_ERR(0, 100, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  5:
-        if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_uv_coords)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("write_obj_with_colors_texture_core", 1, 9, 9, 5); __PYX_ERR(0, 100, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  6:
-        if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_nver)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("write_obj_with_colors_texture_core", 1, 9, 9, 6); __PYX_ERR(0, 100, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  7:
-        if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ntri)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("write_obj_with_colors_texture_core", 1, 9, 9, 7); __PYX_ERR(0, 100, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  8:
-        if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_ntexver)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("write_obj_with_colors_texture_core", 1, 9, 9, 8); __PYX_ERR(0, 100, __pyx_L3_error)
-        }
-      }
-      if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "write_obj_with_colors_texture_core") < 0)) __PYX_ERR(0, 100, __pyx_L3_error)
-      }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 9) {
-      goto __pyx_L5_argtuple_error;
-    } else {
-      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
-      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
-      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
-      values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
-      values[5] = PyTuple_GET_ITEM(__pyx_args, 5);
-      values[6] = PyTuple_GET_ITEM(__pyx_args, 6);
-      values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
-      values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
-    }
-    __pyx_v_filename = __pyx_convert_string_from_py_std__in_string(values[0]); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 100, __pyx_L3_error)
-    __pyx_v_mtl_name = __pyx_convert_string_from_py_std__in_string(values[1]); if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 100, __pyx_L3_error)
-    __pyx_v_vertices = ((PyArrayObject *)values[2]);
-    __pyx_v_triangles = ((PyArrayObject *)values[3]);
-    __pyx_v_colors = ((PyArrayObject *)values[4]);
-    __pyx_v_uv_coords = ((PyArrayObject *)values[5]);
-    __pyx_v_nver = __Pyx_PyInt_As_int(values[6]); if (unlikely((__pyx_v_nver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L3_error)
-    __pyx_v_ntri = __Pyx_PyInt_As_int(values[7]); if (unlikely((__pyx_v_ntri == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L3_error)
-    __pyx_v_ntexver = __Pyx_PyInt_As_int(values[8]); if (unlikely((__pyx_v_ntexver == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L3_error)
-  }
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("write_obj_with_colors_texture_core", 1, 9, 9, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 100, __pyx_L3_error)
-  __pyx_L3_error:;
-  __Pyx_AddTraceback("mesh_core_cython.write_obj_with_colors_texture_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return NULL;
-  __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_vertices), __pyx_ptype_5numpy_ndarray, 0, "vertices", 0))) __PYX_ERR(0, 101, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_triangles), __pyx_ptype_5numpy_ndarray, 0, "triangles", 0))) __PYX_ERR(0, 102, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_colors), __pyx_ptype_5numpy_ndarray, 0, "colors", 0))) __PYX_ERR(0, 103, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_uv_coords), __pyx_ptype_5numpy_ndarray, 0, "uv_coords", 0))) __PYX_ERR(0, 104, __pyx_L1_error)
-  __pyx_r = __pyx_pf_16mesh_core_cython_8write_obj_with_colors_texture_core(__pyx_self, __pyx_v_filename, __pyx_v_mtl_name, __pyx_v_vertices, __pyx_v_triangles, __pyx_v_colors, __pyx_v_uv_coords, __pyx_v_nver, __pyx_v_ntri, __pyx_v_ntexver);
-
-  /* function exit code */
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  __pyx_r = NULL;
-  __pyx_L0:;
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-static PyObject *__pyx_pf_16mesh_core_cython_8write_obj_with_colors_texture_core(CYTHON_UNUSED PyObject *__pyx_self, std::string __pyx_v_filename, std::string __pyx_v_mtl_name, PyArrayObject *__pyx_v_vertices, PyArrayObject *__pyx_v_triangles, PyArrayObject *__pyx_v_colors, PyArrayObject *__pyx_v_uv_coords, int __pyx_v_nver, int __pyx_v_ntri, int __pyx_v_ntexver) {
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_colors;
-  __Pyx_Buffer __pyx_pybuffer_colors;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_triangles;
-  __Pyx_Buffer __pyx_pybuffer_triangles;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_uv_coords;
-  __Pyx_Buffer __pyx_pybuffer_uv_coords;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_vertices;
-  __Pyx_Buffer __pyx_pybuffer_vertices;
-  PyObject *__pyx_r = NULL;
-  __Pyx_RefNannyDeclarations
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("write_obj_with_colors_texture_core", 0);
-  __pyx_pybuffer_vertices.pybuffer.buf = NULL;
-  __pyx_pybuffer_vertices.refcount = 0;
-  __pyx_pybuffernd_vertices.data = NULL;
-  __pyx_pybuffernd_vertices.rcbuffer = &__pyx_pybuffer_vertices;
-  __pyx_pybuffer_triangles.pybuffer.buf = NULL;
-  __pyx_pybuffer_triangles.refcount = 0;
-  __pyx_pybuffernd_triangles.data = NULL;
-  __pyx_pybuffernd_triangles.rcbuffer = &__pyx_pybuffer_triangles;
-  __pyx_pybuffer_colors.pybuffer.buf = NULL;
-  __pyx_pybuffer_colors.refcount = 0;
-  __pyx_pybuffernd_colors.data = NULL;
-  __pyx_pybuffernd_colors.rcbuffer = &__pyx_pybuffer_colors;
-  __pyx_pybuffer_uv_coords.pybuffer.buf = NULL;
-  __pyx_pybuffer_uv_coords.refcount = 0;
-  __pyx_pybuffernd_uv_coords.data = NULL;
-  __pyx_pybuffernd_uv_coords.rcbuffer = &__pyx_pybuffer_uv_coords;
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer, (PyObject*)__pyx_v_vertices, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 100, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_vertices.diminfo[0].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_vertices.diminfo[0].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_vertices.diminfo[1].strides = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_vertices.diminfo[1].shape = __pyx_pybuffernd_vertices.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer, (PyObject*)__pyx_v_triangles, &__Pyx_TypeInfo_int, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 100, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_triangles.diminfo[0].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_triangles.diminfo[0].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_triangles.diminfo[1].strides = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_triangles.diminfo[1].shape = __pyx_pybuffernd_triangles.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_colors.rcbuffer->pybuffer, (PyObject*)__pyx_v_colors, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 100, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_colors.diminfo[0].strides = __pyx_pybuffernd_colors.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_colors.diminfo[0].shape = __pyx_pybuffernd_colors.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_colors.diminfo[1].strides = __pyx_pybuffernd_colors.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_colors.diminfo[1].shape = __pyx_pybuffernd_colors.rcbuffer->pybuffer.shape[1];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_uv_coords.rcbuffer->pybuffer, (PyObject*)__pyx_v_uv_coords, &__Pyx_TypeInfo_float, PyBUF_FORMAT| PyBUF_C_CONTIGUOUS, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 100, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_uv_coords.diminfo[0].strides = __pyx_pybuffernd_uv_coords.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_uv_coords.diminfo[0].shape = __pyx_pybuffernd_uv_coords.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_uv_coords.diminfo[1].strides = __pyx_pybuffernd_uv_coords.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_uv_coords.diminfo[1].shape = __pyx_pybuffernd_uv_coords.rcbuffer->pybuffer.shape[1];
-
-  /* "mesh_core_cython.pyx":107
- *                 int nver, int ntri, int ntexver
- *                 ):
- *     _write_obj_with_colors_texture(filename, mtl_name,             # <<<<<<<<<<<<<<
- *         <float*> np.PyArray_DATA(vertices), <int*> np.PyArray_DATA(triangles), <float*> np.PyArray_DATA(colors), <float*> np.PyArray_DATA(uv_coords),
- *         nver, ntri, ntexver)
- */
-  _write_obj_with_colors_texture(__pyx_v_filename, __pyx_v_mtl_name, ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_vertices))), ((int *)PyArray_DATA(((PyArrayObject *)__pyx_v_triangles))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_colors))), ((float *)PyArray_DATA(((PyArrayObject *)__pyx_v_uv_coords))), __pyx_v_nver, __pyx_v_ntri, __pyx_v_ntexver);
-
-  /* "mesh_core_cython.pyx":100
- *         mapping_type)
- * 
- * def write_obj_with_colors_texture_core(string filename, string mtl_name,             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-
-  /* function exit code */
-  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
-  goto __pyx_L0;
-  __pyx_L1_error:;
-  { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
-    __Pyx_PyThreadState_declare
-    __Pyx_PyThreadState_assign
-    __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_colors.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_uv_coords.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer);
-  __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("mesh_core_cython.write_obj_with_colors_texture_core", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
-  goto __pyx_L2;
-  __pyx_L0:;
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_colors.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_triangles.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_uv_coords.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_vertices.rcbuffer->pybuffer);
-  __pyx_L2:;
-  __Pyx_XGIVEREF(__pyx_r);
-  __Pyx_RefNannyFinishContext();
-  return __pyx_r;
-}
-
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":735
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":734
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -3202,7 +2775,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew1", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":736
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":735
  * 
  * cdef inline object PyArray_MultiIterNew1(a):
  *     return PyArray_MultiIterNew(1, <void*>a)             # <<<<<<<<<<<<<<
@@ -3210,13 +2783,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
  * cdef inline object PyArray_MultiIterNew2(a, b):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(1, ((void *)__pyx_v_a)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 736, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(1, ((void *)__pyx_v_a)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 735, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":735
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":734
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -3235,7 +2808,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":738
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":737
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -3252,7 +2825,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew2", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":739
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":738
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)             # <<<<<<<<<<<<<<
@@ -3260,13 +2833,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(2, ((void *)__pyx_v_a), ((void *)__pyx_v_b)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 739, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(2, ((void *)__pyx_v_a), ((void *)__pyx_v_b)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 738, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":738
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":737
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -3285,7 +2858,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":741
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":740
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -3302,7 +2875,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew3", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":742
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":741
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)             # <<<<<<<<<<<<<<
@@ -3310,13 +2883,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(3, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 742, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(3, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 741, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":741
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":740
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -3335,7 +2908,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":744
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":743
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -3352,7 +2925,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew4", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":745
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":744
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)             # <<<<<<<<<<<<<<
@@ -3360,13 +2933,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(4, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c), ((void *)__pyx_v_d)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 745, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(4, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c), ((void *)__pyx_v_d)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 744, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":744
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":743
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -3385,7 +2958,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":747
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":746
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -3402,7 +2975,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew5", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":748
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":747
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)             # <<<<<<<<<<<<<<
@@ -3410,13 +2983,13 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyArray_MultiIterNew(5, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c), ((void *)__pyx_v_d), ((void *)__pyx_v_e)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 748, __pyx_L1_error)
+  __pyx_t_1 = PyArray_MultiIterNew(5, ((void *)__pyx_v_a), ((void *)__pyx_v_b), ((void *)__pyx_v_c), ((void *)__pyx_v_d), ((void *)__pyx_v_e)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 747, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":747
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":746
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -3435,7 +3008,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":750
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":749
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -3449,7 +3022,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("PyDataType_SHAPE", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":751
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":750
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -3459,7 +3032,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   __pyx_t_1 = (PyDataType_HASSUBARRAY(__pyx_v_d) != 0);
   if (__pyx_t_1) {
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":752
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":751
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):
  *         return <tuple>d.subarray.shape             # <<<<<<<<<<<<<<
@@ -3471,7 +3044,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     __pyx_r = ((PyObject*)__pyx_v_d->subarray->shape);
     goto __pyx_L0;
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":751
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":750
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -3480,7 +3053,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
  */
   }
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":754
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":753
  *         return <tuple>d.subarray.shape
  *     else:
  *         return ()             # <<<<<<<<<<<<<<
@@ -3494,7 +3067,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     goto __pyx_L0;
   }
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":750
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":749
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -3509,7 +3082,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":929
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":928
  *     int _import_umath() except -1
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -3521,7 +3094,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("set_array_base", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":930
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":929
  * 
  * cdef inline void set_array_base(ndarray arr, object base):
  *     Py_INCREF(base) # important to do this before stealing the reference below!             # <<<<<<<<<<<<<<
@@ -3530,7 +3103,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   Py_INCREF(__pyx_v_base);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":931
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":930
  * cdef inline void set_array_base(ndarray arr, object base):
  *     Py_INCREF(base) # important to do this before stealing the reference below!
  *     PyArray_SetBaseObject(arr, base)             # <<<<<<<<<<<<<<
@@ -3539,7 +3112,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   (void)(PyArray_SetBaseObject(__pyx_v_arr, __pyx_v_base));
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":929
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":928
  *     int _import_umath() except -1
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -3551,7 +3124,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __Pyx_RefNannyFinishContext();
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":933
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":932
  *     PyArray_SetBaseObject(arr, base)
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -3566,7 +3139,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("get_array_base", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":934
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":933
  * 
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)             # <<<<<<<<<<<<<<
@@ -3575,7 +3148,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
  */
   __pyx_v_base = PyArray_BASE(__pyx_v_arr);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":935
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":934
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)
  *     if base is NULL:             # <<<<<<<<<<<<<<
@@ -3585,7 +3158,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_t_1 = ((__pyx_v_base == NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":936
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":935
  *     base = PyArray_BASE(arr)
  *     if base is NULL:
  *         return None             # <<<<<<<<<<<<<<
@@ -3596,7 +3169,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
     __pyx_r = Py_None; __Pyx_INCREF(Py_None);
     goto __pyx_L0;
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":935
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":934
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)
  *     if base is NULL:             # <<<<<<<<<<<<<<
@@ -3605,7 +3178,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
  */
   }
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":937
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":936
  *     if base is NULL:
  *         return None
  *     return <object>base             # <<<<<<<<<<<<<<
@@ -3617,7 +3190,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_r = ((PyObject *)__pyx_v_base);
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":933
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":932
  *     PyArray_SetBaseObject(arr, base)
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -3632,7 +3205,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":941
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":940
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -3656,7 +3229,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_array", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":942
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":941
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -3672,16 +3245,16 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":943
+      /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":942
  * cdef inline int import_array() except -1:
  *     try:
  *         __pyx_import_array()             # <<<<<<<<<<<<<<
  *     except Exception:
  *         raise ImportError("numpy.core.multiarray failed to import")
  */
-      __pyx_t_4 = _import_array(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 943, __pyx_L3_error)
+      __pyx_t_4 = _import_array(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 942, __pyx_L3_error)
 
-      /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":942
+      /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":941
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -3695,7 +3268,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":944
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":943
  *     try:
  *         __pyx_import_array()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -3705,28 +3278,28 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __pyx_t_4 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(&((PyTypeObject*)PyExc_Exception)[0])));
     if (__pyx_t_4) {
       __Pyx_AddTraceback("numpy.import_array", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(1, 944, __pyx_L5_except_error)
+      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(1, 943, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GOTREF(__pyx_t_7);
 
-      /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":945
+      /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":944
  *         __pyx_import_array()
  *     except Exception:
  *         raise ImportError("numpy.core.multiarray failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef inline int import_umath() except -1:
  */
-      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 945, __pyx_L5_except_error)
+      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 944, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __PYX_ERR(1, 945, __pyx_L5_except_error)
+      __PYX_ERR(1, 944, __pyx_L5_except_error)
     }
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":942
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":941
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -3741,7 +3314,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":941
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":940
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -3764,7 +3337,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":947
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":946
  *         raise ImportError("numpy.core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -3788,7 +3361,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_umath", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":948
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":947
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -3804,16 +3377,16 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":949
+      /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":948
  * cdef inline int import_umath() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")
  */
-      __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 949, __pyx_L3_error)
+      __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 948, __pyx_L3_error)
 
-      /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":948
+      /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":947
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -3827,7 +3400,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":950
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":949
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -3837,28 +3410,28 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __pyx_t_4 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(&((PyTypeObject*)PyExc_Exception)[0])));
     if (__pyx_t_4) {
       __Pyx_AddTraceback("numpy.import_umath", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(1, 950, __pyx_L5_except_error)
+      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(1, 949, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GOTREF(__pyx_t_7);
 
-      /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":951
+      /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":950
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef inline int import_ufunc() except -1:
  */
-      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 951, __pyx_L5_except_error)
+      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 950, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __PYX_ERR(1, 951, __pyx_L5_except_error)
+      __PYX_ERR(1, 950, __pyx_L5_except_error)
     }
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":948
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":947
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -3873,7 +3446,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":947
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":946
  *         raise ImportError("numpy.core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -3896,7 +3469,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":953
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":952
  *         raise ImportError("numpy.core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -3920,7 +3493,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_ufunc", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":954
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":953
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -3936,16 +3509,16 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":955
+      /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":954
  * cdef inline int import_ufunc() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")
  */
-      __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 955, __pyx_L3_error)
+      __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 954, __pyx_L3_error)
 
-      /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":954
+      /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":953
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -3959,7 +3532,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":956
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":955
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -3969,28 +3542,28 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __pyx_t_4 = __Pyx_PyErr_ExceptionMatches(((PyObject *)(&((PyTypeObject*)PyExc_Exception)[0])));
     if (__pyx_t_4) {
       __Pyx_AddTraceback("numpy.import_ufunc", __pyx_clineno, __pyx_lineno, __pyx_filename);
-      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(1, 956, __pyx_L5_except_error)
+      if (__Pyx_GetException(&__pyx_t_5, &__pyx_t_6, &__pyx_t_7) < 0) __PYX_ERR(1, 955, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GOTREF(__pyx_t_7);
 
-      /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":957
+      /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":956
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef extern from *:
  */
-      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 957, __pyx_L5_except_error)
+      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 956, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      __PYX_ERR(1, 957, __pyx_L5_except_error)
+      __PYX_ERR(1, 956, __pyx_L5_except_error)
     }
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":954
+    /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":953
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -4005,7 +3578,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":953
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":952
  *         raise ImportError("numpy.core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -4028,7 +3601,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":967
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":966
  * 
  * 
  * cdef inline bint is_timedelta64_object(object obj):             # <<<<<<<<<<<<<<
@@ -4041,7 +3614,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("is_timedelta64_object", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":979
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":978
  *     bool
  *     """
  *     return PyObject_TypeCheck(obj, &PyTimedeltaArrType_Type)             # <<<<<<<<<<<<<<
@@ -4051,7 +3624,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_
   __pyx_r = PyObject_TypeCheck(__pyx_v_obj, (&PyTimedeltaArrType_Type));
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":967
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":966
  * 
  * 
  * cdef inline bint is_timedelta64_object(object obj):             # <<<<<<<<<<<<<<
@@ -4065,7 +3638,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_timedelta64_object(PyObject *__pyx_v_
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":982
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":981
  * 
  * 
  * cdef inline bint is_datetime64_object(object obj):             # <<<<<<<<<<<<<<
@@ -4078,7 +3651,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("is_datetime64_object", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":994
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":993
  *     bool
  *     """
  *     return PyObject_TypeCheck(obj, &PyDatetimeArrType_Type)             # <<<<<<<<<<<<<<
@@ -4088,7 +3661,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
   __pyx_r = PyObject_TypeCheck(__pyx_v_obj, (&PyDatetimeArrType_Type));
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":982
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":981
  * 
  * 
  * cdef inline bint is_datetime64_object(object obj):             # <<<<<<<<<<<<<<
@@ -4102,7 +3675,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":997
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":996
  * 
  * 
  * cdef inline npy_datetime get_datetime64_value(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -4113,7 +3686,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_is_datetime64_object(PyObject *__pyx_v_o
 static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *__pyx_v_obj) {
   npy_datetime __pyx_r;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":1004
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":1003
  *     also needed.  That can be found using `get_datetime64_unit`.
  *     """
  *     return (<PyDatetimeScalarObject*>obj).obval             # <<<<<<<<<<<<<<
@@ -4123,7 +3696,7 @@ static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *
   __pyx_r = ((PyDatetimeScalarObject *)__pyx_v_obj)->obval;
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":997
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":996
  * 
  * 
  * cdef inline npy_datetime get_datetime64_value(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -4136,7 +3709,7 @@ static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":1007
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":1006
  * 
  * 
  * cdef inline npy_timedelta get_timedelta64_value(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -4147,7 +3720,7 @@ static CYTHON_INLINE npy_datetime __pyx_f_5numpy_get_datetime64_value(PyObject *
 static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject *__pyx_v_obj) {
   npy_timedelta __pyx_r;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":1011
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":1010
  *     returns the int64 value underlying scalar numpy timedelta64 object
  *     """
  *     return (<PyTimedeltaScalarObject*>obj).obval             # <<<<<<<<<<<<<<
@@ -4157,7 +3730,7 @@ static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject
   __pyx_r = ((PyTimedeltaScalarObject *)__pyx_v_obj)->obval;
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":1007
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":1006
  * 
  * 
  * cdef inline npy_timedelta get_timedelta64_value(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -4170,7 +3743,7 @@ static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject
   return __pyx_r;
 }
 
-/* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":1014
+/* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":1013
  * 
  * 
  * cdef inline NPY_DATETIMEUNIT get_datetime64_unit(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -4181,7 +3754,7 @@ static CYTHON_INLINE npy_timedelta __pyx_f_5numpy_get_timedelta64_value(PyObject
 static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObject *__pyx_v_obj) {
   NPY_DATETIMEUNIT __pyx_r;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":1018
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":1017
  *     returns the unit part of the dtype for a numpy datetime64 object.
  *     """
  *     return <NPY_DATETIMEUNIT>(<PyDatetimeScalarObject*>obj).obmeta.base             # <<<<<<<<<<<<<<
@@ -4189,7 +3762,7 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
   __pyx_r = ((NPY_DATETIMEUNIT)((PyDatetimeScalarObject *)__pyx_v_obj)->obmeta.base);
   goto __pyx_L0;
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":1014
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":1013
  * 
  * 
  * cdef inline NPY_DATETIMEUNIT get_datetime64_unit(object obj) nogil:             # <<<<<<<<<<<<<<
@@ -4199,71 +3772,6 @@ static CYTHON_INLINE NPY_DATETIMEUNIT __pyx_f_5numpy_get_datetime64_unit(PyObjec
 
   /* function exit code */
   __pyx_L0:;
-  return __pyx_r;
-}
-
-/* "string.from_py":13
- * 
- * @cname("__pyx_convert_string_from_py_std__in_string")
- * cdef string __pyx_convert_string_from_py_std__in_string(object o) except *:             # <<<<<<<<<<<<<<
- *     cdef Py_ssize_t length = 0
- *     cdef const char* data = __Pyx_PyObject_AsStringAndSize(o, &length)
- */
-
-static std::string __pyx_convert_string_from_py_std__in_string(PyObject *__pyx_v_o) {
-  Py_ssize_t __pyx_v_length;
-  char const *__pyx_v_data;
-  std::string __pyx_r;
-  __Pyx_RefNannyDeclarations
-  char const *__pyx_t_1;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("__pyx_convert_string_from_py_std__in_string", 0);
-
-  /* "string.from_py":14
- * @cname("__pyx_convert_string_from_py_std__in_string")
- * cdef string __pyx_convert_string_from_py_std__in_string(object o) except *:
- *     cdef Py_ssize_t length = 0             # <<<<<<<<<<<<<<
- *     cdef const char* data = __Pyx_PyObject_AsStringAndSize(o, &length)
- *     return string(data, length)
- */
-  __pyx_v_length = 0;
-
-  /* "string.from_py":15
- * cdef string __pyx_convert_string_from_py_std__in_string(object o) except *:
- *     cdef Py_ssize_t length = 0
- *     cdef const char* data = __Pyx_PyObject_AsStringAndSize(o, &length)             # <<<<<<<<<<<<<<
- *     return string(data, length)
- * 
- */
-  __pyx_t_1 = __Pyx_PyObject_AsStringAndSize(__pyx_v_o, (&__pyx_v_length)); if (unlikely(__pyx_t_1 == ((char const *)NULL))) __PYX_ERR(2, 15, __pyx_L1_error)
-  __pyx_v_data = __pyx_t_1;
-
-  /* "string.from_py":16
- *     cdef Py_ssize_t length = 0
- *     cdef const char* data = __Pyx_PyObject_AsStringAndSize(o, &length)
- *     return string(data, length)             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __pyx_r = std::string(__pyx_v_data, __pyx_v_length);
-  goto __pyx_L0;
-
-  /* "string.from_py":13
- * 
- * @cname("__pyx_convert_string_from_py_std__in_string")
- * cdef string __pyx_convert_string_from_py_std__in_string(object o) except *:             # <<<<<<<<<<<<<<
- *     cdef Py_ssize_t length = 0
- *     cdef const char* data = __Pyx_PyObject_AsStringAndSize(o, &length)
- */
-
-  /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_AddTraceback("string.from_py.__pyx_convert_string_from_py_std__in_string", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_pretend_to_initialize(&__pyx_r);
-  __pyx_L0:;
-  __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
@@ -4314,13 +3822,10 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_ImportError, __pyx_k_ImportError, sizeof(__pyx_k_ImportError), 0, 0, 1, 1},
-  {&__pyx_n_s_barycentric_weight, __pyx_k_barycentric_weight, sizeof(__pyx_k_barycentric_weight), 0, 0, 1, 1},
   {&__pyx_n_s_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
   {&__pyx_n_s_colors, __pyx_k_colors, sizeof(__pyx_k_colors), 0, 0, 1, 1},
   {&__pyx_n_s_depth_buffer, __pyx_k_depth_buffer, sizeof(__pyx_k_depth_buffer), 0, 0, 1, 1},
-  {&__pyx_n_s_filename, __pyx_k_filename, sizeof(__pyx_k_filename), 0, 0, 1, 1},
-  {&__pyx_n_s_get_normal_core, __pyx_k_get_normal_core, sizeof(__pyx_k_get_normal_core), 0, 0, 1, 1},
   {&__pyx_n_s_h, __pyx_k_h, sizeof(__pyx_k_h), 0, 0, 1, 1},
   {&__pyx_n_s_image, __pyx_k_image, sizeof(__pyx_k_image), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
@@ -4328,18 +3833,15 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_mapping_type, __pyx_k_mapping_type, sizeof(__pyx_k_mapping_type), 0, 0, 1, 1},
   {&__pyx_n_s_mesh_core_cython, __pyx_k_mesh_core_cython, sizeof(__pyx_k_mesh_core_cython), 0, 0, 1, 1},
   {&__pyx_kp_s_mesh_core_cython_pyx, __pyx_k_mesh_core_cython_pyx, sizeof(__pyx_k_mesh_core_cython_pyx), 0, 0, 1, 0},
-  {&__pyx_n_s_mtl_name, __pyx_k_mtl_name, sizeof(__pyx_k_mtl_name), 0, 0, 1, 1},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
-  {&__pyx_n_s_normal, __pyx_k_normal, sizeof(__pyx_k_normal), 0, 0, 1, 1},
   {&__pyx_n_s_np, __pyx_k_np, sizeof(__pyx_k_np), 0, 0, 1, 1},
-  {&__pyx_n_s_ntexver, __pyx_k_ntexver, sizeof(__pyx_k_ntexver), 0, 0, 1, 1},
   {&__pyx_n_s_ntri, __pyx_k_ntri, sizeof(__pyx_k_ntri), 0, 0, 1, 1},
   {&__pyx_n_s_numpy, __pyx_k_numpy, sizeof(__pyx_k_numpy), 0, 0, 1, 1},
   {&__pyx_kp_s_numpy_core_multiarray_failed_to, __pyx_k_numpy_core_multiarray_failed_to, sizeof(__pyx_k_numpy_core_multiarray_failed_to), 0, 0, 1, 0},
   {&__pyx_kp_s_numpy_core_umath_failed_to_impor, __pyx_k_numpy_core_umath_failed_to_impor, sizeof(__pyx_k_numpy_core_umath_failed_to_impor), 0, 0, 1, 0},
   {&__pyx_n_s_nver, __pyx_k_nver, sizeof(__pyx_k_nver), 0, 0, 1, 1},
-  {&__pyx_n_s_rasterize_triangles_core, __pyx_k_rasterize_triangles_core, sizeof(__pyx_k_rasterize_triangles_core), 0, 0, 1, 1},
   {&__pyx_n_s_render_colors_core, __pyx_k_render_colors_core, sizeof(__pyx_k_render_colors_core), 0, 0, 1, 1},
+  {&__pyx_n_s_render_mask_texture_core, __pyx_k_render_mask_texture_core, sizeof(__pyx_k_render_mask_texture_core), 0, 0, 1, 1},
   {&__pyx_n_s_render_texture_core, __pyx_k_render_texture_core, sizeof(__pyx_k_render_texture_core), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_n_s_tex_c, __pyx_k_tex_c, sizeof(__pyx_k_tex_c), 0, 0, 1, 1},
@@ -4349,17 +3851,15 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_tex_triangles, __pyx_k_tex_triangles, sizeof(__pyx_k_tex_triangles), 0, 0, 1, 1},
   {&__pyx_n_s_tex_w, __pyx_k_tex_w, sizeof(__pyx_k_tex_w), 0, 0, 1, 1},
   {&__pyx_n_s_texture, __pyx_k_texture, sizeof(__pyx_k_texture), 0, 0, 1, 1},
-  {&__pyx_n_s_tri_normal, __pyx_k_tri_normal, sizeof(__pyx_k_tri_normal), 0, 0, 1, 1},
-  {&__pyx_n_s_triangle_buffer, __pyx_k_triangle_buffer, sizeof(__pyx_k_triangle_buffer), 0, 0, 1, 1},
+  {&__pyx_n_s_triangle_depth, __pyx_k_triangle_depth, sizeof(__pyx_k_triangle_depth), 0, 0, 1, 1},
+  {&__pyx_n_s_triangle_texture, __pyx_k_triangle_texture, sizeof(__pyx_k_triangle_texture), 0, 0, 1, 1},
   {&__pyx_n_s_triangles, __pyx_k_triangles, sizeof(__pyx_k_triangles), 0, 0, 1, 1},
-  {&__pyx_n_s_uv_coords, __pyx_k_uv_coords, sizeof(__pyx_k_uv_coords), 0, 0, 1, 1},
   {&__pyx_n_s_vertices, __pyx_k_vertices, sizeof(__pyx_k_vertices), 0, 0, 1, 1},
   {&__pyx_n_s_w, __pyx_k_w, sizeof(__pyx_k_w), 0, 0, 1, 1},
-  {&__pyx_n_s_write_obj_with_colors_texture_co, __pyx_k_write_obj_with_colors_texture_co, sizeof(__pyx_k_write_obj_with_colors_texture_co), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 945, __pyx_L1_error)
+  __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 944, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -4369,87 +3869,63 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":945
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":944
  *         __pyx_import_array()
  *     except Exception:
  *         raise ImportError("numpy.core.multiarray failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef inline int import_umath() except -1:
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_numpy_core_multiarray_failed_to); if (unlikely(!__pyx_tuple_)) __PYX_ERR(1, 945, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_s_numpy_core_multiarray_failed_to); if (unlikely(!__pyx_tuple_)) __PYX_ERR(1, 944, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "../../../../../miniconda3/envs/anders_torch/lib/python3.8/site-packages/numpy/__init__.pxd":951
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":950
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef inline int import_ufunc() except -1:
  */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_s_numpy_core_umath_failed_to_impor); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(1, 951, __pyx_L1_error)
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_s_numpy_core_umath_failed_to_impor); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(1, 950, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__2);
   __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "mesh_core_cython.pyx":40
- *         int nver, int ntri, int ntexver)
+  /* "mesh_core_cython.pyx":43
  * 
- * def get_normal_core(np.ndarray[float, ndim=2, mode = "c"] normal not None,             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] tri_normal not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-  __pyx_tuple__3 = PyTuple_Pack(4, __pyx_n_s_normal, __pyx_n_s_tri_normal, __pyx_n_s_triangles, __pyx_n_s_ntri); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 40, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__3);
-  __Pyx_GIVEREF(__pyx_tuple__3);
-  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(4, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_mesh_core_cython_pyx, __pyx_n_s_get_normal_core, 40, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 40, __pyx_L1_error)
-
-  /* "mesh_core_cython.pyx":49
- *         ntri)
- * 
- * def rasterize_triangles_core(             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-  __pyx_tuple__5 = PyTuple_Pack(9, __pyx_n_s_vertices, __pyx_n_s_triangles, __pyx_n_s_depth_buffer, __pyx_n_s_triangle_buffer, __pyx_n_s_barycentric_weight, __pyx_n_s_nver, __pyx_n_s_ntri, __pyx_n_s_h, __pyx_n_s_w); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 49, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__5);
-  __Pyx_GIVEREF(__pyx_tuple__5);
-  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(9, 0, 9, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_mesh_core_cython_pyx, __pyx_n_s_rasterize_triangles_core, 49, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 49, __pyx_L1_error)
-
-  /* "mesh_core_cython.pyx":64
- *         h, w)
  * 
  * def render_colors_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
  *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
  *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
  */
-  __pyx_tuple__7 = PyTuple_Pack(10, __pyx_n_s_image, __pyx_n_s_vertices, __pyx_n_s_triangles, __pyx_n_s_colors, __pyx_n_s_depth_buffer, __pyx_n_s_nver, __pyx_n_s_ntri, __pyx_n_s_h, __pyx_n_s_w, __pyx_n_s_c); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 64, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__7);
-  __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(10, 0, 10, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_mesh_core_cython_pyx, __pyx_n_s_render_colors_core, 64, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 64, __pyx_L1_error)
+  __pyx_tuple__3 = PyTuple_Pack(10, __pyx_n_s_image, __pyx_n_s_vertices, __pyx_n_s_triangles, __pyx_n_s_colors, __pyx_n_s_depth_buffer, __pyx_n_s_nver, __pyx_n_s_ntri, __pyx_n_s_h, __pyx_n_s_w, __pyx_n_s_c); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 43, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__3);
+  __Pyx_GIVEREF(__pyx_tuple__3);
+  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(10, 0, 10, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_mesh_core_cython_pyx, __pyx_n_s_render_colors_core, 43, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 43, __pyx_L1_error)
 
-  /* "mesh_core_cython.pyx":79
+  /* "mesh_core_cython.pyx":62
+ *         h, w, c)
+ * 
+ * def render_mask_texture_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
+ *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
+ *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
+ */
+  __pyx_tuple__5 = PyTuple_Pack(11, __pyx_n_s_image, __pyx_n_s_vertices, __pyx_n_s_triangles, __pyx_n_s_triangle_texture, __pyx_n_s_triangle_depth, __pyx_n_s_depth_buffer, __pyx_n_s_nver, __pyx_n_s_ntri, __pyx_n_s_h, __pyx_n_s_w, __pyx_n_s_c); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 62, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__5);
+  __Pyx_GIVEREF(__pyx_tuple__5);
+  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(11, 0, 11, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_mesh_core_cython_pyx, __pyx_n_s_render_mask_texture_core, 62, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 62, __pyx_L1_error)
+
+  /* "mesh_core_cython.pyx":83
  *         h, w, c)
  * 
  * def render_texture_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
  *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
  *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
  */
-  __pyx_tuple__9 = PyTuple_Pack(17, __pyx_n_s_image, __pyx_n_s_vertices, __pyx_n_s_triangles, __pyx_n_s_texture, __pyx_n_s_tex_coords, __pyx_n_s_tex_triangles, __pyx_n_s_depth_buffer, __pyx_n_s_nver, __pyx_n_s_tex_nver, __pyx_n_s_ntri, __pyx_n_s_h, __pyx_n_s_w, __pyx_n_s_c, __pyx_n_s_tex_h, __pyx_n_s_tex_w, __pyx_n_s_tex_c, __pyx_n_s_mapping_type); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 79, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__9);
-  __Pyx_GIVEREF(__pyx_tuple__9);
-  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(17, 0, 17, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_mesh_core_cython_pyx, __pyx_n_s_render_texture_core, 79, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 79, __pyx_L1_error)
-
-  /* "mesh_core_cython.pyx":100
- *         mapping_type)
- * 
- * def write_obj_with_colors_texture_core(string filename, string mtl_name,             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-  __pyx_tuple__11 = PyTuple_Pack(9, __pyx_n_s_filename, __pyx_n_s_mtl_name, __pyx_n_s_vertices, __pyx_n_s_triangles, __pyx_n_s_colors, __pyx_n_s_uv_coords, __pyx_n_s_nver, __pyx_n_s_ntri, __pyx_n_s_ntexver); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 100, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__11);
-  __Pyx_GIVEREF(__pyx_tuple__11);
-  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(9, 0, 9, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_mesh_core_cython_pyx, __pyx_n_s_write_obj_with_colors_texture_co, 100, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) __PYX_ERR(0, 100, __pyx_L1_error)
+  __pyx_tuple__7 = PyTuple_Pack(17, __pyx_n_s_image, __pyx_n_s_vertices, __pyx_n_s_triangles, __pyx_n_s_texture, __pyx_n_s_tex_coords, __pyx_n_s_tex_triangles, __pyx_n_s_depth_buffer, __pyx_n_s_nver, __pyx_n_s_tex_nver, __pyx_n_s_ntri, __pyx_n_s_h, __pyx_n_s_w, __pyx_n_s_c, __pyx_n_s_tex_h, __pyx_n_s_tex_w, __pyx_n_s_tex_c, __pyx_n_s_mapping_type); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 83, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__7);
+  __Pyx_GIVEREF(__pyx_tuple__7);
+  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(17, 0, 17, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_mesh_core_cython_pyx, __pyx_n_s_render_texture_core, 83, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 83, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -4512,7 +3988,7 @@ static int __Pyx_modinit_type_import_code(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__Pyx_modinit_type_import_code", 0);
   /*--- Type import code ---*/
-  __pyx_t_1 = PyImport_ImportModule(__Pyx_BUILTIN_MODULE_NAME); if (unlikely(!__pyx_t_1)) __PYX_ERR(3, 9, __pyx_L1_error)
+  __pyx_t_1 = PyImport_ImportModule(__Pyx_BUILTIN_MODULE_NAME); if (unlikely(!__pyx_t_1)) __PYX_ERR(2, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_ptype_7cpython_4type_type = __Pyx_ImportType(__pyx_t_1, __Pyx_BUILTIN_MODULE_NAME, "type", 
   #if defined(PYPY_VERSION_NUM) && PYPY_VERSION_NUM < 0x050B0000
@@ -4521,40 +3997,40 @@ static int __Pyx_modinit_type_import_code(void) {
   sizeof(PyHeapTypeObject),
   #endif
   __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_7cpython_4type_type) __PYX_ERR(3, 9, __pyx_L1_error)
+   if (!__pyx_ptype_7cpython_4type_type) __PYX_ERR(2, 9, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyImport_ImportModule("numpy"); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 200, __pyx_L1_error)
+  __pyx_t_1 = PyImport_ImportModule("numpy"); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 199, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_ptype_5numpy_dtype = __Pyx_ImportType(__pyx_t_1, "numpy", "dtype", sizeof(PyArray_Descr), __Pyx_ImportType_CheckSize_Ignore);
-   if (!__pyx_ptype_5numpy_dtype) __PYX_ERR(1, 200, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_dtype) __PYX_ERR(1, 199, __pyx_L1_error)
   __pyx_ptype_5numpy_flatiter = __Pyx_ImportType(__pyx_t_1, "numpy", "flatiter", sizeof(PyArrayIterObject), __Pyx_ImportType_CheckSize_Ignore);
-   if (!__pyx_ptype_5numpy_flatiter) __PYX_ERR(1, 223, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_flatiter) __PYX_ERR(1, 222, __pyx_L1_error)
   __pyx_ptype_5numpy_broadcast = __Pyx_ImportType(__pyx_t_1, "numpy", "broadcast", sizeof(PyArrayMultiIterObject), __Pyx_ImportType_CheckSize_Ignore);
-   if (!__pyx_ptype_5numpy_broadcast) __PYX_ERR(1, 227, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_broadcast) __PYX_ERR(1, 226, __pyx_L1_error)
   __pyx_ptype_5numpy_ndarray = __Pyx_ImportType(__pyx_t_1, "numpy", "ndarray", sizeof(PyArrayObject), __Pyx_ImportType_CheckSize_Ignore);
-   if (!__pyx_ptype_5numpy_ndarray) __PYX_ERR(1, 239, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_ndarray) __PYX_ERR(1, 238, __pyx_L1_error)
   __pyx_ptype_5numpy_generic = __Pyx_ImportType(__pyx_t_1, "numpy", "generic", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_generic) __PYX_ERR(1, 771, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_generic) __PYX_ERR(1, 770, __pyx_L1_error)
   __pyx_ptype_5numpy_number = __Pyx_ImportType(__pyx_t_1, "numpy", "number", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_number) __PYX_ERR(1, 773, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_number) __PYX_ERR(1, 772, __pyx_L1_error)
   __pyx_ptype_5numpy_integer = __Pyx_ImportType(__pyx_t_1, "numpy", "integer", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_integer) __PYX_ERR(1, 775, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_integer) __PYX_ERR(1, 774, __pyx_L1_error)
   __pyx_ptype_5numpy_signedinteger = __Pyx_ImportType(__pyx_t_1, "numpy", "signedinteger", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_signedinteger) __PYX_ERR(1, 777, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_signedinteger) __PYX_ERR(1, 776, __pyx_L1_error)
   __pyx_ptype_5numpy_unsignedinteger = __Pyx_ImportType(__pyx_t_1, "numpy", "unsignedinteger", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_unsignedinteger) __PYX_ERR(1, 779, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_unsignedinteger) __PYX_ERR(1, 778, __pyx_L1_error)
   __pyx_ptype_5numpy_inexact = __Pyx_ImportType(__pyx_t_1, "numpy", "inexact", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_inexact) __PYX_ERR(1, 781, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_inexact) __PYX_ERR(1, 780, __pyx_L1_error)
   __pyx_ptype_5numpy_floating = __Pyx_ImportType(__pyx_t_1, "numpy", "floating", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_floating) __PYX_ERR(1, 783, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_floating) __PYX_ERR(1, 782, __pyx_L1_error)
   __pyx_ptype_5numpy_complexfloating = __Pyx_ImportType(__pyx_t_1, "numpy", "complexfloating", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_complexfloating) __PYX_ERR(1, 785, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_complexfloating) __PYX_ERR(1, 784, __pyx_L1_error)
   __pyx_ptype_5numpy_flexible = __Pyx_ImportType(__pyx_t_1, "numpy", "flexible", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_flexible) __PYX_ERR(1, 787, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_flexible) __PYX_ERR(1, 786, __pyx_L1_error)
   __pyx_ptype_5numpy_character = __Pyx_ImportType(__pyx_t_1, "numpy", "character", sizeof(PyObject), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5numpy_character) __PYX_ERR(1, 789, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_character) __PYX_ERR(1, 788, __pyx_L1_error)
   __pyx_ptype_5numpy_ufunc = __Pyx_ImportType(__pyx_t_1, "numpy", "ufunc", sizeof(PyUFuncObject), __Pyx_ImportType_CheckSize_Ignore);
-   if (!__pyx_ptype_5numpy_ufunc) __PYX_ERR(1, 827, __pyx_L1_error)
+   if (!__pyx_ptype_5numpy_ufunc) __PYX_ERR(1, 826, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_RefNannyFinishContext();
   return 0;
@@ -4800,64 +4276,40 @@ if (!__Pyx_RefNanny) {
  */
   __pyx_t_2 = __pyx_f_5numpy_import_array(); if (unlikely(__pyx_t_2 == ((int)-1))) __PYX_ERR(0, 6, __pyx_L1_error)
 
-  /* "mesh_core_cython.pyx":40
- *         int nver, int ntri, int ntexver)
+  /* "mesh_core_cython.pyx":43
  * 
- * def get_normal_core(np.ndarray[float, ndim=2, mode = "c"] normal not None,             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] tri_normal not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_16mesh_core_cython_1get_normal_core, NULL, __pyx_n_s_mesh_core_cython); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 40, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_get_normal_core, __pyx_t_1) < 0) __PYX_ERR(0, 40, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "mesh_core_cython.pyx":49
- *         ntri)
- * 
- * def rasterize_triangles_core(             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_16mesh_core_cython_3rasterize_triangles_core, NULL, __pyx_n_s_mesh_core_cython); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 49, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_rasterize_triangles_core, __pyx_t_1) < 0) __PYX_ERR(0, 49, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "mesh_core_cython.pyx":64
- *         h, w)
  * 
  * def render_colors_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
  *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
  *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_16mesh_core_cython_5render_colors_core, NULL, __pyx_n_s_mesh_core_cython); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 64, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_16mesh_core_cython_1render_colors_core, NULL, __pyx_n_s_mesh_core_cython); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 43, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_render_colors_core, __pyx_t_1) < 0) __PYX_ERR(0, 64, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_render_colors_core, __pyx_t_1) < 0) __PYX_ERR(0, 43, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "mesh_core_cython.pyx":79
+  /* "mesh_core_cython.pyx":62
+ *         h, w, c)
+ * 
+ * def render_mask_texture_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
+ *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
+ *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
+ */
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_16mesh_core_cython_3render_mask_texture_core, NULL, __pyx_n_s_mesh_core_cython); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 62, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_render_mask_texture_core, __pyx_t_1) < 0) __PYX_ERR(0, 62, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "mesh_core_cython.pyx":83
  *         h, w, c)
  * 
  * def render_texture_core(np.ndarray[float, ndim=3, mode = "c"] image not None,             # <<<<<<<<<<<<<<
  *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
  *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_16mesh_core_cython_7render_texture_core, NULL, __pyx_n_s_mesh_core_cython); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 79, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_16mesh_core_cython_5render_texture_core, NULL, __pyx_n_s_mesh_core_cython); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 83, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_render_texture_core, __pyx_t_1) < 0) __PYX_ERR(0, 79, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "mesh_core_cython.pyx":100
- *         mapping_type)
- * 
- * def write_obj_with_colors_texture_core(string filename, string mtl_name,             # <<<<<<<<<<<<<<
- *                 np.ndarray[float, ndim=2, mode = "c"] vertices not None,
- *                 np.ndarray[int, ndim=2, mode="c"] triangles not None,
- */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_16mesh_core_cython_9write_obj_with_colors_texture_core, NULL, __pyx_n_s_mesh_core_cython); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 100, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_write_obj_with_colors_texture_co, __pyx_t_1) < 0) __PYX_ERR(0, 100, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_render_texture_core, __pyx_t_1) < 0) __PYX_ERR(0, 83, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "mesh_core_cython.pyx":1
@@ -4870,12 +4322,12 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "string.from_py":13
+  /* "../../../../../../../home2/user/anders/miniconda3/envs/anders_py38/lib/python3.8/site-packages/numpy/__init__.pxd":1013
  * 
- * @cname("__pyx_convert_string_from_py_std__in_string")
- * cdef string __pyx_convert_string_from_py_std__in_string(object o) except *:             # <<<<<<<<<<<<<<
- *     cdef Py_ssize_t length = 0
- *     cdef const char* data = __Pyx_PyObject_AsStringAndSize(o, &length)
+ * 
+ * cdef inline NPY_DATETIMEUNIT get_datetime64_unit(object obj) nogil:             # <<<<<<<<<<<<<<
+ *     """
+ *     returns the unit part of the dtype for a numpy datetime64 object.
  */
 
   /*--- Wrapped vars code ---*/

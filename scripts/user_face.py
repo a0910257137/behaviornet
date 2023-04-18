@@ -519,9 +519,50 @@ def main(annos_path, img_root):
             preds, p_fit, Chi_sq, sigma_p, sigma_y, corr, R_sq, cvg_hst = lm(
                 x2d, x3d, K, angles, params, img_wh)
             preds = preds.reshape([68, 2]) * img_wh
-            for kp in preds:
-                kp = kp.astype(np.int32)
-                img = cv2.circle(img, kp, 10, (0, 255, 0), -1)
+            kps = preds.astype(np.int32)
+
+            for l in range(kps.shape[0]):
+                if 0 <= l < 17:
+                    color = [205, 133, 63]
+                elif 17 <= l < 27:
+                    # eyebrows
+                    color = [205, 186, 150]
+                elif 27 <= l < 39:
+                    # eyes
+                    color = [238, 130, 98]
+                elif 39 <= l < 48:
+                    # nose
+                    color = [205, 96, 144]
+                elif 48 <= l < 68:
+                    color = [0, 191, 255]
+                if l in [0, 8, 16, 27, 30, 33, 36]:
+                    color = [0, 0, 255]
+                cv2.circle(img, (kps[l][0], kps[l][1]), 10, color, -1)
+                cv2.circle(img, (kps[l][0], kps[l][1]), 10, (255, 255, 255), -1)
+                line_width = 5
+                if l not in [16, 21, 26, 32, 38, 42, 47, 59, 67]:
+                    start_point = (kps[l][0], kps[l][1])
+                    end_point = (kps[l + 1][0], kps[l + 1][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                elif l == 32:
+                    start_point = (kps[l][0], kps[l][1])
+                    end_point = (kps[27][0], kps[27][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                elif l == 38:
+                    start_point = (kps[l][0], kps[l][1])
+                    end_point = (kps[33][0], kps[33][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                elif l == 59:
+                    start_point = (kps[l][0], kps[l][1])
+                    end_point = (kps[48][0], kps[48][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                elif l == 67:
+                    start_point = (kps[l][0], kps[l][1])
+                    end_point = (kps[60][0], kps[60][1])
+                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+            # for kp in preds:
+            #     kp = kp.astype(np.int32)
+            #     img = cv2.circle(img, kp, 10, (0, 255, 0), -1)
             cv2.imwrite("output.jpg", img)
             xxx
             print('\nLM fitting results:')

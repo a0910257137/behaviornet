@@ -79,102 +79,18 @@ void get_point_weight(float *weight, point p, point p0, point p1, point p2)
     weight[2] = u;
 }
 
-void _get_normal_core(
-    float *normal, float *tri_normal, int *triangles,
-    int ntri)
-{
-    int i, j;
-    int tri_p0_ind, tri_p1_ind, tri_p2_ind;
-
-    for (i = 0; i < ntri; i++)
-    {
-        tri_p0_ind = triangles[3 * i];
-        tri_p1_ind = triangles[3 * i + 1];
-        tri_p2_ind = triangles[3 * i + 2];
-
-        for (j = 0; j < 3; j++)
-        {
-            normal[3 * tri_p0_ind + j] = normal[3 * tri_p0_ind + j] + tri_normal[3 * i + j];
-            normal[3 * tri_p1_ind + j] = normal[3 * tri_p1_ind + j] + tri_normal[3 * i + j];
-            normal[3 * tri_p2_ind + j] = normal[3 * tri_p2_ind + j] + tri_normal[3 * i + j];
-        }
-    }
-}
-
-void _rasterize_triangles_core(
-    float *vertices, int *triangles,
-    float *depth_buffer, int *triangle_buffer, float *barycentric_weight,
-    int nver, int ntri,
-    int h, int w)
-{
-    int i;
-    int x, y, k;
-    int tri_p0_ind, tri_p1_ind, tri_p2_ind;
-    point p0, p1, p2, p;
-    int x_min, x_max, y_min, y_max;
-    float p_depth, p0_depth, p1_depth, p2_depth;
-    float weight[3];
-
-    for (i = 0; i < ntri; i++)
-    {
-        tri_p0_ind = triangles[3 * i];
-        tri_p1_ind = triangles[3 * i + 1];
-        tri_p2_ind = triangles[3 * i + 2];
-
-        p0.x = vertices[3 * tri_p0_ind];
-        p0.y = vertices[3 * tri_p0_ind + 1];
-        p0_depth = vertices[3 * tri_p0_ind + 2];
-        p1.x = vertices[3 * tri_p1_ind];
-        p1.y = vertices[3 * tri_p1_ind + 1];
-        p1_depth = vertices[3 * tri_p1_ind + 2];
-        p2.x = vertices[3 * tri_p2_ind];
-        p2.y = vertices[3 * tri_p2_ind + 1];
-        p2_depth = vertices[3 * tri_p2_ind + 2];
-
-        x_min = max((int)ceil(min(p0.x, min(p1.x, p2.x))), 0);
-        x_max = min((int)floor(max(p0.x, max(p1.x, p2.x))), w - 1);
-
-        y_min = max((int)ceil(min(p0.y, min(p1.y, p2.y))), 0);
-        y_max = min((int)floor(max(p0.y, max(p1.y, p2.y))), h - 1);
-
-        if (x_max < x_min || y_max < y_min)
-        {
-            continue;
-        }
-
-        for (y = y_min; y <= y_max; y++) // h
-        {
-            for (x = x_min; x <= x_max; x++) // w
-            {
-                p.x = x;
-                p.y = y;
-                if (p.x < 2 || p.x > w - 3 || p.y < 2 || p.y > h - 3 || isPointInTri(p, p0, p1, p2))
-                {
-                    get_point_weight(weight, p, p0, p1, p2);
-                    p_depth = weight[0] * p0_depth + weight[1] * p1_depth + weight[2] * p2_depth;
-
-                    if ((p_depth > depth_buffer[y * w + x]))
-                    {
-                        depth_buffer[y * w + x] = p_depth;
-                        triangle_buffer[y * w + x] = i;
-                        for (k = 0; k < 3; k++)
-                        {
-                            barycentric_weight[y * w * 3 + x * 3 + k] = weight[k];
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 void _render_colors_core(
     float *image, float *vertices, int *triangles,
     float *colors,
     float *depth_buffer,
+    float *raw_image,
+    float *raw_depth_buffer,
     int nver, int ntri,
     int h, int w, int c)
 {
+
+    memcpy(image, raw_image, h * w * 3 * sizeof(float));
+    memcpy(depth_buffer, raw_depth_buffer, h * w * 3 * sizeof(float));
     int i;
     int x, y, k;
     int tri_p0_ind, tri_p1_ind, tri_p2_ind;
@@ -242,6 +158,61 @@ void _render_colors_core(
     }
 }
 
+void _render_mask_texture_core(
+    float *image,
+    float *vertices,
+    int *triangles,
+    float *triangle_texture,
+    float *triangle_depth,
+    float *depth_buffer,
+    float *raw_image,
+    float *raw_depth_buffer,
+    int nver, int ntri,
+    int h, int w, int c)
+{
+    memcpy(image, raw_image, h * w * 3 * sizeof(float));
+    memcpy(depth_buffer, raw_depth_buffer, h * w * 3 * sizeof(float));
+    int i;
+    int x, y, k;
+    int tri_p0_ind, tri_p1_ind, tri_p2_ind;
+    point p0, p1, p2, p;
+    int x_min, x_max, y_min, y_max;
+    for (i = 0; i < ntri; i++)
+    {
+        tri_p0_ind = triangles[3 * i];
+        tri_p1_ind = triangles[3 * i + 1];
+        tri_p2_ind = triangles[3 * i + 2];
+        p0.x = vertices[3 * tri_p0_ind];
+        p0.y = vertices[3 * tri_p0_ind + 1];
+        p1.x = vertices[3 * tri_p1_ind];
+        p1.y = vertices[3 * tri_p1_ind + 1];
+        p2.x = vertices[3 * tri_p2_ind];
+        p2.y = vertices[3 * tri_p2_ind + 1];
+        x_min = max((int)ceil(min(p0.x, min(p1.x, p2.x))), 0);
+        x_max = min((int)floor(max(p0.x, max(p1.x, p2.x))), w - 1);
+
+        y_min = max((int)ceil(min(p0.y, min(p1.y, p2.y))), 0);
+        y_max = min((int)floor(max(p0.y, max(p1.y, p2.y))), h - 1);
+
+        if (x_max < x_min || y_max < y_min)
+            continue;
+
+        for (x = x_min; x <= x_max; x++) // h
+        {
+            for (y = y_min; y <= y_max; y++) // w
+            {
+                p.x = x;
+                p.y = y;
+                if ((triangle_depth[i] > depth_buffer[y * w + x]) && (isPointInTri(p, p0, p1, p2)))
+                {
+                    depth_buffer[y * w + x] = triangle_depth[i];
+                    for (k = 0; k < c; k++) // c
+                        image[y * w * c + x * c + k] = triangle_texture[i * c + k];
+                }
+            }
+        }
+    }
+}
 void _render_texture_core(
     float *image, float *vertices, int *triangles,
     float *texture, float *tex_coords, int *tex_triangles,
@@ -347,41 +318,5 @@ void _render_texture_core(
                 }
             }
         }
-    }
-}
-
-// ------------------------------------------------- write
-// obj write
-// Ref: https://github.com/patrikhuber/eos/blob/master/include/eos/core/Mesh.hpp
-void _write_obj_with_colors_texture(string filename, string mtl_name,
-                                    float *vertices, int *triangles, float *colors, float *uv_coords,
-                                    int nver, int ntri, int ntexver)
-{
-    int i;
-
-    ofstream obj_file(filename);
-
-    // first line of the obj file: the mtl name
-    obj_file << "mtllib " << mtl_name << endl;
-
-    // write vertices
-    for (i = 0; i < nver; ++i)
-    {
-        obj_file << "v " << vertices[3 * i] << " " << vertices[3 * i + 1] << " " << vertices[3 * i + 2] << colors[3 * i] << " " << colors[3 * i + 1] << " " << colors[3 * i + 2] << endl;
-    }
-
-    // write uv coordinates
-    for (i = 0; i < ntexver; ++i)
-    {
-        // obj_file << "vt " << uv_coords[2*i] << " " << (1 - uv_coords[2*i + 1]) << endl;
-        obj_file << "vt " << uv_coords[2 * i] << " " << uv_coords[2 * i + 1] << endl;
-    }
-
-    obj_file << "usemtl FaceTexture" << endl;
-    // write triangles
-    for (i = 0; i < ntri; ++i)
-    {
-        // obj_file << "f " << triangles[3*i] << "/" << triangles[3*i] << " " << triangles[3*i + 1] << "/" << triangles[3*i + 1] << " " << triangles[3*i + 2] << "/" << triangles[3*i + 2] << endl;
-        obj_file << "f " << triangles[3 * i + 2] << "/" << triangles[3 * i + 2] << " " << triangles[3 * i + 1] << "/" << triangles[3 * i + 1] << " " << triangles[3 * i] << "/" << triangles[3 * i] << endl;
     }
 }

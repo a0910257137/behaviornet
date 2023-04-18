@@ -26,8 +26,10 @@ class GeneralTasks:
             "origin_width": tf.io.FixedLenFeature([], dtype=tf.int64),
             "b_images": tf.io.FixedLenFeature([], dtype=tf.string),
             "b_coords": tf.io.FixedLenFeature([], dtype=tf.string),
-            "is_masks": tf.io.FixedLenFeature([], dtype=tf.string)
+            "is_masks": tf.io.FixedLenFeature([], dtype=tf.string),
+            "scale_factor": tf.io.FixedLenFeature([], dtype=tf.string)
         }
+
         self._multi_aug_funcs = Augmentation(self.config, self.batch_size,
                                              self.img_resize_size)
         self.MorphabelModel = MorphabelModel(self.batch_size, self.max_obj_num,
@@ -38,17 +40,18 @@ class GeneralTasks:
         for task_infos, infos in zip(self.task_configs, task_infos):
             self.num_lnmks = task_infos.num_lnmks
             task, m_cates = task_infos['preprocess'], len(task_infos['cates'])
-            b_coords, b_face_masks, b_imgs, b_origin_sizes = self._parse_TFrecord(
+            b_coords, b_face_masks, b_imgs, b_origin_sizes, b_scale_factors = self._parse_TFrecord(
                 task, infos)
-
             b_imgs, b_coords = self._multi_aug_funcs(b_imgs, b_coords,
                                                      self.num_lnmks, task)
+            b_bboxes = b_coords[:, :, :2, :2]
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_lnmks = tf.identity(b_coords)
             b_objs_kps, b_cates = b_coords[..., :-1], b_coords[..., -1][..., 0]
-            b_obj_sizes = self._obj_sizes(b_objs_kps, task)
+            b_obj_sizes = self._obj_sizes(b_objs_kps)
             b_round_kp_idxs, b_kp_idxs, b_coords, b_offset_vals = offer_kps_func(
                 b_objs_kps, self.map_height, self.map_width)
+
             if task == "obj_det":
                 targets['b_coords'] = b_coords[:, :, 1:, :]
                 b_keypoints = tf.concat(
@@ -77,7 +80,7 @@ class GeneralTasks:
                 targets['b_coords'] = tf.squeeze(mean, axis=-2)
 
                 b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.constant(
-                    [192., 320.], dtype=tf.float32)
+                    [self.map_height, self.map_width], dtype=tf.float32)
                 b_lnmks = tf.einsum('b n k c, b c -> b n k c',
                                     b_lnmks[:, :, 2:, :2], b_resized)
                 mean = tf.math.reduce_mean(b_lnmks, axis=-2, keepdims=True)
@@ -94,6 +97,11 @@ class GeneralTasks:
                     Tout=tf.float32)
                 targets['b_origin_sizes'] = b_origin_sizes
                 targets['params'] = tf.cast(params, tf.float32)
+            elif task == "keypoint":
+                targets['b_keypoints'] = b_coords[:, :, 1:, :]
+                targets['b_bboxes'] = b_bboxes
+                targets['b_scale_factors'] = b_scale_factors
+                targets['b_origin_sizes'] = b_origin_sizes
 
         return tf.cast(b_imgs, dtype=tf.float32), targets
 
@@ -138,10 +146,9 @@ class GeneralTasks:
         return tf.concat([b_fg_mask, b_bg_mask], axis=-1)
 
     @tf.function
-    def _obj_sizes(self, b_objs_kps, task):
-        if 'obj_det' in str(task) or 'tdmm' in str(task):
-            # B, N, 2, 2
-            b_obj_sizes = b_objs_kps[:, :, 1, :] - b_objs_kps[:, :, 0, :]
+    def _obj_sizes(self, b_objs_kps):
+        # B, N, 2, 2
+        b_obj_sizes = b_objs_kps[:, :, 1, :] - b_objs_kps[:, :, 0, :]
         b_obj_sizes = tf.where(tf.math.is_nan(b_obj_sizes), np.inf, b_obj_sizes)
         return b_obj_sizes
 
@@ -202,10 +209,12 @@ class GeneralTasks:
         return np.transpose(b_hms, [0, 2, 3, 1])
 
     def _parse_TFrecord(self, task, infos):
-        if task == "obj_det" or task == "tdmm":
+        if (task == "obj_det") or (task == "tdmm") or (task == "keypoint"):
             anno_shape = [-1, self.max_obj_num, self.num_lnmks, 3]
+
         b_coords, b_images, b_origin_sizes = None, None, None
         parse_vals = tf.io.parse_example(infos, self.features)
+
         b_images = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)
         b_images = tf.reshape(
             b_images, [-1, self.map_height, self.map_width, self.img_channel])
@@ -216,6 +225,9 @@ class GeneralTasks:
         b_face_masks = tf.reshape(b_face_masks, [-1, self.max_obj_num])
         origin_height = tf.reshape(parse_vals['origin_height'], (-1, 1))
         origin_width = tf.reshape(parse_vals['origin_width'], (-1, 1))
+
         b_origin_sizes = tf.concat([origin_height, origin_width], axis=-1)
         b_origin_sizes = tf.cast(b_origin_sizes, tf.int32)
-        return b_coords, b_face_masks, b_images, b_origin_sizes
+        b_scale_factors = tf.io.decode_raw(parse_vals['scale_factor'],
+                                           tf.float32)
+        return b_coords, b_face_masks, b_images, b_origin_sizes, b_scale_factors

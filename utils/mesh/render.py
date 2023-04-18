@@ -141,3 +141,32 @@ def render_texture(vertices,
                                          triangles.shape[0], h, w, c, tex_h,
                                          tex_w, tex_c, mt)
     return image
+
+
+def render_mask_texture(vertices, colors, triangles, h, w, c=3):
+    ''' render mesh by z buffer
+    Args:
+        vertices: 3 x nver
+        colors: 3 x nver
+        triangles: 3 x ntri
+        h: height
+        w: width    
+    '''
+    # initial
+    image = np.zeros((h, w, c), dtype=np.float32, order='C')
+    vertices = vertices.astype(np.float32)
+    colors = colors.astype(np.float32)
+    depth_buffer = np.zeros([h, w], dtype=np.float32, order='C') - 999999.
+    # triangle depth: approximate the depth to the average value of z in each vertex(v0, v1, v2), since the vertices are closed to each other
+    tri_tex = (colors[triangles[:, 0], :] + colors[triangles[:, 1], :] +
+               colors[triangles[:, 2], :]) / 3.
+    tri_depth = (vertices[triangles[:, 0], 2] + vertices[triangles[:, 1], 2] +
+                 vertices[triangles[:, 2], 2]) / 3.
+    vertices = np.ascontiguousarray(vertices)
+
+    mesh_core_cython.render_mask_texture_core(image, vertices, triangles,
+                                              tri_tex, tri_depth, depth_buffer,
+                                              vertices.shape[0],
+                                              triangles.shape[0], h, w, c)
+
+    return image

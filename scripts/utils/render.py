@@ -95,24 +95,19 @@ def render_texture(vertices, colors, triangles, h, w, c=3):
     '''
     # initial
     image = np.zeros((h, w, c))
-
     depth_buffer = np.zeros([h, w]) - 999999.
     # triangle depth: approximate the depth to the average value of z in each vertex(v0, v1, v2), since the vertices are closed to each other
     tri_depth = (vertices[2, triangles[0, :]] + vertices[2, triangles[1, :]] +
                  vertices[2, triangles[2, :]]) / 3.
     tri_tex = (colors[:, triangles[0, :]] + colors[:, triangles[1, :]] +
                colors[:, triangles[2, :]]) / 3.
-
     for i in range(triangles.shape[1]):
         tri = triangles[:, i]  # 3 vertex indices
-
         # the inner bounding box
         umin = max(int(np.ceil(np.min(vertices[0, tri]))), 0)
         umax = min(int(np.floor(np.max(vertices[0, tri]))), w - 1)
-
         vmin = max(int(np.ceil(np.min(vertices[1, tri]))), 0)
         vmax = min(int(np.floor(np.max(vertices[1, tri]))), h - 1)
-
         if umax < umin or vmax < vmin:
             continue
 

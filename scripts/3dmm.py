@@ -13,8 +13,7 @@ import utils.mesh as mesh
 from utils.io import *
 
 
-def gen_vertices(bfm, fitted_s, fitted_angles, fitted_t, fitted_sp, fitted_ep,
-                 valid_ind):
+def gen_vertices(bfm, fitted_s, fitted_angles, fitted_t, fitted_sp, fitted_ep):
     fitted_vertices = bfm.generate_vertices(fitted_sp, fitted_ep)
     transformed_vertices = bfm.transform(fitted_vertices, fitted_s,
                                          fitted_angles, fitted_t)
@@ -22,7 +21,7 @@ def gen_vertices(bfm, fitted_s, fitted_angles, fitted_t, fitted_sp, fitted_ep,
 
 
 def tdmm(annos_path, img_root, save_path):
-    bfm = MorphabelModel('/home3/user/anders/objects/3D-head/3DDFA/BFM/BFM.mat')
+    bfm = MorphabelModel('/aidata/anders/3D-head/3DDFA/BFM/BFM.mat')
     X_ind = bfm.kpt_ind
     X_ind_all = np.stack([X_ind * 3, X_ind * 3 + 1, X_ind * 3 + 2])
     X_ind_all = np.concatenate([
@@ -33,10 +32,7 @@ def tdmm(annos_path, img_root, save_path):
     valid_ind = np.reshape(np.transpose(X_ind_all), (-1))
     print('initialize bfm model success')
     annos = load_json(annos_path)
-
     i = 0
-
-    angles = []
     for frame in tqdm(annos["frame_list"]):
         name = frame["name"]
         # print(name)
@@ -44,7 +40,6 @@ def tdmm(annos_path, img_root, save_path):
         # img = cv2.imread(img_path)
         # h, w, c = img.shape
         for lb in frame["labels"]:
-            tmp = []
             tmp_kps = []
             keypoints = lb["keypoints"]
             for key in keypoints.keys():
@@ -53,17 +48,31 @@ def tdmm(annos_path, img_root, save_path):
             tmp_kps = np.stack(tmp_kps)
             kps = tmp_kps
             fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
-                kps[:, ::-1], X_ind, idxs=None, max_iter=20)
-            transformed_vertices = gen_vertices(bfm, fitted_s, fitted_angles,
-                                                fitted_t, fitted_sp, fitted_ep,
-                                                valid_ind)
-            landmarks = transformed_vertices[valid_ind]
-            landmarks = np.reshape(landmarks, (landmarks.shape[0] // 3, 3))
+                kps[:, ::-1], X_ind, idxs=None, max_iter=5)
+
+            # transformed_vertices = gen_vertices(bfm, fitted_s, fitted_angles,
+            #                                     fitted_t, fitted_sp, fitted_ep)
+            # landmarks = transformed_vertices[valid_ind]
+            # landmarks = np.reshape(landmarks, (landmarks.shape[0] // 3, 3))
             fitted_angles *= (180 / np.pi)
+            pitch, yaw, roll = fitted_angles
+            if pitch < 0:
+                pitch = -(180 + pitch)
+            elif pitch > 0:
+                pitch = (180 - pitch)
+            # lb["attributes"]["pitch"] = pitch
+            # lb["attributes"]["yaw"] = yaw
+            # lb["attributes"]["roll"] = roll
             yaw = fitted_angles[1]
-            lb['attributes'] = {'yaw': yaw, 'small': False, 'valid': True}
+            lb['attributes'] = {
+                "pitch": pitch,
+                "yaw": yaw,
+                "roll": roll,
+                "small": False,
+                "valid": True
+            }
         i += 1
-    # dump_json(path=save_path, data=annos)
+    dump_json(path=save_path, data=annos)
 
 
 def parse_config():

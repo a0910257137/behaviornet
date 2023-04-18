@@ -194,7 +194,6 @@ class AnchorGenerator(object):
                                                      featmap_sizes[i],
                                                      self.strides[i])
             multi_level_anchors.append(anchors)
-
         return multi_level_anchors
 
     def single_level_grid_anchors(self,
@@ -251,7 +250,8 @@ class AnchorGenerator(object):
         Returns:
             tuple[torch.Tensor]: The mesh grids of x and y.
         """
-        xx = tf.repeat(x, y.shape[0])
+
+        xx = tf.tile(x, [y.shape[0]])
         yy = tf.repeat(y, x.shape[0])
         if row_major:
             return xx, yy
@@ -274,14 +274,12 @@ class AnchorGenerator(object):
         assert self.num_levels == len(featmap_sizes)
         multi_level_flags = []
 
-        #TODO: 
-
-        print(self.num_base_anchors)
-        xx
+        #TODO:
         for i in range(self.num_levels):
             anchor_stride = self.strides[i]
             feat_h, feat_w = featmap_sizes[i]
-            h, w = pad_shape[1:3]
+            h, w = pad_shape[:2]
+
             valid_feat_h = min(int(np.ceil(h / anchor_stride[1])), feat_h)
             valid_feat_w = min(int(np.ceil(w / anchor_stride[0])), feat_w)
             flags = self.single_level_valid_flags((feat_h, feat_w),
@@ -308,21 +306,29 @@ class AnchorGenerator(object):
         feat_h, feat_w = featmap_size
         valid_h, valid_w = valid_size
         assert valid_h <= feat_h and valid_w <= feat_w
-        xxx
-        valid_x = tf.zeros(feat_w, dtype=tf.bool)
-        valid_y = tf.zeros(feat_h, dtype=tf.bool)
-        valid_x[:valid_w] = 1
-        valid_y[:valid_h] = 1
+
+        valid_x = tf.zeros(feat_w, dtype=tf.float32)
+        valid_y = tf.zeros(feat_h, dtype=tf.float32)
+
+        valid_x = tf.tensor_scatter_nd_update(valid_x,
+                                              tf.range(valid_w)[:, None],
+                                              tf.ones(shape=(valid_w, )))
+        valid_y = tf.tensor_scatter_nd_update(valid_y,
+                                              tf.range(valid_h)[:, None],
+                                              tf.ones(shape=(valid_h, )))
         valid_xx, valid_yy = self._meshgrid(valid_x, valid_y)
-        valid = valid_xx & valid_yy
-        valid = valid[:, None].expand(valid.size(0),
-                                      num_base_anchors).contiguous().view(-1)
+        valid_xx = tf.cast(valid_xx, tf.bool)
+        valid_yy = tf.cast(valid_yy, tf.bool)
+        valid = tf.math.logical_and(valid_xx, valid_yy)
+        # valid = valid_xx & valid_yy
+        valid = tf.tile(valid[:, None], [1, num_base_anchors])
+        valid = tf.reshape(valid, [-1])
         return valid
 
     @property
     def num_base_anchors(self):
         """list[int]: total number of base anchors in a feature grid"""
-        return [base_anchors.shape(0) for base_anchors in self.base_anchors]
+        return [base_anchors.shape[0] for base_anchors in self.base_anchors]
 
     @property
     def num_levels(self):

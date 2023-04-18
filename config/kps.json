@@ -1,16 +1,15 @@
 {
     "predictor": {
-        "visible_gpu": "0",
-        "pb_path": "/home2/user/anders/3D/archive_model/mask",
-        "weight_root":"/home3/user/anders/objects/landmarks/AFLW/archive_model/add_dataset/concat", 
+        "visible_gpu": "1",
+        "pb_path": "/aidata/anders/landmarks/AFLW/archive_model/add_dataset/concat",
+        "weight_root":"/aidata/anders/landmarks/AFLW/archive_model/add_dataset/concat", 
         "top_k_n": 15,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,
         "n_objs": 30,
         "gpu_fraction":0.5, 
         "eval_method":"IoU",
-        
-        "mode": "tdmm",
+        "mode": "tflite",
         "img_input_size": [
             320,
             192

@@ -45,7 +45,7 @@ class Augmentation(Base):
             b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, aug_imgs)
         b_imgs = b_imgs / 255
         # for obj det
-        if task == "obj_det" or task == "tdmm":
+        if task == "obj_det" or task == "tdmm" or task == "keypoint":
             anno_shape = [self.batch_size, self.max_obj_num, num_lnmks, 3]
         b_coors = tf.reshape(b_coors, shape=anno_shape)
         b_imgs = tf.reshape(b_imgs, [
