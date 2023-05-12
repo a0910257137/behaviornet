@@ -55,6 +55,19 @@ def img_gen(config_path, img_path_root, save_root):
             orig_imgs.append(img)
             imgs.append(img)
         rets = predictor.pred(imgs, origin_shapes)
+        b_boxes, b_kps = rets
+        for img, bboxes, kps in zip(imgs, b_boxes.numpy(), b_kps.numpy()):
+            for bbox, kp in zip(bboxes, kps):
+
+                tl = bbox[0].astype(np.int32)
+                br = bbox[1].astype(np.int32)
+                img = cv2.rectangle(img, tl, br, (0, 255, 0), 3)
+                for kkp in kp:
+                    kkp = kkp.astype(np.int32)
+                    img = cv2.circle(img, tuple(kkp), 3, (255, 0, 0), -1)
+        cv2.imwrite("output.jpg", img)
+        xxx
+
         if config['predictor']['mode'] == "centernet" or config['predictor'][
                 'mode'] == "offset" or config['predictor']['mode'] == "tflite":
             target_dict = _get_cates(config['predictor']['cat_path'])

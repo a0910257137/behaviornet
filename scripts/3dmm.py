@@ -60,17 +60,17 @@ def tdmm(annos_path, img_root, save_path):
                 pitch = -(180 + pitch)
             elif pitch > 0:
                 pitch = (180 - pitch)
-            # lb["attributes"]["pitch"] = pitch
-            # lb["attributes"]["yaw"] = yaw
-            # lb["attributes"]["roll"] = roll
-            yaw = fitted_angles[1]
-            lb['attributes'] = {
-                "pitch": pitch,
-                "yaw": yaw,
-                "roll": roll,
-                "small": False,
-                "valid": True
-            }
+            lb["attributes"]["pitch"] = pitch
+            lb["attributes"]["yaw"] = yaw
+            lb["attributes"]["roll"] = roll
+            # yaw = fitted_angles[1]
+            # lb['attributes'] = {
+            #     "pitch": pitch,
+            #     "yaw": yaw,
+            #     "roll": roll,
+            #     "small": False,
+            #     "valid": True
+            # }
         i += 1
     dump_json(path=save_path, data=annos)
 

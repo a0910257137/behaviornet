@@ -4,6 +4,7 @@ import os
 from monitor import logger
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 from pprint import pprint
+import gc
 
 
 class CheckpointManagerCallback(tf.keras.callbacks.Callback):
@@ -40,10 +41,16 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
         self.model = model
 
     # def on_batch_begin(self, epoch, logs=None):
-    #     imgs = tf.constant(0., shape=(1, 256, 256, 3))
+    #     imgs = tf.constant(0., shape=(1, 640, 640, 3))
     #     self.model.model(imgs, training=False)
-    #     tf.keras.models.save_model(
-    #         self.model.model, '/home/anders/Downloads/ffhq/archive_model')
+    #     model_dir = "'/aidata/anders/3D-head/LS3D-W/archive/v1'"
+    #     tf.keras.models.save_model(self.model.model, model_dir)
+
+    #     testing_model = tf.keras.models.load_model(model_dir)
+    #     results = testing_model(imgs, training=False)
+    #     print('-' * 100)
+    #     pprint(results)
+    #     exit(1)
 
     def on_epoch_end(self, epoch, logs=None):
         epochs_finished = epoch + 1

@@ -36,7 +36,6 @@ class ConvBlock(tf.keras.layers.Layer):
                 kernel_initializer=kernel_initializer,
                 bias_initializer=bias_initializer,
                 dilation_rate=self.dilation_rate,
-                groups=groups,
                 kernel_regularizer=reg_layer,
                 padding='same',
                 name='conv')
@@ -189,7 +188,6 @@ class DepthwiseSeparableConv(tf.keras.layers.Layer):
                  in_channel,
                  out_channel,
                  kernel_size,
-                 use_bias=True,
                  strides=1,
                  groups=1,
                  activation='relu',
@@ -203,23 +201,24 @@ class DepthwiseSeparableConv(tf.keras.layers.Layer):
             kernel_size=3,
             strides=1,
             padding='same',
-            groups=groups,
             kernel_initializer=kernel_initializer,
             use_bias=False)
-        self.gn1 = tfa.layers.GroupNormalization(groups=groups, axis=-1)
+        # self.gn1 = tfa.layers.GroupNormalization(groups=groups, axis=-1)
+        self.norm = tf.keras.layers.BatchNormalization(name='bn')
         self.act1 = tf.keras.layers.Activation(activation='relu')
-
-        self.point_conv = ConvBlock(filters=out_channel,
-                                    kernel_size=1,
-                                    strides=1,
-                                    groups=groups,
-                                    use_bias=False,
-                                    norm_method='gn',
-                                    activation='relu')
+        self.point_conv = ConvBlock(
+            filters=out_channel,
+            kernel_size=1,
+            strides=1,
+            groups=groups,
+            kernel_initializer=tf.keras.initializers.HeUniform(),
+            use_bias=False,
+            norm_method='bn',
+            activation='relu')
 
     def call(self, x):
         x = self.depth_conv(x)
-        x = self.gn1(x)
+        x = self.norm(x)
         x = self.act1(x)
         x = self.point_conv(x)
         return x

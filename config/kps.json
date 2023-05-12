@@ -1,22 +1,22 @@
 {
     "predictor": {
-        "visible_gpu": "1",
-        "pb_path": "/aidata/anders/landmarks/AFLW/archive_model/add_dataset/concat",
-        "weight_root":"/aidata/anders/landmarks/AFLW/archive_model/add_dataset/concat", 
+        "visible_gpu": "-1",
+        "pb_path": "/aidata/anders/3D-head/LS3D-W/archive/v1",
+        "weight_root":"/aidata/anders/3D-head/LS3D-W/archive/v1", 
         "top_k_n": 15,
         "nms_iou_thres": 0.5,
         "kp_thres": 0.5,
         "n_objs": 30,
         "gpu_fraction":0.5, 
         "eval_method":"IoU",
-        "mode": "tflite",
+        "mode": "scrfd",
         "img_input_size": [
-            320,
-            192
+            640,
+            640
         ],
         "resize_size": [
-            192,
-            320
+            640,
+            640
         ],
         "cat_path": "./config/face.txt"
     },

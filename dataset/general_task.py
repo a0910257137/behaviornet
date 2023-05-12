@@ -42,16 +42,16 @@ class GeneralTasks:
             task, m_cates = task_infos['preprocess'], len(task_infos['cates'])
             b_coords, b_face_masks, b_imgs, b_origin_sizes, b_scale_factors = self._parse_TFrecord(
                 task, infos)
+
             b_imgs, b_coords = self._multi_aug_funcs(b_imgs, b_coords,
                                                      self.num_lnmks, task)
-            b_bboxes = b_coords[:, :, :2, :2]
+            b_bboxes = tf.identity(b_coords[:, :, :2, :2])
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_lnmks = tf.identity(b_coords)
             b_objs_kps, b_cates = b_coords[..., :-1], b_coords[..., -1][..., 0]
             b_obj_sizes = self._obj_sizes(b_objs_kps)
             b_round_kp_idxs, b_kp_idxs, b_coords, b_offset_vals = offer_kps_func(
                 b_objs_kps, self.map_height, self.map_width)
-
             if task == "obj_det":
                 targets['b_coords'] = b_coords[:, :, 1:, :]
                 b_keypoints = tf.concat(
@@ -98,10 +98,20 @@ class GeneralTasks:
                 targets['b_origin_sizes'] = b_origin_sizes
                 targets['params'] = tf.cast(params, tf.float32)
             elif task == "keypoint":
-                targets['b_keypoints'] = b_coords[:, :, 1:, :]
-                targets['b_bboxes'] = b_bboxes
+                b_cates = tf.constant(1.,
+                                      shape=(self.batch_size, self.max_obj_num,
+                                             5, 1))
+                b_coords = tf.concat(
+                    [b_coords[:, :, 1:, :][..., ::-1], b_cates], axis=-1)
+
+                targets['b_keypoints'] = b_coords
+                targets['b_bboxes'] = b_bboxes[..., ::-1]
                 targets['b_scale_factors'] = b_scale_factors
                 targets['b_origin_sizes'] = b_origin_sizes
+                b_labels = tf.math.reduce_all(tf.math.is_finite(b_bboxes),
+                                              axis=[2, 3])
+                b_labels = tf.where(b_labels == True, 0., np.inf)
+                targets['b_labels'] = b_labels
 
         return tf.cast(b_imgs, dtype=tf.float32), targets
 

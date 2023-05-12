@@ -6,7 +6,6 @@ import tensorflow as tf
 from .network import Network
 from .backbone.hardnet import *
 from .backbone.mobilenet import *
-
 from .loss.core.anchor_generator import AnchorGenerator
 from pprint import pprint
 
@@ -22,7 +21,6 @@ class ModelFactory:
                                                self.config.resize_size[1],
                                                self.img_channel),
                                   kernel_initializer='he_uniform')
-
         # self.backbone = HardNet39(input_shape=(self.config.resize_size[0],
         #                                        self.config.resize_size[1],
         #                                        self.img_channel),
@@ -52,7 +50,7 @@ class ModelFactory:
                           self._model_keys,
                           name='network')
         optimizers = self._optimizer()
-        network.compile(optimizer=optimizers, loss=self.loss, run_eagerly=True)
+        network.compile(optimizer=optimizers, loss=self.loss, run_eagerly=False)
         return network, optimizers
 
     def _optimizer(self):

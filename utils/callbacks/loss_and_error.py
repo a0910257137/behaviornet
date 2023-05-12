@@ -33,13 +33,6 @@ class LossAndErrorPrintingCallback(tf.keras.callbacks.Callback):
             self.end_time - self.start_time, 'Date', now)
         for key in logs.keys():
             train_info += '%s: %.6f, ' % (key, logs[key])
-        # with self.writers['train'].as_default():
-        #     for key in logs.keys():
-        #         tf.summary.scalar('batch/{}'.format(key),
-        #                           data=logs[key],
-        #                           step=self.train_seen)
-        #         train_info += '%s: %.6f, ' % (key, logs[key])
-        # self.writers['train'].flush()
         logger.info(train_info)
 
     def on_test_batch_begin(self, batch, logs=None):
@@ -54,11 +47,4 @@ class LossAndErrorPrintingCallback(tf.keras.callbacks.Callback):
             self.end_time - self.start_time, 'Date', now)
         for key in logs.keys():
             eval_info += ' %s: %.6f, ' % (key, logs[key])
-        # with self.writers['validation'].as_default():
-        #     for key in logs.keys():
-        #         tf.summary.scalar('batch/{}'.format(key),
-        #                           data=logs[key],
-        #                           step=self.eval_seen)
-        #         eval_info += ' %s: %.6f, ' % (key, logs[key])
-        # self.writers['validation'].flush()
         logger.info(eval_info)

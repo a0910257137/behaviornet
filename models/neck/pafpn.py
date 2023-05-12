@@ -13,7 +13,6 @@ class PAFPN(tf.keras.Model):
                  no_norm_on_lateral=False,
                  **kwargs):
         super(PAFPN, self).__init__(extra_convs_on_inputs, **kwargs)
-        # print('-' * 100)
         self.in_channels = config.in_channels
         out_channels = config.out_channels
         self.num_outs = config.num_outs
@@ -50,57 +49,71 @@ class PAFPN(tf.keras.Model):
                 self.add_extra_convs = 'on_input'
             else:
                 self.add_extra_convs = 'on_output'
-        self.lateral_convs = []
-        self.fpn_convs = []
-
+        self.lateral_convs, self.fpn_convs = [], []
         for i in range(self.start_level, self.backbone_end_level):
-            l_conv = ConvBlock(filters=out_channels,
-                               kernel_size=1,
-                               strides=1,
-                               norm_method=None,
-                               activation=None,
-                               use_bias=True)
-            fpn_conv = ConvBlock(filters=out_channels,
-                                 kernel_size=3,
-                                 strides=1,
-                                 norm_method=None,
-                                 activation=None,
-                                 use_bias=True)
+            l_conv = ConvBlock(
+                filters=out_channels,
+                kernel_size=1,
+                strides=1,
+                kernel_initializer=tf.keras.initializers.HeNormal,
+                norm_method=None,
+                activation=None,
+                use_bias=True,
+                conv_mode='sp_conv2d')
+            fpn_conv = ConvBlock(
+                filters=out_channels,
+                kernel_size=3,
+                strides=1,
+                kernel_initializer=tf.keras.initializers.HeNormal,
+                norm_method=None,
+                activation=None,
+                use_bias=True,
+                conv_mode='sp_conv2d')
 
             self.lateral_convs.append(l_conv)
             self.fpn_convs.append(fpn_conv)
 
         self.downsample_convs, self.pafpn_convs = [], []
         for i in range(self.start_level + 1, self.backbone_end_level):
-            d_conv = ConvBlock(filters=out_channels,
-                               kernel_size=3,
-                               strides=2,
-                               norm_method=None,
-                               activation=None,
-                               use_bias=True)
-            pafpn_conv = ConvBlock(filters=out_channels,
-                                   kernel_size=3,
-                                   strides=1,
-                                   norm_method=None,
-                                   activation=None,
-                                   use_bias=True)
+            d_conv = ConvBlock(
+                filters=out_channels,
+                kernel_size=3,
+                strides=2,
+                kernel_initializer=tf.keras.initializers.HeNormal,
+                norm_method=None,
+                activation=None,
+                use_bias=True,
+                conv_mode='sp_conv2d')
+            pafpn_conv = ConvBlock(
+                filters=out_channels,
+                kernel_size=3,
+                strides=1,
+                kernel_initializer=tf.keras.initializers.HeNormal,
+                norm_method=None,
+                activation=None,
+                use_bias=True,
+                conv_mode='sp_conv2d')
             self.downsample_convs.append(d_conv)
             self.pafpn_convs.append(pafpn_conv)
         # add extra conv layers (e.g., RetinaNet)
 
         extra_levels = self.num_outs - self.backbone_end_level + self.start_level
         if self.add_extra_convs and extra_levels >= 1:
+
             for i in range(extra_levels):
                 if i == 0 and self.add_extra_convs == 'on_input':
                     in_channels = self.in_channels[self.backbone_end_level - 1]
                 else:
                     in_channels = out_channels
-                extra_fpn_conv = ConvBlock(filters=out_channels,
-                                           kernel_size=3,
-                                           strides=2,
-                                           norm_method=None,
-                                           activation=None,
-                                           use_bias=True)
+                extra_fpn_conv = ConvBlock(
+                    filters=out_channels,
+                    kernel_size=3,
+                    strides=2,
+                    kernel_initializer=tf.keras.initializers.HeNormal,
+                    norm_method=None,
+                    activation=None,
+                    use_bias=True,
+                    conv_mode='sp_conv2d')
                 self.fpn_convs.append(extra_fpn_conv)
 
         self.resize = tf.image.resize
@@ -119,16 +132,13 @@ class PAFPN(tf.keras.Model):
         ]
         # build top-down path
         used_backbone_levels = len(laterals)
-
         for i in range(used_backbone_levels - 1, 0, -1):
-            prev_shape = laterals[i - 1].shape[1:3]
-
+            prev_shape = tf.shape(laterals[i - 1])[1:3]
             laterals[i - 1] += self.resize(
                 images=laterals[i],
                 size=prev_shape,
                 method=tf.image.ResizeMethod.NEAREST_NEIGHBOR,
             )
-
         # build outputs
         # part 1: from original levels
         inter_outs = [
@@ -167,4 +177,4 @@ class PAFPN(tf.keras.Model):
                         outs.append(self.fpn_convs[i](self.relu(outs[-1])))
                     else:
                         outs.append(self.fpn_convs[i](outs[-1]))
-        return tuple(outs)
+        return outs[0], outs[1], outs[2]

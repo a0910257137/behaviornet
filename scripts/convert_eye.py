@@ -11,13 +11,6 @@ import cv2
 os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
 
 threads = multiprocessing.cpu_count()
-features = {
-    "origin_height": tf.io.FixedLenFeature([], dtype=tf.int64),
-    "origin_width": tf.io.FixedLenFeature([], dtype=tf.int64),
-    "b_theta": tf.io.FixedLenFeature([], dtype=tf.string),
-    "b_images": tf.io.FixedLenFeature([], dtype=tf.string),
-    "b_coords": tf.io.FixedLenFeature([], dtype=tf.string)
-}
 
 
 def representative_dataset_gen():

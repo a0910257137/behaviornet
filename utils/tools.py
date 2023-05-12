@@ -6,7 +6,7 @@ import logging
 import datetime
 import commentjson
 import tensorflow as tf
-from .callbacks import EmbeddingMap, LossAndErrorPrintingCallback, CheckpointManagerCallback, Histogram
+from .callbacks import EmbeddingMap, LossAndErrorPrintingCallback, CheckpointManagerCallback, Histogram, ClearMemory
 from monitor import logger
 
 
@@ -19,6 +19,8 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
     writers = {'train': train_writer, 'validation': eval_writer}
     checkpoint = tf.train.Checkpoint(model=model, optimizer=optimizer)
     checkpoint_dir = config.model_path
+
+    clear_memory = ClearMemory()
     manager = tf.train.CheckpointManager(checkpoint,
                                          checkpoint_dir,
                                          max_to_keep=5)
@@ -45,7 +47,7 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
     #                              update_freq=1000)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
-    callbacks.append([saver_callback, tensorboard_callback, loss_callback])
+    callbacks.append([saver_callback, loss_callback, clear_memory])
     return callbacks
 
 
@@ -78,11 +80,15 @@ def set_data_config(config):
 
 def set_model_config(config):
     config.models['3dmm'] = config.data_reader['3dmm']
+    config.models.loss.batch_size = config.batch_size
+    config.models.loss.resize_size = config.data_reader.resize_size
     config.models.tasks = config.data_reader.tasks
     config.models.max_obj_num = config.data_reader.max_obj_num
     config.models.resize_size = config.data_reader.resize_size
     config.models.batch_size = config.batch_size
     config.models.lr = config.learn_rate
+
+    config.models.loss.use_kps = config.models.head.use_kps
     return config
 
 

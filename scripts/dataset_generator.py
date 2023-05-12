@@ -338,7 +338,9 @@ def get_coors(img_root,
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
     save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
-    # save_root = os.path.join("/home2/user/anders/3D/total", 'tf_records')
+    # save_root = os.path.abspath(
+    #     os.path.join('/aidata/anders/data_collection/okay/total', 'tf_records'))
+
     frame_count = 0
     root_dir = "/aidata/anders/3D-head/3DDFA"
     bfm_path = os.path.join(root_dir, "BFM/BFM.mat")
@@ -358,9 +360,13 @@ def get_coors(img_root,
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
         is_masks, frame_kps = [], []
+        dataset = frame['dataset']
         img_name = frame['name']
+
+        # img_path = os.path.join(img_root, dataset, 'imgs', img_name)
         img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
+
         if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
@@ -465,7 +471,7 @@ def parse_config():
     parser.add_argument('--anno_file_names', default=None, nargs='+')
     parser.add_argument('--img_root', type=str)
     parser.add_argument('--obj_cate_file', type=str)
-    parser.add_argument('--img_size', default=(640, 640), type=tuple)
+    parser.add_argument('--img_size', default=(320, 320), type=tuple)
     parser.add_argument('--max_obj', default=15, type=int)
     parser.add_argument('--min_num', default=1, type=int)
     parser.add_argument('--train_ratio', default=0.8, type=float)

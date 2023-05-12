@@ -30,12 +30,14 @@ class MobileNetModel(tf.keras.Model):
                       kernel_size=3,
                       use_bias=False,
                       strides=2,
+                      kernel_initializer=tf.keras.initializers.HeNormal,
                       norm_method='bn'),
             ConvBlock(filters=stage_planes[1],
                       kernel_size=3,
                       use_bias=False,
                       strides=1,
                       conv_mode='sp_conv2d',
+                      kernel_initializer=tf.keras.initializers.HeNormal,
                       norm_method='bn')
         ]
         # implemnt bottleneck
@@ -45,21 +47,25 @@ class MobileNetModel(tf.keras.Model):
             layer_name = f'layer{i + 1}'
             for n in range(num_blocks):
                 if n == 0:
-                    _layer = ConvBlock(filters=stage_planes[i + 2],
-                                       kernel_size=3,
-                                       use_bias=False,
-                                       strides=2,
-                                       conv_mode='sp_conv2d',
-                                       norm_method='bn',
-                                       name=layer_name)
+                    _layer = ConvBlock(
+                        filters=stage_planes[i + 2],
+                        kernel_size=3,
+                        use_bias=False,
+                        strides=2,
+                        conv_mode='sp_conv2d',
+                        kernel_initializer=tf.keras.initializers.HeNormal,
+                        norm_method='bn',
+                        name=layer_name)
                 else:
-                    _layer = ConvBlock(filters=stage_planes[i + 2],
-                                       kernel_size=3,
-                                       use_bias=False,
-                                       strides=1,
-                                       conv_mode='sp_conv2d',
-                                       norm_method='bn',
-                                       name=layer_name)
+                    _layer = ConvBlock(
+                        filters=stage_planes[i + 2],
+                        kernel_size=3,
+                        use_bias=False,
+                        strides=1,
+                        conv_mode='sp_conv2d',
+                        kernel_initializer=tf.keras.initializers.HeNormal,
+                        norm_method='bn',
+                        name=layer_name)
                 _layers.append(_layer)
             _block = [*_layers]
             self.stage_layers.append(_block)

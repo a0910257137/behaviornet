@@ -171,7 +171,7 @@ class AnchorGenerator(object):
         base_anchors = tf.stack(base_anchors, axis=-1)
         return base_anchors
 
-    def grid_anchors(self, featmap_sizes):
+    def grid_anchors(self, batch, featmap_sizes):
         """Generate grid anchors in multiple feature levels.
 
         Args:
@@ -188,13 +188,18 @@ class AnchorGenerator(object):
         """
 
         assert self.num_levels == len(featmap_sizes)
-        multi_level_anchors = []
+        multi_level_anchors, num_level_anchors = [], []
         for i in range(self.num_levels):
             anchors = self.single_level_grid_anchors(self.base_anchors[i],
                                                      featmap_sizes[i],
                                                      self.strides[i])
+            num_level_anchors.append(tf.shape(anchors)[0])
+            anchors = tf.tile(anchors[None, :, :], [batch, 1, 1])
             multi_level_anchors.append(anchors)
-        return multi_level_anchors
+
+        num_level_anchors = tf.tile(
+            tf.cast(num_level_anchors, tf.int32)[None, :], [batch, 1])
+        return multi_level_anchors, num_level_anchors
 
     def single_level_grid_anchors(self,
                                   base_anchors,
@@ -217,9 +222,8 @@ class AnchorGenerator(object):
             torch.Tensor: Anchors in the overall feature maps.
         """
 
-        feat_h, feat_w = featmap_size
-        # feat_h = int(feat_h)
-        # feat_w = int(feat_w)
+        feat_h = featmap_size[0]
+        feat_w = featmap_size[1]
 
         shift_x = tf.range(0, feat_w) * stride[0]
         shift_y = tf.range(0, feat_h) * stride[1]
@@ -242,23 +246,23 @@ class AnchorGenerator(object):
         """Generate mesh grid of x and y.
 
         Args:
-            x (torch.Tensor): Grids of x dimension.
-            y (torch.Tensor): Grids of y dimension.
+            x (tf.Tensor): Grids of x dimension.
+            y (tf.Tensor): Grids of y dimension.
             row_major (bool, optional): Whether to return y grids first.
                 Defaults to True.
 
         Returns:
-            tuple[torch.Tensor]: The mesh grids of x and y.
+            tuple[tf.Tensor]: The mesh grids of x and y.
         """
 
-        xx = tf.tile(x, [y.shape[0]])
-        yy = tf.repeat(y, x.shape[0])
+        xx = tf.tile(x, [tf.shape(y)[0]])
+        yy = tf.repeat(y, tf.shape(x)[0])
         if row_major:
             return xx, yy
         else:
             return yy, xx
 
-    def valid_flags(self, featmap_sizes, pad_shape):
+    def valid_flags(self, batch, featmap_sizes, pad_shape):
         """Generate valid flags of anchors in multiple feature levels.
 
         Args:
@@ -270,21 +274,27 @@ class AnchorGenerator(object):
         Return:
             list(torch.Tensor): Valid flags of anchors in multiple levels.
         """
-
         assert self.num_levels == len(featmap_sizes)
         multi_level_flags = []
-
-        #TODO:
         for i in range(self.num_levels):
             anchor_stride = self.strides[i]
-            feat_h, feat_w = featmap_sizes[i]
-            h, w = pad_shape[:2]
-
-            valid_feat_h = min(int(np.ceil(h / anchor_stride[1])), feat_h)
-            valid_feat_w = min(int(np.ceil(w / anchor_stride[0])), feat_w)
+            feat_h = featmap_sizes[i][0]
+            feat_w = featmap_sizes[i][1]
+            # feat_h, feat_w = featmap_sizes[i]
+            h = pad_shape[0]
+            w = pad_shape[1]
+            valid_feat_h = tf.math.minimum(
+                tf.cast(tf.math.ceil(h / anchor_stride[1]), tf.int32), feat_h)
+            valid_feat_w = tf.math.minimum(
+                tf.cast(tf.math.ceil(w / anchor_stride[0]), tf.int32), feat_w)
+            # valid_feat_h = min(int(np.ceil(h / anchor_stride[1])), feat_h)
+            # valid_feat_w = min(int(np.ceil(w / anchor_stride[0])), feat_w)
             flags = self.single_level_valid_flags((feat_h, feat_w),
                                                   (valid_feat_h, valid_feat_w),
                                                   self.num_base_anchors[i])
+
+            flags = tf.tile(flags[None, :], [batch, 1])
+
             multi_level_flags.append(flags)
         return multi_level_flags
 
@@ -305,7 +315,7 @@ class AnchorGenerator(object):
         """
         feat_h, feat_w = featmap_size
         valid_h, valid_w = valid_size
-        assert valid_h <= feat_h and valid_w <= feat_w
+        # assert valid_h <= feat_h and valid_w <= feat_w
 
         valid_x = tf.zeros(feat_w, dtype=tf.float32)
         valid_y = tf.zeros(feat_h, dtype=tf.float32)

@@ -20,6 +20,7 @@ threads = multiprocessing.cpu_count()
 
 
 def flatten_model(nested_model):
+
     def get_layers(layers):
         layers_flat = []
         for layer in layers:
@@ -42,8 +43,7 @@ def _folding_bn(weights):
     return depth_kernel, point_kernel, bias
 
 
-def save(dir, depth_kernel, point_kernel, bias, conv_1x1_kernel,
-         conv_1x1_bias):
+def save(dir, depth_kernel, point_kernel, bias, conv_1x1_kernel, conv_1x1_bias):
     if not os.path.exists(dir):
         os.umask(0)
         os.makedirs(dir, mode=0o755)
@@ -99,11 +99,10 @@ def _restore(model, cp_dir, save_root):
                         zip(restore_layers[:2], model_layers[:2])):
                     if i == 1:
                         restore_weights = restore_layer.get_weights()
-                        kernel_weights = np.concatenate([
-                            restore_weights[0],
-                            np.zeros(shape=(1, 1, 32, 1))
-                        ],
-                                                        axis=-1)
+                        kernel_weights = np.concatenate(
+                            [restore_weights[0],
+                             np.zeros(shape=(1, 1, 32, 1))],
+                            axis=-1)
                         kernel_bias = np.concatenate(
                             [restore_weights[1],
                              np.zeros(shape=(1, ))],
@@ -159,6 +158,7 @@ def _restore(model, cp_dir, save_root):
 
 
 def convert2tfl(img_root, save_root, model, tfl_format):
+
     def representative_dataset_gen():
         jpg_files = glob(os.path.join(img_root, '*.jpg'))
         pbg_file = glob(os.path.join(img_root, '*.png'))
