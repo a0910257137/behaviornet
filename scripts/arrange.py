@@ -1,19 +1,46 @@
 import numpy as np
 import cv2
-from utils.io import *
 import os
 from glob import glob
 from pprint import pprint
 import copy
 from tqdm import tqdm
+import json
+from pathlib import Path
+
+
+def load_json(path):
+    """The function of loading json file
+
+    Arguments:
+        path {str} -- The path of the json file
+
+    Returns:
+        list, dict -- The obj stored in the json file
+    """
+    with open(path, 'r') as f:
+        data = json.load(f)
+    return data
+
+
+def dump_json(path, data):
+    """Dump data to json file
+
+    Arguments:
+        data {[Any]} -- data
+        path {str} -- json file path
+    """
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with open(path, 'w') as f:
+        json.dump(data, f)
+
 
 annos = load_json("/aidata/relabel/pose/annos/BDD_demo_test_model3.json")
 base_infos = annos['frame_list'][0]['labels'][0]
 
 lb_dir = "/aidata/relabel/lnmks/Stage1_4_12_4_26"
 svae_dir = "/aidata/relabel/lnmks/Stage1_4_12_4_26/stage1_total/imgs"
-lb_names = ["anders", "andy"
-            "chiamin", "poyuan"]
+lb_names = ["anders", "andy", "chiamin", "poyuan"]
 bdd_results = {"frame_list": []}
 
 for lb_name in tqdm(lb_names):

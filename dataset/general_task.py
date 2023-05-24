@@ -16,6 +16,7 @@ class GeneralTasks:
         self.model_name = self.config.model_name
         self.map_height, self.map_width = tf.cast(
             self.config.resize_size, tf.float32) * self.config.img_down_ratio
+
         self.is_do_filp = self.config.augments.do_flip
         self.img_resize_size = tf.cast(self.config.resize_size, dtype=tf.int32)
         self.max_obj_num = self.config.max_obj_num
@@ -42,7 +43,6 @@ class GeneralTasks:
             task, m_cates = task_infos['preprocess'], len(task_infos['cates'])
             b_coords, b_face_masks, b_imgs, b_origin_sizes, b_scale_factors = self._parse_TFrecord(
                 task, infos)
-
             b_imgs, b_coords = self._multi_aug_funcs(b_imgs, b_coords,
                                                      self.num_lnmks, task)
             b_bboxes = tf.identity(b_coords[:, :, :2, :2])
@@ -77,16 +77,19 @@ class GeneralTasks:
                                            axis=-2,
                                            keepdims=True)
                 b_keypoints = mean
+                targets['size_idxs'] = mean[:, :, 0, :]
+                targets['size_vals'] = tf.where(tf.math.is_nan(b_obj_sizes),
+                                                np.inf, b_obj_sizes)
                 targets['b_coords'] = tf.squeeze(mean, axis=-2)
-
-                b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.constant(
-                    [self.map_height, self.map_width], dtype=tf.float32)
+                b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.concat(
+                    [self.map_height[None], self.map_width[None]], axis=-1)
                 b_lnmks = tf.einsum('b n k c, b c -> b n k c',
                                     b_lnmks[:, :, 2:, :2], b_resized)
                 mean = tf.math.reduce_mean(b_lnmks, axis=-2, keepdims=True)
                 b_lnmks -= mean
                 b_lnmks = tf.where(tf.math.is_nan(b_lnmks), np.inf, b_lnmks)
                 targets['b_lnmks'] = b_lnmks
+
                 params = self.MorphabelModel.fit_points(b_lnmks, b_origin_sizes)
                 targets['obj_heat_map'] = tf.py_function(
                     self._draw_kps,
@@ -103,7 +106,6 @@ class GeneralTasks:
                                              5, 1))
                 b_coords = tf.concat(
                     [b_coords[:, :, 1:, :][..., ::-1], b_cates], axis=-1)
-
                 targets['b_keypoints'] = b_coords
                 targets['b_bboxes'] = b_bboxes[..., ::-1]
                 targets['b_scale_factors'] = b_scale_factors
@@ -205,7 +207,10 @@ class GeneralTasks:
                                                       cates):
                     if np.isinf(sigma) or np.any(np.isinf(kp)):
                         continue
-                    i = int(face_mask)
+                    i = 1
+                    if face_mask == np.inf:
+                        i = 0
+                    # i = int(face_mask)
                     for i_kp in kp:
                         hms[int(i)] = draw_msra_gaussian(
                             hms[int(i)], np.asarray(i_kp, dtype=np.float32),
@@ -224,18 +229,15 @@ class GeneralTasks:
 
         b_coords, b_images, b_origin_sizes = None, None, None
         parse_vals = tf.io.parse_example(infos, self.features)
-
         b_images = tf.io.decode_raw(parse_vals['b_images'], tf.uint8)
         b_images = tf.reshape(
             b_images, [-1, self.map_height, self.map_width, self.img_channel])
         b_coords = tf.io.decode_raw(parse_vals['b_coords'], tf.float32)
-
         b_coords = tf.reshape(b_coords, anno_shape)
         b_face_masks = tf.io.decode_raw(parse_vals['is_masks'], tf.float32)
         b_face_masks = tf.reshape(b_face_masks, [-1, self.max_obj_num])
         origin_height = tf.reshape(parse_vals['origin_height'], (-1, 1))
         origin_width = tf.reshape(parse_vals['origin_width'], (-1, 1))
-
         b_origin_sizes = tf.concat([origin_height, origin_width], axis=-1)
         b_origin_sizes = tf.cast(b_origin_sizes, tf.int32)
         b_scale_factors = tf.io.decode_raw(parse_vals['scale_factor'],

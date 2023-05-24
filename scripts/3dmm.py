@@ -33,12 +33,9 @@ def tdmm(annos_path, img_root, save_path):
     print('initialize bfm model success')
     annos = load_json(annos_path)
     i = 0
+    anlges = []
     for frame in tqdm(annos["frame_list"]):
         name = frame["name"]
-        # print(name)
-        # img_path = os.path.join(img_root, name)
-        # img = cv2.imread(img_path)
-        # h, w, c = img.shape
         for lb in frame["labels"]:
             tmp_kps = []
             keypoints = lb["keypoints"]
@@ -49,30 +46,25 @@ def tdmm(annos_path, img_root, save_path):
             kps = tmp_kps
             fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
                 kps[:, ::-1], X_ind, idxs=None, max_iter=5)
-
             # transformed_vertices = gen_vertices(bfm, fitted_s, fitted_angles,
             #                                     fitted_t, fitted_sp, fitted_ep)
             # landmarks = transformed_vertices[valid_ind]
             # landmarks = np.reshape(landmarks, (landmarks.shape[0] // 3, 3))
             fitted_angles *= (180 / np.pi)
+            anlges.append(fitted_angles)
             pitch, yaw, roll = fitted_angles
-            if pitch < 0:
-                pitch = -(180 + pitch)
-            elif pitch > 0:
-                pitch = (180 - pitch)
-            lb["attributes"]["pitch"] = pitch
-            lb["attributes"]["yaw"] = yaw
-            lb["attributes"]["roll"] = roll
-            # yaw = fitted_angles[1]
-            # lb['attributes'] = {
-            #     "pitch": pitch,
-            #     "yaw": yaw,
-            #     "roll": roll,
-            #     "small": False,
-            #     "valid": True
-            # }
+            # if pitch < 0:
+            #     pitch = -(180 + pitch)
+            # elif pitch > 0:
+            #     pitch = (180 - pitch)
+            # lb["attributes"]["pitch"] = pitch
+            # lb["attributes"]["yaw"] = yaw
+            # lb["attributes"]["roll"] = roll
         i += 1
-    dump_json(path=save_path, data=annos)
+    anlges = np.asarray(anlges)
+
+    np.save("/aidata/anders/data_collection/okay/LS3D-W/angles.npy", anlges)
+    # dump_json(path=save_path, data=annos)
 
 
 def parse_config():

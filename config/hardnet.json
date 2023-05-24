@@ -1,13 +1,13 @@
 {
-    "batch_size": 32,
-    "epochs":120,
-    "learn_rate": 0.00025,
-    "model_path": "/home2/user/anders/3D/archive_model/mask",
+    "batch_size": 36,
+    "epochs":100,
+    "learn_rate": 0.0005,
+    "model_path": "/aidata/anders/data_collection/okay/total/archives/v1",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/home2/user/anders/3D/archive_model/mask/logs/"
+        "log_dir": "/aidata/anders/data_collection/okay/total/archives/v1/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -26,8 +26,8 @@
             "read_img": true,
             "num_lnmks": 70,
             "category_path": "./config/face.txt",
-            "train_folder": "/home2/user/anders/3D/exp/tf_records/train",
-            "test_folder": "/home2/user/anders/3D/exp/tf_records/test"
+            "train_folder": "/aidata/anders/data_collection/okay/total/tf_records/train",
+            "test_folder": "/aidata/anders/data_collection/okay/total/tf_records/test"
         }],
         "augments": {
             "color_chains": [
@@ -36,7 +36,7 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": ["Flip", "WarpAffineTransform", "RandomPaste"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["RandomPaste"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains": {
                 "cutout": {
                     "max_holes": 15,
@@ -48,12 +48,12 @@
                     "fill_value": 0
                 }
             },
-            "do_flip": true
+            "do_flip": false
         },
         "3dmm":{
-            "model_path":"/home3/user/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
-            "pms_path":"/home2/user/anders/3D/exp/tf_records/params/param_mean_std.npy",
-            "n_s":1,
+            "model_path":"/aidata/anders/3D-head/3DDFA/BFM/BFM.mat",
+            "pms_path":"/aidata/anders/data_collection/okay/total/tf_records/params/param_mean_std.npy",
+            "n_s":0,
             "n_R":9,
             "n_shp":50,
             "n_exp":29,
@@ -61,7 +61,7 @@
         }
     },
     "models": {
-        "model_name": "obj_det",
+        "model_name": "anchor_free_obj_det",
         "frozen_backbone": false,
         "multi_optimizer": false,
         "optimizer": "adam",
@@ -99,15 +99,19 @@
                     "name": "obj_heat_map",
                     "out_dims": 2
                 }],
+                "size_maps": [{
+                    "name": "obj_size_map",
+                    "out_dims": 2
+                }],
                 "i_vdc_maps": [{
                     "name": "obj_param_map",
-                    "out_dims": 89
+                    "out_dims": 88
                 }]
             }
         },
         "loss": { //weighted constant based on DETR paper
-            "type": "center_head",
-            "meta_joint":true
+            "module_name": "center_head",
+            "meta_joint":false
         }
     }
 }

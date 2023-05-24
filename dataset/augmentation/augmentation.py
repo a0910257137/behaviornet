@@ -23,6 +23,7 @@ class Augmentation(Base):
             tmp_logic = tf.tile(
                 flip_probs[:, None, None, None],
                 [1, self.img_resize_size[0], self.img_resize_size[1], 3])
+
             b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, filp_imgs)
 
         if len(self.augments.tensorpack_chains) != 0:

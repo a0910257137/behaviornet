@@ -4,7 +4,6 @@ import json
 import os
 from pprint import pprint
 from math import cos, sin
-import math
 import argparse
 from pathlib import Path
 import sys
@@ -13,32 +12,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.morphable_model import MorphabelModel
 
 os.environ['CUDA_VISIBLE_DEVICES'] = "-1"
-
-# def matrix2angle(R):
-#     ''' get three Euler angles from Rotation Matrix
-#     Args:
-#         R: (3,3). rotation matrix
-#     Returns:
-#         x: pitch
-#         y: yaw
-#         z: roll
-#     '''
-#     sy = math.sqrt(R[0, 0] * R[0, 0] + R[1, 0] * R[1, 0])
-
-#     singular = sy < 1e-6
-
-#     if not singular:
-#         x = math.atan2(R[2, 1], R[2, 2])
-#         y = math.atan2(-R[2, 0], sy)
-#         z = math.atan2(R[1, 0], R[0, 0])
-#     else:
-#         x = math.atan2(-R[1, 2], R[1, 1])
-#         y = math.atan2(-R[2, 0], sy)
-#         z = 0
-
-#     # rx, ry, rz = np.rad2deg(x), np.rad2deg(y), np.rad2deg(z)
-#     rx, ry, rz = x * 180 / np.pi, y * 180 / np.pi, z * 180 / np.pi
-#     return rx, ry,
 
 
 def load_json(path):
@@ -75,7 +48,7 @@ def camera_func(x3d, K, Rt):
     return preds[:, :2]
 
 
-root_dir = "/home3/user/anders/objects/3D-head/calibration"
+root_dir = "/aidata/anders/3D-head/calibration"
 
 
 class LM:
@@ -84,7 +57,7 @@ class LM:
         self.iteration = 0  # iteration counter
         self.func_calls = 0  # running count of function evaluations
         self.MaxIter = 5000
-        self.trans_constraint = 50
+        self.trans_constraint = 90
 
     def __call__(self, x2d, x3d, K, angles, params, img_wh):
         x2d = x2d / img_wh
@@ -156,7 +129,6 @@ class LM:
         X2_old = X2
         # initialize convergence history
         cvg_hst = np.ones((self.MaxIter, Npar + 2))
-
         # -------- Start Main Loop ----------- #
         while not stop and self.iteration <= self.MaxIter:
             self.iteration = self.iteration + 1
@@ -315,13 +287,12 @@ class LM:
         R_sq = 0
         # convergence history
         cvg_hst = cvg_hst[:self.iteration, :]
-        # iters = list(range(cvg_hst.shape[0]))
-        # from matplotlib import pyplot as plt
-        # for i in range(cvg_hst.shape[1] - 1):
-        #     plt.plot(iters, cvg_hst[:, i + 1], label="list_{}".format(i))
-        # plt.legend()
-        # plt.savefig("foo.jpg")
-
+        iters = list(range(cvg_hst.shape[0]))
+        from matplotlib import pyplot as plt
+        for i in range(cvg_hst.shape[1] - 1):
+            plt.plot(iters, cvg_hst[:, i + 1], label="list_{}".format(i))
+        plt.legend()
+        plt.savefig("foo.jpg")
         return preds, params, redX2, sigma_p, sigma_y, corr_p, R_sq, cvg_hst
 
     def lm_matx(self, x3d, K, img_wh, p_old, y_old, dX2, J, angles, params, x2d,
@@ -481,7 +452,7 @@ def main(annos_path, img_root):
     print('-' * 100)
     print('initialize bfm model success')
     lm = LM()
-    bfm = MorphabelModel('/home3/user/anders/objects/3D-head/3DDFA/BFM/BFM.mat')
+    bfm = MorphabelModel('/aidata/anders/3D-head/3DDFA/BFM/BFM.mat')
     X_ind = bfm.kpt_ind
     X_ind_all = np.stack([X_ind * 3, X_ind * 3 + 1, X_ind * 3 + 2])
     X_ind_all = np.concatenate([
@@ -496,8 +467,9 @@ def main(annos_path, img_root):
     annos = load_json(annos_path)
     print('-' * 100)
     print("Start calibrating and calculating depth")
-
-    K = np.load(os.path.join(root_dir, "checker/K.npy"))
+    K = np.fromfile(
+        "/aidata/anders/3D-head/user_depth/calibrate_images/params/bins/cmat_f64.bin"
+    ).reshape([3, -1])
     for frame in annos["frame_list"]:
         name = frame["name"]
         img_path = os.path.join(img_root, name)
@@ -506,15 +478,15 @@ def main(annos_path, img_root):
         img_wh = np.array([w, h])[None, :]
         params = np.array([5, 5, 50])[:, None]
         for lb in frame["labels"]:
+            box2d = lb["box2d"]
             keypoints = lb["keypoints"]
             kps = np.asarray([keypoints[key] for key in keypoints.keys()])
             x2d = kps[:, ::-1]  # convert to x, y format
             fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
-                kps[:, ::-1], X_ind, idxs=None, max_iter=10)
+                kps[:, ::-1], X_ind, idxs=None, max_iter=5)
             landmarks = shapeMU + shapePC.dot(fitted_sp) + expPC.dot(fitted_ep)
             landmarks = np.reshape(landmarks, (landmarks.shape[0] // 3, 3))
-            transformed_landmarks = 1e-4 * landmarks  # convert to centimeter
-            x3d = transformed_landmarks
+            x3d = 1e-4 * landmarks  # convert to centimeter
             angles = np.asarray(fitted_angles)[:, None]
             preds, p_fit, Chi_sq, sigma_p, sigma_y, corr, R_sq, cvg_hst = lm(
                 x2d, x3d, K, angles, params, img_wh)
@@ -560,17 +532,21 @@ def main(annos_path, img_root):
                     start_point = (kps[l][0], kps[l][1])
                     end_point = (kps[60][0], kps[60][1])
                     cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+            tl, br = (int(box2d['x1']), int(box2d['y1'])), (int(box2d['x2']),
+                                                            int(box2d['y2']))
+            img = cv2.rectangle(img, tl, br, (0, 255, 255), 2)
             # for kp in preds:
             #     kp = kp.astype(np.int32)
             #     img = cv2.circle(img, kp, 10, (0, 255, 0), -1)
             cv2.imwrite("output.jpg", img)
-            xxx
             print('\nLM fitting results:')
             for i in range(len(p_fit)):
                 print('----------------------------- ')
                 print('parameter      = p%i' % (i + 1))
                 print('fitted value   = %0.4f' % p_fit[i, 0])
-                # print('standard error = %0.2f %%' % error_p[i, 0])
+            # print('standard error = %0.2f %%' % error_p[i, 0])
+
+            xxx
 
     # lm(x2d, x3d, K, angles, params, img_wh)
     return p_fit, Chi_sq, sigma_p, sigma_y, corr, R_sq, cvg_hst

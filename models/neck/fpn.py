@@ -12,7 +12,7 @@ class FPN(tf.keras.Model):
     def __init__(self, config, **kwargs):
         super(FPN, self).__init__(**kwargs)
         self.config = config
-        self.structure = self.config.neck.structure
+        self.structure = self.config.structure
         self.SC = self.structure.skip_conv_ch
         up_transi_lists = [
             224 + self.SC[0], 96 + self.SC[1], 64 + self.SC[2], 64 + self.SC[3]
@@ -24,7 +24,7 @@ class FPN(tf.keras.Model):
                 ConvBlock(up_transi_lists[i],
                           kernel_size=1,
                           use_bias=False,
-                          norm_method='range_bn',
+                          norm_method=norm_method,
                           name='up_trans{}'.format(i + 1)))
 
         self.avg_pool_concat = AvgPoolConcat()

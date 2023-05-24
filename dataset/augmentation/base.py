@@ -135,6 +135,7 @@ class Base:
         objs_kps_x = objs_kps[..., :1]
         objs_kps_x = -objs_kps_x + w - 1
         objs_kps_y = objs_kps[..., -1:]
+
         objs_kps_x[:, 0, :] -= objs_wilds[:, 0, :]
         objs_kps_x[:, 1, :] += objs_wilds[:, 1, :]
         objs_kps = np.concatenate([objs_kps_x, objs_kps_y], axis=-1)
@@ -142,10 +143,9 @@ class Base:
         jawline = objs_kps[:, 2:19][:, ::-1]
         eyebrows = objs_kps[:, 19:29][:, ::-1]
         L_eyes = objs_kps[:, 29:35][:, [3, 2, 1, 0, 5, 4]]
+
         R_eyes = objs_kps[:, 35:41][:, [3, 2, 1, 0, 5, 4]]
-
         nose = objs_kps[:, 41:50]
-
         out_lips = objs_kps[:, 50:62][:, [6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8, 7]]
 
         in_lips = objs_kps[:, 62:70][:, [4, 3, 2, 1, 0, 7, 6, 5]]

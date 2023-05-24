@@ -14,15 +14,12 @@ class Network(tf.keras.Model):
         self.task = self.config.tasks[0]['preprocess']
         if self.task == 'tdmm':
             pms = np.load(self.config['3dmm']['pms_path'])
-            n_s, n_R, n_shp, n_exp = self.config['3dmm']["n_s"], self.config[
-                '3dmm']["n_R"], self.config['3dmm']["n_shp"], self.config[
-                    '3dmm']["n_exp"]
-            s = pms[:, :n_s]
-            Rt = pms[:, n_s:n_s + n_R]
-            shp, exp = pms[:, n_s + n_R:n_s + n_R +
-                           n_shp], pms[:,
-                                       199 + n_s + n_R:199 + n_s + n_R + n_exp]
-            pms = np.concatenate([s, Rt, shp, exp], axis=-1)
+            n_R, n_shp, n_exp = self.config['3dmm']["n_R"], self.config['3dmm'][
+                "n_shp"], self.config['3dmm']["n_exp"]
+            Rt = pms[:, :n_R]
+            shp, exp = pms[:, n_R:n_R + n_shp], pms[:,
+                                                    199 + n_R:199 + n_R + n_exp]
+            pms = np.concatenate([Rt, shp, exp], axis=-1)
             self.train_mean_std = tf.cast(pms[:2, ], tf.float32)
 
     def compile(self, optimizer, loss, run_eagerly=None):
@@ -31,7 +28,7 @@ class Network(tf.keras.Model):
                                      metrics=['accuracy'])
         self._loss = loss
         self.optimizer = optimizer
-        # image_inputs = tf.keras.Input(shape=(320, 320, 3), name='image_inputs')
+        # image_inputs = tf.keras.Input(shape=(192, 320, 3), name='image_inputs')
         # preds = self.model(image_inputs, training=False)
         # fully_models = tf.keras.Model(image_inputs, preds, name='fully')
         # print(fully_models.summary())
@@ -49,7 +46,7 @@ class Network(tf.keras.Model):
             labels['mean_std'] = self.train_mean_std
         with tf.GradientTape() as tape:
             preds = self.model(imgs, training=training)
-            loss = self._loss(self.config.batch_size, preds, labels, training)
+            loss = self._loss(preds, labels, training)
 
         if self.config.multi_optimizer:
             self._gradient(self.model, self.optimizer, loss['total'], tape)
@@ -69,7 +66,7 @@ class Network(tf.keras.Model):
                                   ) / self.train_mean_std[1][None, None, :]
             labels['mean_std'] = self.train_mean_std
         preds = self.model(imgs, training=training)
-        loss = self._loss(self.config.batch_size, preds, labels, training)
+        loss = self._loss(preds, labels, training)
         return loss
 
     def get_trainable_variables(self, model):

@@ -1,6 +1,6 @@
 {
-    "batch_size": 32,
-    "epochs": 200,
+    "batch_size": 64,
+    "epochs": 300,
     "learn_rate": 0.0025,
     "model_path": "/aidata/anders/3D-head/LS3D-W/archive/v2",
     "summary": {

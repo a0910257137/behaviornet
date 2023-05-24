@@ -357,7 +357,7 @@ def offset_loss(b_idx, b_oms, tar_vals, batch_size, max_obj_num):
 
 
 def wpdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params,
-              gt_Z_params, pms, pred_opms, n_s, n_R, shp_base, exp_base):
+              gt_Z_params, pms, pred_opms, n_R, shp_base, exp_base):
 
     def get_Rt_weights(gt_vertices, pred_Rt, gt_Rt):
         pose_diffs = tf.reshape(tf.math.abs(pred_Rt - gt_Rt),
@@ -388,8 +388,7 @@ def wpdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params,
         return w_norm * shp_exp_diffs
 
     eps = 1e-6
-    gt_Rt, gt_shp_exp = gt_params[..., n_s:n_R + n_s], gt_params[...,
-                                                                 n_R + n_s:]
+    gt_Rt, gt_shp_exp = gt_params[..., :n_R], gt_params[..., n_R:]
     with tf.name_scope('wpdc_loss'):
         # B C N
         valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
@@ -402,24 +401,16 @@ def wpdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params,
         # pred_params are reconstruct params
         pred_params = pred_Z_params * pms[1][None, None, :] + pms[0][None,
                                                                      None, :]
-        pred_Rt, pred_shp_exp = pred_params[..., n_s:n_s +
-                                            n_R], pred_params[..., n_s + n_R:]
-
+        pred_Rt, pred_shp_exp = pred_params[..., :n_R], pred_params[..., n_R:]
         Rt_weights = get_Rt_weights(gt_vertices, pred_Rt, gt_Rt)
         shp_exp_weights = get_shp_exp_weights(shp_base, exp_base, pred_shp_exp,
                                               gt_shp_exp)
         weights = tf.concat(
             [tf.transpose(Rt_weights, (1, 2, 0)), shp_exp_weights], axis=-1)
-
         weights = (weights + eps) / tf.math.reduce_max(
             weights, keepdims=True, axis=-1)
-
-        R_shp_exp_loss = weights * tf.math.square(pred_Z_params[..., 1:] -
-                                                  gt_Z_params[..., 1:])
-
-        s_loss = tf.math.square(pred_Z_params[..., :1] - gt_Z_params[..., :1])
-        loss = tf.concat([s_loss, R_shp_exp_loss], axis=-1)
-
+        R_shp_exp_loss = weights * tf.math.square(pred_Z_params - gt_Z_params)
+        loss = R_shp_exp_loss
         loss = loss * tf.cast(valid_mask[..., None], tf.float32)
         loss = tf.where(
             tf.tile(valid_mask[..., None], (1, 1, tf.shape(loss)[-1])), loss,
@@ -430,43 +421,50 @@ def wpdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params,
     return loss, pred_params
 
 
-def vdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params, pms,
-             pred_params, n_s, n_R, n_shp, u_base, shp_base, exp_base):
-    gt_s, gt_R = gt_params[..., :n_s], gt_params[..., n_s:n_s + n_R]
+def vdc_loss(batch_size, max_obj_num, b_idx, gt_vertices, gt_params,
+             gt_size_vals, pred_params, n_R, n_shp, u_base, shp_base, exp_base):
+    # ground truth parameters
+    gt_R = gt_params[..., :n_R]
+    gt_R = tf.reshape(gt_R, (batch_size, max_obj_num, 3, 3))
+    # prediction parameters
+    pred_R = pred_params[..., :n_R]
+    pred_shp, pred_exp = pred_params[...,
+                                     n_R:n_R + n_shp], pred_params[...,
+                                                                   n_R + n_shp:]
+
+    pred_R = tf.reshape(pred_R, (batch_size, max_obj_num, 3, 3))
     with tf.name_scope('vdc_loss'):
         # B C N
         valid_mask = tf.math.reduce_all(tf.math.is_finite(b_idx), axis=-1)
-        pred_s, pred_R = pred_params[..., :n_s], pred_params[..., n_s:n_s + n_R]
-        pred_shp, pred_exp = pred_params[..., n_s + n_R:n_s + n_R +
-                                         n_shp], pred_params[...,
-                                                             n_s + n_R + n_shp:]
-        pred_R = tf.reshape(pred_R, (batch_size, max_obj_num, 3, 3))
-        gt_R = tf.reshape(gt_R, (batch_size, max_obj_num, 3, 3))
         pred_vertices = u_base + tf.linalg.matmul(
             shp_base, pred_shp[..., None]) + tf.linalg.matmul(
                 exp_base, pred_exp[..., None])
         pred_vertices = tf.reshape(
             pred_vertices,
             (batch_size, max_obj_num, tf.shape(pred_vertices)[2] // 3, 3))
-        pred_R = tf.reshape(pred_R, (batch_size, max_obj_num, 3, 3))
-        pred_vertices = pred_s[..., None] * tf.linalg.matmul(
-            pred_vertices, pred_R, transpose_b=(0, 1, 3, 2))
+        pred_vertices = tf.linalg.matmul(pred_vertices,
+                                         pred_R,
+                                         transpose_b=(0, 1, 3, 2))
+        # X Y
         pred_lnmks = pred_vertices[..., :68, :2]
-        gt_R = tf.reshape(gt_R, (batch_size, max_obj_num, 3, 3))
-
-        gt_vertices = gt_s[..., None] * tf.linalg.matmul(
-            gt_vertices, gt_R, transpose_b=(0, 1, 3, 2))
+        gt_vertices = tf.linalg.matmul(gt_vertices,
+                                       gt_R,
+                                       transpose_b=(0, 1, 3, 2))
         b_diffs = (gt_vertices - pred_vertices)**2
         b_loss = b_diffs[valid_mask]
     return b_loss, pred_lnmks
 
 
-def lrr_loss(batch, max_obj_num, pred_lnmks, gt_lnmks):
+def lrr_loss(batch, max_obj_num, pred_lnmks, gt_lnmks, gt_size_vals):
     valid_mask = tf.math.reduce_all(tf.math.is_finite(gt_lnmks), axis=[-1, -2])
-    mask = gt_lnmks == np.inf
+    pred_tls, pred_brs = tf.math.reduce_min(
+        pred_lnmks, axis=-2), tf.math.reduce_max(pred_lnmks, axis=-2)
+    pred_wh = gt_size_vals[..., ::-1] / (pred_brs - pred_tls)  # B N, C (x, y)
+    pred_lnmks /= pred_wh[:, :, None, :]
+    pred_lnmks = tf.where(tf.math.is_inf(pred_lnmks), 0., pred_lnmks)
     gt_lnmks = tf.where(tf.math.is_inf(gt_lnmks), 0., gt_lnmks)
-    mean = tf.math.reduce_mean(gt_lnmks, axis=-2, keepdims=True)
-    gt_lnmks -= mean
+    # mean = tf.math.reduce_mean(gt_lnmks, axis=-2, keepdims=True)
+    # gt_lnmks -= mean
     gt_lnmks = gt_lnmks[..., ::-1]
     pred_lnmks = tf.reshape(pred_lnmks, [batch, max_obj_num, -1])
 
@@ -474,10 +472,9 @@ def lrr_loss(batch, max_obj_num, pred_lnmks, gt_lnmks):
     diff = pred_lnmks - gt_lnmks
     loss = tf.math.sqrt(
         tf.math.reduce_sum(tf.math.square(diff), axis=-1) + 1e-9)
-
     valid_mask = tf.cast(valid_mask, tf.float32)
     loss = loss * valid_mask
     loss = tf.math.reduce_sum(loss, axis=-1) / tf.math.reduce_sum(valid_mask,
                                                                   axis=-1)
-    
+
     return loss

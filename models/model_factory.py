@@ -16,20 +16,20 @@ class ModelFactory:
         self.config = config
         self._model_keys = ['backbone', 'neck', 'head']
         self.img_channel = 3
-        self.backbone = mobilenet(self.config.backbone,
-                                  input_shape=(self.config.resize_size[0],
-                                               self.config.resize_size[1],
-                                               self.img_channel),
-                                  kernel_initializer='he_uniform')
-        # self.backbone = HardNet39(input_shape=(self.config.resize_size[0],
+        # self.backbone = mobilenet(self.config.backbone,
+        #                           input_shape=(self.config.resize_size[0],
         #                                        self.config.resize_size[1],
         #                                        self.img_channel),
-        #                           pooling='avg_pool',
         #                           kernel_initializer='he_uniform')
-        anchor_generator = self.build_anchor_generator(
-            self.config.anchor_generator)
-        self.config.head["anchor_generator"] = anchor_generator
-        self.config.loss["anchor_generator"] = anchor_generator
+        # anchor_generator = self.build_anchor_generator(
+        #     self.config.anchor_generator)
+        # self.config.head["anchor_generator"] = anchor_generator
+        # self.config.loss["anchor_generator"] = anchor_generator
+        self.backbone = HardNet39(input_shape=(self.config.resize_size[0],
+                                               self.config.resize_size[1],
+                                               self.img_channel),
+                                  pooling='avg_pool',
+                                  kernel_initializer='he_uniform')
 
         self.neck = None
         if self.config.neck.module_name is not None:
@@ -38,7 +38,7 @@ class ModelFactory:
         self.head = HEAD_FACTORY.get(self.config.head.module_name)(
             self.config.head, name='head')
         self.loss = LOSS_FACTORY.get(self.config.loss.module_name)(
-            self.config.loss).build_loss
+            self.config).build_loss
         self.modules = MODULE_FACTORY.get(self.config.model_name)(self.config,
                                                                   self.backbone,
                                                                   self.neck,

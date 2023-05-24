@@ -11,9 +11,8 @@ class Head(tf.keras.Model):
     def __init__(self, config, *args, **kwargs):
         super(Head, self).__init__(*args, **kwargs)
 
-        self.config = config
-        self.head_cfg = self.config.head
-        self.pred_config = self.config.head.pred_layer
+        self.head_cfg = config
+        self.pred_config = self.head_cfg.pred_layer
         self.head_keys = [
             'offset_map_LE', 'offset_map_RE', 'offset_map_LM', 'offset_map_RM'
         ]

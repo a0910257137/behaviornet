@@ -27,9 +27,11 @@ class MorphabelModel:
         self.max_obj_num = max_obj_num
         self.model = load_BFM(config['model_path'])
         self.max_iter = config['max_iter']
+        self.n_s = config['n_s']
+        self.n_R = config['n_R']
         self.n_shp = config['n_shp']
         self.n_exp = config['n_exp']
-        #-------------------- estimate
+        #-------------------- estimate --------------------
         self.kpt_ind = self.model['kpt_ind']
         X_ind_all = np.stack(
             [self.kpt_ind * 3, self.kpt_ind * 3 + 1, self.kpt_ind * 3 + 2])
@@ -55,10 +57,8 @@ class MorphabelModel:
                                    tf.shape(self.shapeMU)[-2] // 3, 3))
         mean = tf.math.reduce_mean(self.shapeMU, axis=-2, keepdims=True)
         self.shapeMU -= mean
-
         self.shapeMU = tf.reshape(self.shapeMU,
                                   (self.batch_size, self.max_obj_num, -1, 1))
-
         self.shapePC = tf.tile(self.shapePC[tf.newaxis, tf.newaxis, ...],
                                [self.batch_size, self.max_obj_num, 1, 1])
         self.expPC = tf.tile(self.expPC[tf.newaxis, tf.newaxis, ...],
@@ -107,10 +107,8 @@ class MorphabelModel:
                 self.shapeMU,
                 tf.linalg.matmul(self.shapePC, sp) +
                 tf.linalg.matmul(self.expPC, ep))
-
             X = tf.reshape(
                 X, (self.batch_size, self.max_obj_num, tf.shape(X)[2] // 3, 3))
-
             P = self.estimate_affine_matrix_3d22d(X, x, mask_A, mask_T)
             s, R, t = self.P2sRt(P)
             #----- estimate shape
@@ -119,7 +117,6 @@ class MorphabelModel:
             shape = tf.transpose(
                 tf.reshape(shape, (self.batch_size, self.max_obj_num,
                                    tf.shape(shape)[2] // 3, 3)), (0, 1, 3, 2))
-
             ep = self.estimate_expression(x,
                                           mask_exp_eq_left,
                                           self.shapeMU,
@@ -130,7 +127,6 @@ class MorphabelModel:
                                           R,
                                           t[:, :, :2],
                                           lamb=20.)
-
             # shape
             expression = tf.linalg.matmul(self.expPC, ep)
             expression = tf.transpose(
@@ -153,7 +149,11 @@ class MorphabelModel:
         R = tf.reshape(R, (self.batch_size, n_objs, -1))
         sp = tf.reshape(sp, (self.batch_size, n_objs, -1))
         ep = tf.reshape(ep, (self.batch_size, n_objs, -1))
-        params = tf.concat([s, R, sp, ep], axis=-1)
+        t = tf.reshape(t, (self.batch_size, n_objs, -1))
+        if self.n_s == 0:
+            params = tf.concat([R, sp, ep], axis=-1)
+        else:
+            params = tf.concat([s, R, sp, ep], axis=-1)
         return params
 
     def estimate_affine_matrix_3d22d(self, X, x, mask_A, mask_T):
@@ -184,13 +184,6 @@ class MorphabelModel:
                                                                        None,
                                                                        None]
         x = scale * x
-        # from matplotlib import pyplot as plt
-        # an_lnmks = tf.transpose(x[0, 0])
-        # an_lnmks = an_lnmks.numpy()
-        # # an_lnmks = an_lnmks.astype(np.int32)
-        # fig = plt.figure()
-        # for i, kp in enumerate(an_lnmks):
-        #     plt.scatter(kp[0], kp[1], color="green")
         # 2d points
         ms = -mean * scale
 
@@ -235,12 +228,7 @@ class MorphabelModel:
                                                                        None,
                                                                        None]
         X = scale * X
-        # an_lnmks = tf.transpose(X[0, 0])
-        # an_lnmks = an_lnmks.numpy()[..., :2]
-        # for i, kp in enumerate(an_lnmks):
-        #     plt.scatter(kp[0], kp[1], marker='*', color="blue")
-        # plt.grid()
-        # plt.savefig("x.png")
+        # 3D
 
         ms = -mean * scale
         row1 = tf.concat([
@@ -298,9 +286,14 @@ class MorphabelModel:
         b = tf.reshape(x, (self.batch_size, n_objs, c * k, 1))
         # --- 3. solution
         # (B, N, 136, 8)
-        valid_A = tf.reshape(A[tf.reduce_all(mask_A, axis=(-2, -1))],
-                             (self.batch_size, -1, 136, 8))[:, :1, :, :]
-        A = tf.where(mask_A, A, tf.tile(valid_A, (1, n, 1, 1)))
+        # mask_A shape is (36, 15, 136, 8)
+        true_idxs = tf.where(mask_A == True)
+        valid_A = tf.reshape(tf.gather_nd(A, true_idxs), (-1, 136, 8))[None, :1,
+                                                                       ...]
+        # valid_A = tf.reshape(A[tf.reduce_all(mask_A, axis=(-2, -1))],
+        #                      (self.batch_size, -1, 136, 8))[:, :1, :, :]
+
+        A = tf.where(mask_A, A, tf.tile(valid_A, [self.batch_size, n, 1, 1]))
         p_8 = tf.linalg.matmul(tf.linalg.pinv(A), b)
         row1 = p_8[:, :, None, :4, 0]
         row2 = p_8[:, :, None, 4:, 0]
@@ -314,9 +307,12 @@ class MorphabelModel:
                          axis=-1)
         P = tf.concat([row1, row2, row3], axis=2)
         # --- 4. denormalization
-        valid_T = tf.reshape(T[tf.reduce_all(mask_T, axis=(-2, -1))],
-                             (self.batch_size, -1, 3, 3))[:, :1, :, :]
-        T = tf.where(mask_T, T, tf.tile(valid_T, (1, n, 1, 1)))
+        true_idxs = tf.where(mask_T == True)
+        valid_T = tf.reshape(tf.gather_nd(T, true_idxs), (-1, 3, 3))[None, :1,
+                                                                     ...]
+        # valid_T = tf.reshape(T[tf.reduce_all(mask_T, axis=(-2, -1))],
+        #                      (self.batch_size, -1, 3, 3))[:, :1, :, :]
+        T = tf.where(mask_T, T, tf.tile(valid_T, [self.batch_size, n, 1, 1]))
         P_Affine = tf.linalg.matmul(tf.linalg.inv(T), tf.linalg.matmul(P, U))
         return P_Affine
 
@@ -427,11 +423,16 @@ class MorphabelModel:
                        (self.batch_size, n_objs, -1, 1))
         equation_right = tf.linalg.matmul(pc, x - b, transpose_a=(0, 1, 3, 2))
 
-        valid_left = tf.reshape(
-            equation_left[tf.reduce_all(mask_eq_left, axis=(-2, -1))],
-            (self.batch_size, -1, self.n_exp, self.n_exp))[:, :1, :, :]
-        equation_left = tf.where(mask_eq_left, equation_left,
-                                 tf.tile(valid_left, (1, n, 1, 1)))
+        true_idxs = tf.where(mask_eq_left == True)
+        valid_left = tf.reshape(tf.gather_nd(equation_left, true_idxs),
+                                (-1, self.n_exp, self.n_exp))[None, :1, ...]
+
+        # valid_left = tf.reshape(
+        #     equation_left[tf.reduce_all(mask_eq_left, axis=(-2, -1))],
+        #     (self.batch_size, -1, self.n_exp, self.n_exp))[:, :1, :, :]
+        equation_left = tf.where(
+            mask_eq_left, equation_left,
+            tf.tile(valid_left, (self.batch_size, n, 1, 1)))
         exp_para = tf.linalg.matmul(tf.linalg.inv(equation_left),
                                     equation_right)
         return exp_para
@@ -502,12 +503,20 @@ class MorphabelModel:
 
         x = tf.reshape(tf.transpose(x, (0, 1, 3, 2)),
                        (self.batch_size, n_objs, -1, 1))
+        #TODO:
+        # valid right
         equation_right = tf.linalg.matmul(pc, x - b, transpose_a=(0, 1, 3, 2))
-        valid_left = tf.reshape(
-            equation_left[tf.reduce_all(mask_shp_eq_left, axis=(-2, -1))],
-            (self.batch_size, -1, self.n_shp, self.n_shp))[:, :1, :, :]
-        equation_left = tf.where(mask_shp_eq_left, equation_left,
-                                 tf.tile(valid_left, [1, n, 1, 1]))
+
+        true_idxs = tf.where(mask_shp_eq_left == True)
+        valid_left = tf.reshape(tf.gather_nd(equation_left, true_idxs),
+                                (-1, self.n_shp, self.n_shp))[None, :1, ...]
+
+        # valid_left = tf.reshape(
+        #     equation_left[tf.reduce_all(mask_shp_eq_left, axis=(-2, -1))],
+        #     (self.batch_size, -1, self.n_shp, self.n_shp))[:, :1, :, :]
+        equation_left = tf.where(
+            mask_shp_eq_left, equation_left,
+            tf.tile(valid_left, [self.batch_size, n, 1, 1]))
         shape_para = tf.linalg.matmul(tf.linalg.inv(equation_left),
                                       equation_right)
 

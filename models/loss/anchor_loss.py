@@ -27,7 +27,9 @@ class AnchorLoss(LossBase):
         self.height, self.width = self.config.resize_size
         self.batch_size = self.config.batch_size
         self.NK = 5
-        self.num_level_anchors = [12800, 3200, 800]
+        #
+        # self.num_level_anchors = [12800, 3200, 800]
+        self.num_level_anchors = [3200, 800, 200]
         self.lv_anchor_sum = [
             num_anchors // 2 for num_anchors in self.num_level_anchors
         ]
@@ -47,6 +49,7 @@ class AnchorLoss(LossBase):
         self.reg_max = 8
 
         self.anchor_generator_strides = [(8, 8), (16, 16), (32, 32)]
+        # self.anchor_generator_strides = [(4, 4), (8, 8), (16, 16)]
         self.cls_out_channels = 1
         self.loss_kps_std = 1.0
         self.diou_func = DIoULoss(loss_weight=1.0)
@@ -58,13 +61,14 @@ class AnchorLoss(LossBase):
             use_sigmoid=self.loss_cls_cfg["use_sigmoid"],
             beta=self.loss_cls_cfg["beta"],
             loss_weight=self.loss_cls_cfg["loss_weight"])
-        self.feat_size = tf.constant([(80, 80), (40, 40), (20, 20)])
+        # self.feat_size = tf.constant([(80, 80), (40, 40), (20, 20)])
+        self.feat_size = tf.constant([(40, 40), (20, 20), (10, 10)])
         multi_level_anchors, self.target_num_lv_anchors, multi_level_flags = self.get_anchors(
             self.batch_size, self.feat_size)
         self.b_anchors = tf.concat(multi_level_anchors, axis=1)
         self.b_flags = tf.concat(multi_level_flags, axis=1)
 
-    def build_loss(self, batch, logits, targets, training):
+    def build_loss(self, logits, targets, training):
         """
             Get targets for GFL head.
             This method is almost the same as `AnchorHead.get_targets()`. Besides
@@ -73,7 +77,6 @@ class AnchorLoss(LossBase):
         """
         b_gt_bboxes, b_gt_keypointss, b_gt_labels = targets[
             'b_bboxes'], targets['b_keypoints'], targets['b_labels']
-
         with tf.device('CPU'):
             anchors_list, labels_list, label_weights_list, bbox_targets_list, bbox_weights_list, keypoints_targets_list, keypoints_weights_list, num_total_samples = tf.py_function(
                 self.get_targets,
@@ -84,18 +87,18 @@ class AnchorLoss(LossBase):
                 Tout=(tf.float32, tf.float32, tf.float32, tf.float32,
                       tf.float32, tf.float32, tf.float32, tf.float32))
 
-        anchors_list = tf.reshape(anchors_list, [self.batch_size, 16800, -1])
-        labels_list = tf.reshape(labels_list, [self.batch_size, 16800, -1])
-        label_weights_list = tf.reshape(label_weights_list,
-                                        [self.batch_size, 16800, -1])
-        bbox_targets_list = tf.reshape(bbox_targets_list,
-                                       [self.batch_size, 16800, -1])
-        bbox_weights_list = tf.reshape(bbox_weights_list,
-                                       [self.batch_size, 16800, -1])
-        keypoints_targets_list = tf.reshape(keypoints_targets_list,
-                                            [self.batch_size, 16800, -1])
-        keypoints_weights_list = tf.reshape(keypoints_weights_list,
-                                            [self.batch_size, 16800, -1])
+        # anchors_list = tf.reshape(anchors_list, [self.batch_size, 16800, -1])
+        # labels_list = tf.reshape(labels_list, [self.batch_size, 16800, -1])
+        # label_weights_list = tf.reshape(label_weights_list,
+        #                                 [self.batch_size, 16800, -1])
+        # bbox_targets_list = tf.reshape(bbox_targets_list,
+        #                                [self.batch_size, 16800, -1])
+        # bbox_weights_list = tf.reshape(bbox_weights_list,
+        #                                [self.batch_size, 16800, -1])
+        # keypoints_targets_list = tf.reshape(keypoints_targets_list,
+        #                                     [self.batch_size, 16800, -1])
+        # keypoints_weights_list = tf.reshape(keypoints_weights_list,
+        #                                     [self.batch_size, 16800, -1])
 
         anchors_list = self.split2level(anchors_list)
         labels_list = self.split2level(labels_list)
@@ -152,6 +155,7 @@ class AnchorLoss(LossBase):
                     zip(anchors_list, multi_lv_feats, labels_list,
                         label_weights_list, bbox_targets_list,
                         keypoints_targets_list, keypoints_weights_list)):
+
             b_cls_preds, b_bbox_preds, b_kp_preds = lv_feats
             anchors = tf.reshape(anchors, [-1, 4])
             b_cls_preds = tf.reshape(b_cls_preds, [-1, self.cls_out_channels])
@@ -406,7 +410,7 @@ class AnchorLoss(LossBase):
         ]
         return num_level_anchors_inside
 
-    def images_to_levels(self, target, num_levels, to_image=False):
+    def images_to_levels(self, target, num_levels):
         """Convert targets by image to targets by feature level.
 
         [target_img0, target_img1] -> [target_level0, target_level1, ...]

@@ -87,8 +87,9 @@ def set_model_config(config):
     config.models.resize_size = config.data_reader.resize_size
     config.models.batch_size = config.batch_size
     config.models.lr = config.learn_rate
-
-    config.models.loss.use_kps = config.models.head.use_kps
+    if config.models.model_name == 'anchor_obj_det':
+        config.models.loss.use_kps = config.models.head.use_kps
+    config.models.loss.max_obj_num = config.data_reader.max_obj_num
     return config
 
 

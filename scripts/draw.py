@@ -88,14 +88,7 @@ def draw_tdmm(b_orig_imgs, b_rets):
             tl, br = tuple(tl.astype(np.int32)), tuple(br.astype(np.int32))
             img = cv2.rectangle(img, tl, br, (0, 255, 255), 2)
             lnmks = lnmks[:, ::-1].astype(np.int32)
-            for l in range(lnmks.shape[0]):
-                if 17 <= l < 27:
-                    lnmks[l][1] -= 15
-                elif 27 <= l < 39:
-                    lnmks[l][1] -= 15
-
             for l, kp in enumerate(lnmks):
-
                 if 0 <= l < 17:
                     color = [205, 133, 63]
                 elif 17 <= l < 27:
@@ -109,11 +102,9 @@ def draw_tdmm(b_orig_imgs, b_rets):
                     color = [205, 96, 144]
                 elif 48 <= l < 68:
                     color = [0, 191, 255]
-
                 cv2.circle(img, (lnmks[l][0], lnmks[l][1]), 3, color, -1)
                 cv2.circle(img, (lnmks[l][0], lnmks[l][1]), 2, (255, 255, 255),
                            -1)
-
                 line_width = 1
                 if l not in [16, 21, 26, 32, 38, 42, 47, 59, 67]:
                     start_point = (lnmks[l][0], lnmks[l][1])
