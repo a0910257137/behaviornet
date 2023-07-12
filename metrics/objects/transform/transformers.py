@@ -6,6 +6,7 @@ from .base import Base
 class Numpify:
     """Support transform Dict[list, tuple] -> Dict[np.ndarray] or list -> np.ndarray
     """
+
     def __call__(self, item):
 
         return np.asarray(item)
@@ -14,6 +15,7 @@ class Numpify:
 class MinimalBox2D:
     """Support transform Dict[Union[list, tuple]], List[list, tuple], np.ndarray -> box2d
     """
+
     def __call__(self, coords):
         # coords contain all coords and in shape: (N,2)
         top_left_coord, bottom_right_coord = np.min(coords,
@@ -26,6 +28,7 @@ class LandMarks(Base):
     """Support transform keypoints:{each of facial landmarks}[y1, x1] to
        serial landmark number {top_left, bottom_right }
     """
+
     def __call__(self, item):
         item = item['keypoints']
         return self.parse_lnmk(item)
@@ -34,6 +37,7 @@ class LandMarks(Base):
 class Box2DToKeyPoints:
     """Support transform {x1, x2, y1, y2} to {top_left, bottom_right }
     """
+
     def __call__(self, item):
         item = item['box2d']
         return dict(top_left=np.asarray((item['x1'], item['y1'])),
@@ -43,6 +47,7 @@ class Box2DToKeyPoints:
 class Box2DToKeyPointsWithCenter:
     """Support transform {x1, x2, y1, y2} to {top_left, bottom_right }
     """
+
     def __call__(self, item: Dict[str, List[dict]]):
         """
         1. get user-defined target shape from each label
@@ -70,6 +75,7 @@ class LshapeToKeyPoints:
             }
         }
     """
+
     def __call__(self, item):
         return dict(top_left=(item['l_shape']['facing_box']['x1'],
                               item['l_shape']['facing_box']['y1']),

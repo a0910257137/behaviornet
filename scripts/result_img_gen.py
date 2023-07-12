@@ -55,12 +55,18 @@ def img_gen(config_path, img_path_root, save_root):
             orig_imgs.append(img)
             imgs.append(img)
         rets = predictor.pred(imgs, origin_shapes)
+
         if config['predictor']['mode'] == "centernet" or config['predictor'][
                 'mode'] == "offset" or config['predictor']['mode'] == "tflite":
             target_dict = _get_cates(config['predictor']['cat_path'])
             imgs = draw_box2d(orig_imgs, rets, target_dict)
         elif config['predictor']['mode'] == "tdmm":
             imgs = draw_tdmm(orig_imgs, rets)
+        elif config['predictor']['mode'] == "scrfd":
+            imgs = draw_scrfd(orig_imgs, rets)
+        # for img in imgs:
+        #     cv2.imwrite("output.jpg", img)
+        # xxx
         for img_name, img in zip(img_names, imgs):
             # cv2.imwrite("output.jpg", img)
             # exit(1)

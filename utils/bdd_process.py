@@ -195,6 +195,32 @@ def tdmm_to_bdd(bdd_results, batches_preds, batches_frames, cates):
     return bdd_results
 
 
+def scrfd_to_bdd(bdd_results, batches_preds, batches_frames, cates):
+    b_bboxes = batches_preds.numpy()
+    for bboxes, frames in zip(b_bboxes, batches_frames):
+        valid_mask = np.all(np.isfinite(bboxes), axis=-1)
+        bboxes = bboxes[valid_mask]
+        pred_frame = {
+            'dataset': frames['dataset'],
+            'sequence': frames['sequence'],
+            'name': frames['name'],
+            'labels': []
+        }
+        for bbox in bboxes:
+            pred_lb = {
+                'category': cates[int(bbox[5])].upper(),
+                'box2d': {
+                    'y1': float(bbox[0]),
+                    'x1': float(bbox[1]),
+                    'y2': float(bbox[2]),
+                    'x2': float(bbox[3])
+                }
+            }
+            pred_frame['labels'].append(pred_lb)
+        bdd_results['frame_list'].append(pred_frame)
+    return bdd_results
+
+
 def transform_pd_data(report_results,
                       is_post_cal,
                       mode,

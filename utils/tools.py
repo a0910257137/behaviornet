@@ -38,7 +38,6 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
         write_images=False,
         update_freq='epoch',
         profile_batch='500, 520')
-
     # histogram = Histogram(config=config, writers=writers, update_freq=1000)
     # embedding_map = EmbeddingMap(config=config,
     #                              writers=writers,
@@ -47,7 +46,8 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets):
     #                              update_freq=1000)
     # cosine_decay_scheduler = WarmUpCosineDecayScheduler(
     #     config.learn_rate, config.epochs, train_datasets)
-    callbacks.append([saver_callback, loss_callback, clear_memory])
+    callbacks.append(
+        [saver_callback, tensorboard_callback, loss_callback, clear_memory])
     return callbacks
 
 

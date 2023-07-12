@@ -26,7 +26,7 @@ class ConvBlock(tf.keras.layers.Layer):
         self.kernel_size = (kernel_size, kernel_size)
         self.strides = (strides, strides)
         self.dilation_rate = (dilation_rate, dilation_rate)
-        reg_layer = None
+        reg_layer = tf.keras.regularizers.L2(l2=1e-3)
         if conv_mode == 'conv2d':
             self.conv = tf.keras.layers.Conv2D(
                 filters,
@@ -93,7 +93,6 @@ class ConvBlock(tf.keras.layers.Layer):
             output = self.norm(output)
         elif self.norm_method == 'range_bn':
             output = self.norm(output)
-            # output = self.norm(output)
         if self.activation is not None:
             output = self.act(output)
         return output
@@ -203,22 +202,22 @@ class DepthwiseSeparableConv(tf.keras.layers.Layer):
             padding='same',
             kernel_initializer=kernel_initializer,
             use_bias=False)
-        # self.gn1 = tfa.layers.GroupNormalization(groups=groups, axis=-1)
-        self.norm = tf.keras.layers.BatchNormalization(name='bn')
+        self.gn1 = tfa.layers.GroupNormalization(groups=groups, axis=-1)
+        # self.norm = tf.keras.layers.BatchNormalization(name='bn')
         self.act1 = tf.keras.layers.Activation(activation='relu')
-        self.point_conv = ConvBlock(
-            filters=out_channel,
-            kernel_size=1,
-            strides=1,
-            groups=groups,
-            kernel_initializer=tf.keras.initializers.HeUniform(),
-            use_bias=False,
-            norm_method='bn',
-            activation='relu')
+        self.point_conv = ConvBlock(filters=out_channel,
+                                    kernel_size=1,
+                                    strides=1,
+                                    groups=groups,
+                                    kernel_initializer=kernel_initializer,
+                                    use_bias=False,
+                                    norm_method=norm_method,
+                                    activation='relu')
 
     def call(self, x):
         x = self.depth_conv(x)
-        x = self.norm(x)
+        x = self.gn1(x)
+        # x = self.norm(x)
         x = self.act1(x)
         x = self.point_conv(x)
         return x

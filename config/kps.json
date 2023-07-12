@@ -1,12 +1,12 @@
 {
     "predictor": {
         "visible_gpu": "-1",
-        "pb_path": "/aidata/anders/3D-head/LS3D-W/archive/v2",
-        "weight_root":"/aidata/anders/3D-head/LS3D-W/archive/v2", 
+        "pb_path": "/aidata/anders/data_collection/okay/WF/archives/base",
+        "weight_root":"/aidata/anders/data_collection/okay/WF/archives/base", 
         "top_k_n": 15,
         "nms_iou_thres": 0.5,
-        "kp_thres": 0.5,
-        "n_objs": 30,
+        "kp_thres": 0.1,
+        "n_objs": 500,
         "gpu_fraction":0.5, 
         "eval_method":"IoU",
         "mode": "scrfd",
@@ -33,7 +33,7 @@
         "metric_type":"IoU",
         "conditions": 
             {
-                "transformer_method":"LandMarks",
+                "transformer_method":"MinimalBox2D",
                 "object_matcher_method":"PointDistance",
                 "calculator_method" : "PRFCalculator",
                 "reporter_method" :"EdgePRFReporter",

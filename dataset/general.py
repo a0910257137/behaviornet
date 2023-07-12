@@ -129,28 +129,26 @@ class GeneralDataset:
         # for ds in datasets:
         #     b_img, targets = self.gener_task.build_maps(ds)
         #     b_img = b_img.numpy() * 255.
-        #     b_keypoints = targets['b_keypoints'].numpy()
         #     b_bboxes = targets['b_bboxes'].numpy()
-        #     b_scale_factors = targets['b_scale_factors'].numpy()
+        #     b_lnmks = targets['b_lnmks'].numpy()
         #     b_origin_sizes = targets['b_origin_sizes'].numpy()
-        #     resized = b_origin_sizes[:, ::-1] / np.array([640., 640.])
+        #     resized = b_origin_sizes[:, ::-1] / np.array([320., 320.])
         #     resized = np.expand_dims(resized, axis=[1, 2])
-        #     # b_bboxes = b_bboxes[..., ::-1]
-        #     b_keypoints = b_keypoints[np.all(np.isfinite(b_keypoints), axis=-1)]
-        #     b_keypoints = np.reshape(b_keypoints, [48, 5, -1])
-        #     b_bboxes = b_bboxes[np.all(np.isfinite(b_bboxes), axis=-1)]
-        #     b_bboxes = np.reshape(b_bboxes, [48, 2, 2])
-        #     for img, origin_sizes, bboxes, keypoints in zip(
-        #             b_img, b_origin_sizes, b_bboxes, b_keypoints):
-        #         tl, br = bboxes.astype(np.int32)
-        #         img = cv2.rectangle(img, tuple(tl), tuple(br), (0, 255, 0), 3)
-        #         # img = cv2.resize(img,
-        #         #                  tuple(origin_sizes[::-1]),
-        #         #                  interpolation=cv2.INTER_AREA)
-        #         for j, kp in enumerate(keypoints):
-        #             kp = kp.astype(np.int32)[:2]
-        #             img = cv2.circle(img, tuple(kp), 2, (255, 0, 255), -1)
-        #         cv2.imwrite("output.jpg", img[..., ::-1])
+        #     for i, (img, lnmks,
+        #             bboxes) in enumerate(zip(b_img, b_lnmks, b_bboxes)):
+        #         for bbox, lnmk in zip(bboxes, lnmks):
+        #             if np.any(bbox == np.inf):
+        #                 continue
+        #             tl, br = bbox.astype(np.int32)
+        #             img = cv2.rectangle(img, tuple(tl), tuple(br), (0, 255, 0),
+        #                                 2)
+        #             for l in lnmk:
+        #                 l = l.astype(np.int32)
+        #                 img = cv2.circle(img, tuple(l[::-1]), 2, (0, 255, 0),
+        #                                  -1)
+        #         cv2.imwrite("output_{}.jpg".format(i), img[..., ::-1])
+        #     xxx
+
         datasets = datasets.map(
             lambda *x: self.gener_task.build_maps(x),
             num_parallel_calls=tf.data.experimental.AUTOTUNE)

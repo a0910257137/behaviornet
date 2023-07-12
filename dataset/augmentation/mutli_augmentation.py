@@ -5,6 +5,7 @@ import logging
 
 
 class MultiAugmentation:
+
     def __init__(self, process_type, batch_size, p, need_num):
         self.process_type = process_type
         self.batch_size = batch_size
@@ -26,8 +27,7 @@ class MultiAugmentation:
                     batch_images, batch_boxes, num_idx)
                 mosaic = Mosaic(process_type=self.process_type,
                                 out_size=batch_images.shape[1:3])
-                mosaic_image, mosaic_boxes = mosaic(select_images,
-                                                    select_boxes)
+                mosaic_image, mosaic_boxes = mosaic(select_images, select_boxes)
                 if mosaic_image is None:
                     tf_images.append(batch_images[num_idx])
                     tf_boxes.append(batch_boxes[num_idx])

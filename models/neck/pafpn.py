@@ -139,6 +139,7 @@ class PAFPN(tf.keras.Model):
                 size=prev_shape,
                 method=tf.image.ResizeMethod.NEAREST_NEIGHBOR,
             )
+
         # build outputs
         # part 1: from original levels
         inter_outs = [

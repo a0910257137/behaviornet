@@ -171,6 +171,11 @@ class Eval:
                     elif self.mode == 'tdmm':
                         eval_bdd_annos = tdmm_to_bdd(bdd_results, batch_results,
                                                      batch_frames, self.cates)
+
+                    elif self.mode == 'scrfd':
+                        eval_bdd_annos = scrfd_to_bdd(bdd_results,
+                                                      batch_results,
+                                                      batch_frames, self.cates)
             gt_bdd_annos, eval_bdd_annos = self.with_bddversion(
                 gt_bdd_list), self.with_bddversion(eval_bdd_annos['frame_list'])
             if self.metric_config['metric_type'] == 'IoU':

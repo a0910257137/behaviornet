@@ -15,7 +15,9 @@ import numpy as np
 class AnchorLoss(LossBase):
 
     def __init__(self, config):
-        self.config = config
+
+        self.max_obj_num = config.max_obj_num
+        self.config = config['loss']
         self.train_cfg = self.config['train_cfg']
         self.test_cfg = self.config['test_cfg']
         self.loss_cls_cfg = self.config['loss_cls']
@@ -27,13 +29,8 @@ class AnchorLoss(LossBase):
         self.height, self.width = self.config.resize_size
         self.batch_size = self.config.batch_size
         self.NK = 5
-        #
         # self.num_level_anchors = [12800, 3200, 800]
         self.num_level_anchors = [3200, 800, 200]
-        self.lv_anchor_sum = [
-            num_anchors // 2 for num_anchors in self.num_level_anchors
-        ]
-
         self.pad_shape = tf.constant([self.height, self.width],
                                      dtype=tf.dtypes.float32)
         if self.use_sigmoid_cls:
@@ -45,23 +42,18 @@ class AnchorLoss(LossBase):
         # configurize
         self.use_dfl = False
         self.use_kps = self.config.use_kps
-        self.use_qscore = False
+        self.use_qscore = True
         self.reg_max = 8
-
         self.anchor_generator_strides = [(8, 8), (16, 16), (32, 32)]
-        # self.anchor_generator_strides = [(4, 4), (8, 8), (16, 16)]
-        self.cls_out_channels = 1
         self.loss_kps_std = 1.0
         self.diou_func = DIoULoss(loss_weight=1.0)
         self.smooth_func = SmoothL1Loss(
             beta=self.loss_kps_cfg["beta"],
             loss_weight=self.loss_kps_cfg["loss_weight"])
-
         self.cls_func = QualityFocalLoss(
             use_sigmoid=self.loss_cls_cfg["use_sigmoid"],
             beta=self.loss_cls_cfg["beta"],
             loss_weight=self.loss_cls_cfg["loss_weight"])
-        # self.feat_size = tf.constant([(80, 80), (40, 40), (20, 20)])
         self.feat_size = tf.constant([(40, 40), (20, 20), (10, 10)])
         multi_level_anchors, self.target_num_lv_anchors, multi_level_flags = self.get_anchors(
             self.batch_size, self.feat_size)
@@ -82,23 +74,10 @@ class AnchorLoss(LossBase):
                 self.get_targets,
                 inp=[
                     self.target_num_lv_anchors, self.b_anchors, self.b_flags,
-                    b_gt_bboxes, b_gt_keypointss, b_gt_labels
+                    b_gt_bboxes, b_gt_keypointss, b_gt_labels, self.num_classes
                 ],
                 Tout=(tf.float32, tf.float32, tf.float32, tf.float32,
                       tf.float32, tf.float32, tf.float32, tf.float32))
-
-        # anchors_list = tf.reshape(anchors_list, [self.batch_size, 16800, -1])
-        # labels_list = tf.reshape(labels_list, [self.batch_size, 16800, -1])
-        # label_weights_list = tf.reshape(label_weights_list,
-        #                                 [self.batch_size, 16800, -1])
-        # bbox_targets_list = tf.reshape(bbox_targets_list,
-        #                                [self.batch_size, 16800, -1])
-        # bbox_weights_list = tf.reshape(bbox_weights_list,
-        #                                [self.batch_size, 16800, -1])
-        # keypoints_targets_list = tf.reshape(keypoints_targets_list,
-        #                                     [self.batch_size, 16800, -1])
-        # keypoints_weights_list = tf.reshape(keypoints_weights_list,
-        #                                     [self.batch_size, 16800, -1])
 
         anchors_list = self.split2level(anchors_list)
         labels_list = self.split2level(labels_list)
@@ -107,18 +86,22 @@ class AnchorLoss(LossBase):
         bbox_weights_list = self.split2level(bbox_weights_list)
         keypoints_targets_list = self.split2level(keypoints_targets_list)
         keypoints_weights_list = self.split2level(keypoints_weights_list)
-
-        loss_cls_list, loss_bbox_list, loss_kps_list = self.compute_loss(
+        loss_cls_list, loss_bbox_list, weight_targets_list = self.compute_loss(
             anchors_list, logits['multi_lv_feats'], labels_list,
             label_weights_list, bbox_targets_list, keypoints_targets_list,
             keypoints_weights_list, self.anchor_generator_strides,
             num_total_samples)
-        losses = {}
+        losses = {'total': 0}
+        avg_factor = tf.math.reduce_sum(weight_targets_list)
+        loss_bbox_list = list(map(lambda x: x / avg_factor, loss_bbox_list))
+        if self.use_kps:
+            loss_kps_list = list(map(lambda x: x / avg_factor, loss_kps_list))
+            losses['loss_kps'] = tf.math.reduce_mean(loss_kps_list)
+
         losses['loss_cls'] = tf.math.reduce_mean(loss_cls_list)
         losses['loss_bbox'] = tf.math.reduce_mean(loss_bbox_list)
-        losses['loss_kps'] = tf.math.reduce_mean(loss_kps_list)
-        losses['total'] = losses['loss_cls'] + losses['loss_bbox'] + losses[
-            'loss_kps']
+        for key in losses:
+            losses['total'] += losses[key]
         return losses
 
     # @tf.function
@@ -127,7 +110,6 @@ class AnchorLoss(LossBase):
                      keypoints_targets_list, keypoints_weights_list,
                      anchor_generator_strides, num_total_samples):
         """Compute loss of a single scale level.
-
         Args:
             anchors (Tensor): Box reference for each scale level with shape
                 (N, num_total_anchors, 4).
@@ -145,18 +127,17 @@ class AnchorLoss(LossBase):
             stride (tuple): Stride in this scale level.
             num_total_samples (int): Number of positive samples that is
                 reduced over all GPUs.
-
         Returns:
             dict[str, Tensor]: A dictionary of loss components.
         """
         loss_cls_list, loss_bbox_list, loss_kps_list = [], [], []
+        weight_targets_list = []
         for i, (anchors, lv_feats, labels, label_weights, bbox_targets,
                 kps_targets, kps_weights) in enumerate(
                     zip(anchors_list, multi_lv_feats, labels_list,
                         label_weights_list, bbox_targets_list,
                         keypoints_targets_list, keypoints_weights_list)):
-
-            b_cls_preds, b_bbox_preds, b_kp_preds = lv_feats
+            b_cls_preds, b_bbox_preds = lv_feats
             anchors = tf.reshape(anchors, [-1, 4])
             b_cls_preds = tf.reshape(b_cls_preds, [-1, self.cls_out_channels])
             stride = anchor_generator_strides[i]
@@ -165,7 +146,6 @@ class AnchorLoss(LossBase):
             else:
                 b_bbox_preds = tf.reshape(b_bbox_preds,
                                           [-1, 4 * (self.reg_max + 1)])
-
             bbox_targets = tf.reshape(bbox_targets, [-1, 4])
             labels = tf.reshape(labels, [-1])
             label_weights = tf.reshape(label_weights, [-1])
@@ -173,7 +153,6 @@ class AnchorLoss(LossBase):
                 b_kp_preds = tf.reshape(b_kp_preds, [-1, self.NK * 2])
                 kps_targets = tf.reshape(kps_targets, [-1, self.NK * 2])
                 kps_weights = tf.reshape(kps_weights, [-1, self.NK * 2])
-
             bg_class_ind = self.num_classes
             pos_inds = (labels >= 0.) & (labels < bg_class_ind)
             pos_inds = tf.where(pos_inds == True)
@@ -183,11 +162,9 @@ class AnchorLoss(LossBase):
             pos_anchors = tf.gather_nd(anchors, pos_inds)
             pos_anchor_centers = self.anchor_center(pos_anchors) / stride[0]
             weight_targets = tf.math.sigmoid(b_cls_preds)
-
             weight_targets = tf.gather_nd(
                 tf.math.reduce_max(weight_targets, axis=1), pos_inds)
             pos_decode_bbox_targets = pos_bbox_targets / stride[0]
-
             pos_decode_bbox_pred = distance2bbox(pos_anchor_centers,
                                                  pos_bbox_pred)
             if self.use_kps:
@@ -203,6 +180,7 @@ class AnchorLoss(LossBase):
             if self.use_qscore:
                 s = bbox_overlapping(pos_decode_bbox_pred,
                                      pos_decode_bbox_targets,
+                                     mode='iou',
                                      is_aligned=True)
                 score = tf.tensor_scatter_nd_update(score, pos_inds, s)
             else:
@@ -219,8 +197,8 @@ class AnchorLoss(LossBase):
                     pos_decode_kps_targets * self.loss_kps_std,
                     weight=pos_kps_weights,
                     avg_factor=1.0)
-            else:
-                loss_kps = tf.math.reduce_sum(b_kp_preds) * 0.
+            # else:
+            #     loss_kps = tf.math.reduce_sum(b_kp_preds) * 0.
             if self.use_dfl:
                 pred_corners = tf.reshape(pos_bbox_pred, (-1, self.reg_max + 1))
                 target_corners = bbox2distance(pos_anchor_centers,
@@ -238,8 +216,10 @@ class AnchorLoss(LossBase):
                                      avg_factor=num_total_samples)
             loss_cls_list.append(loss_cls)
             loss_bbox_list.append(loss_bbox)
-            loss_kps_list.append(loss_kps)
-        return loss_cls_list, loss_bbox_list, loss_kps_list
+            # loss_kps_list.append(loss_kps)
+            weight_targets_list.append(tf.math.reduce_sum(weight_targets))
+
+        return loss_cls_list, loss_bbox_list, weight_targets_list
 
     def get_targets(self,
                     b_num_level_anchors,
@@ -261,7 +241,7 @@ class AnchorLoss(LossBase):
         b_flags = b_flags.numpy()
         b_gt_bboxes = b_gt_bboxes.numpy()
         b_gt_bboxes_ignore = np.zeros(shape=(self.batch_size,
-                                             15)).astype(np.bool_)
+                                             self.max_obj_num)).astype(np.bool_)
         b_gt_keypoints = b_gt_keypoints.numpy()
         b_gt_labels = b_gt_labels.numpy()
         #print('QQQ:', num_imgs, gt_bboxes_list[0].shape)
@@ -290,13 +270,10 @@ class AnchorLoss(LossBase):
         labels_list = self.images_to_levels(all_labels, self.num_level_anchors)
         label_weights_list = self.images_to_levels(all_label_weights,
                                                    self.num_level_anchors)
-
         bbox_targets_list = self.images_to_levels(all_bbox_targets,
                                                   self.num_level_anchors)
-
         bbox_weights_list = self.images_to_levels(all_bbox_weights,
                                                   self.num_level_anchors)
-
         keypoints_targets_list = self.images_to_levels(all_keypoints_targets,
                                                        self.num_level_anchors)
         keypoints_weights_list = self.images_to_levels(all_keypoints_weights,
@@ -304,6 +281,7 @@ class AnchorLoss(LossBase):
         num_total_samples = np.mean(num_total_pos, dtype=np.float32)
         num_total_samples = max(num_total_samples, 1.0)
         return anchors_list, labels_list, label_weights_list, bbox_targets_list, bbox_weights_list, keypoints_targets_list, keypoints_weights_list, num_total_samples
+        # return anchors_list_0, anchors_list_1, anchors_list_2, labels_list_0, labels_list_1, labels_list_2, label_weights_list_0, label_weights_list_1, label_weights_list_2, bbox_targets_list_0, bbox_targets_list_1, bbox_targets_list_2, bbox_weights_list_0, bbox_weights_list_1, bbox_weights_list_2, keypoints_targets_list_0, keypoints_targets_list_1, keypoints_targets_list_2, keypoints_weights_list_0, keypoints_weights_list_1, keypoints_weights_list_2, num_total_samples
 
     def _get_targets_single(self,
                             flat_anchors,
@@ -318,7 +296,6 @@ class AnchorLoss(LossBase):
         img_shape = self.pad_shape
         inside_flags = anchor_inside_flags(flat_anchors, valid_flags, img_shape,
                                            self.train_cfg["allowed_border"])
-
         if not inside_flags.any():
             return (None, ) * 7
         # assign gt and sample anchors
@@ -331,13 +308,11 @@ class AnchorLoss(LossBase):
         gt_bboxes_ignore = gt_bboxes_ignore[valid_mask[:, 0]]
         gt_labels = gt_labels[valid_mask[:, 0]]
         gt_keypoints = gt_keypoints[valid_mask[:, 0]]
-
         assign_result = self.assigner.assign(anchors, num_level_anchors_inside,
                                              gt_bboxes, gt_bboxes_ignore,
                                              gt_labels)
         sampling_result = self.sampler.sample(assign_result, anchors, gt_bboxes)
         num_valid_anchors = anchors.shape[0]
-
         bbox_targets = np.zeros_like(anchors)
         bbox_weights = np.zeros_like(anchors)
 
@@ -378,7 +353,6 @@ class AnchorLoss(LossBase):
         if len(neg_inds) > 0:
             label_weights[neg_inds] = 1.0
         # map up to original set of anchors
-
         if unmap_outputs:
             num_total_anchors = flat_anchors.shape[0]
             anchors = unmap(anchors, num_total_anchors, inside_flags)
@@ -412,7 +386,6 @@ class AnchorLoss(LossBase):
 
     def images_to_levels(self, target, num_levels):
         """Convert targets by image to targets by feature level.
-
         [target_img0, target_img1] -> [target_level0, target_level1, ...]
         """
         target = np.stack(target, axis=0)
@@ -423,9 +396,10 @@ class AnchorLoss(LossBase):
             feats = target[:, start:end]
             level_targets.append(feats)
             start = end
+        # return level_targets
         return np.concatenate(level_targets, axis=1)
 
-    # @tf.function
+    @tf.function
     def get_anchors(self, batch, featmap_sizes):
         multi_level_anchors, num_level_anchors = self.anchor_generator.grid_anchors(
             batch, featmap_sizes)
@@ -443,7 +417,7 @@ class AnchorLoss(LossBase):
                      self.num_level_anchors[1] + self.num_level_anchors[2]]
         return [sp0, sp1, sp2]
 
-    # @tf.function
+    @tf.function
     def anchor_center(self, anchors):
         """Get anchor centers from anchors.
 

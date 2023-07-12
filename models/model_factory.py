@@ -16,21 +16,20 @@ class ModelFactory:
         self.config = config
         self._model_keys = ['backbone', 'neck', 'head']
         self.img_channel = 3
-        # self.backbone = mobilenet(self.config.backbone,
-        #                           input_shape=(self.config.resize_size[0],
-        #                                        self.config.resize_size[1],
-        #                                        self.img_channel),
-        #                           kernel_initializer='he_uniform')
-        # anchor_generator = self.build_anchor_generator(
-        #     self.config.anchor_generator)
-        # self.config.head["anchor_generator"] = anchor_generator
-        # self.config.loss["anchor_generator"] = anchor_generator
-        self.backbone = HardNet39(input_shape=(self.config.resize_size[0],
+        self.backbone = mobilenet(self.config.backbone,
+                                  input_shape=(self.config.resize_size[0],
                                                self.config.resize_size[1],
                                                self.img_channel),
-                                  pooling='avg_pool',
                                   kernel_initializer='he_uniform')
-
+        anchor_generator = self.build_anchor_generator(
+            self.config.anchor_generator)
+        self.config.head["anchor_generator"] = anchor_generator
+        self.config.loss["anchor_generator"] = anchor_generator
+        # self.backbone = HardNet39(input_shape=(self.config.resize_size[0],
+        #                                        self.config.resize_size[1],
+        #                                        self.img_channel),
+        #                           pooling='avg_pool',
+        #                           kernel_initializer='he_uniform')
         self.neck = None
         if self.config.neck.module_name is not None:
             self.neck = NECK_FACTORY.get(self.config.neck.module_name)(
@@ -64,7 +63,8 @@ class ModelFactory:
                 elif optimizer_key == 'sgd':
                     optimizer = tf.keras.optimizers.SGD(learning_rate=lr,
                                                         momentum=0.9,
-                                                        nesterov=True)
+                                                        weight_decay=0.0005,
+                                                        nesterov=False)
                 elif optimizer_key == 'nesterov_mom':
                     optimizer = tf.train.MomentumOptimizer(learning_rate=lr,
                                                            momentum=0.9,
@@ -77,10 +77,10 @@ class ModelFactory:
             if optimizer_key == 'adam':
                 return tf.keras.optimizers.Adam(learning_rate=lr)
             elif optimizer_key == 'sgd':
-                return tf.keras.optimizers.SGD(learning_rate=lr,
-                                               momentum=0.9,
-                                               decay=1e-6,
-                                               nesterov=True)
+                return tf.keras.optimizers.experimental.SGD(learning_rate=lr,
+                                                            momentum=0.9,
+                                                            decay=0.0005,
+                                                            nesterov=True)
             elif optimizer_key == 'nesterov_mom':
                 return tf.train.MomentumOptimizer(learning_rate=lr,
                                                   momentum=0.9,

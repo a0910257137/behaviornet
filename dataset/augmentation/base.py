@@ -75,14 +75,14 @@ class Base:
         b_imgs = b_imgs.numpy().astype(np.uint8)
         flip_probs = flip_probs.numpy()
         _, h, w, c = b_imgs.shape
-        aug_prob = .4
+        aug_prob = 1.
         tmp_imgs, tmp_coors = [], []
         for img, coors, flip_prob in zip(b_imgs, b_coors, flip_probs):
             valid_mask = np.all(np.isfinite(coors), axis=-1)
             valid_mask = valid_mask[:, 0]
             coors = coors[valid_mask]
             # check the five landmarks in img or not
-            mask = np.any(coors == -1., axis=-1)
+            # mask = np.any(coors == -1., axis=-1)
             #flip the yx to xy
             annos = coors[..., :2]
             annos = annos[..., ::-1]
@@ -111,9 +111,11 @@ class Base:
                         img, coors, cates = self.warp_affine_transform(
                             img, coors, h, w)
                         coors = np.concatenate([coors, cates], axis=-1)
-
-            coors[mask, :] = 0
-
+                elif tensorpack_aug == "RandomSquareCrop":
+                    if random.random() < aug_prob:
+                        img, coors, cates = self.random_square_crop(
+                            img, coors, h, w)
+                        coors = np.concatenate([coors, cates], axis=-1)
             tmp_imgs.append(img)
             annos = coors[..., :2]
             annos = annos[..., ::-1]
@@ -124,8 +126,10 @@ class Base:
             complement = complement.astype(np.float32)
             coors = np.concatenate([coors, complement], axis=0)
             tmp_coors.append(coors)
+        tmp_coors = np.asarray(tmp_coors)
         b_coors = np.stack(tmp_coors).astype(np.float32)
         b_imgs = np.stack(tmp_imgs)
+
         return b_imgs, b_coors
 
     def _flip(self, img, objs_kps, w):
@@ -306,6 +310,96 @@ class Base:
             return annos
         else:
             return annos
+
+    def random_square_crop(self, img, coors, h, w):
+        crop_choice = [0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+        max_scale = np.amax(crop_choice)
+        scale_retry = 0
+        boxes = coors[:, :2, :2].reshape([-1, 4])
+        lnmks = coors[:, 2:, :2]
+        cates = coors[..., -1:]
+
+        bbox_clip_border = True
+        while True:
+            scale_retry += 1
+            if scale_retry == 1 or max_scale > 1.0:
+                scale = np.random.choice(crop_choice)
+            else:
+                #scale = min(scale*1.2, max_scale)
+                scale = scale * 1.2
+            for i in range(250):
+                short_side = min(w, h)
+                cw = int(scale * short_side)
+                ch = cw
+                # TODO +1
+                if w == cw:
+                    left = 0
+                elif w > cw:
+                    #left = random.uniform(w - cw)
+                    left = random.randint(0, w - cw)
+                else:
+                    left = random.randint(w - cw, 0)
+                if h == ch:
+                    top = 0
+                elif h > ch:
+                    #top = random.uniform(h - ch)
+                    top = random.randint(0, h - ch)
+                else:
+                    top = random.randint(h - ch, 0)
+
+                patch = np.array(
+                    (int(left), int(top), int(left + cw), int(top + ch)),
+                    dtype=np.int32)
+
+                def is_center_of_bboxes_in_patch(boxes, patch):
+                    # TODO >=
+                    center = (boxes[:, :2] + boxes[:, 2:]) / 2
+                    mask = ((center[:, 0] > patch[0]) *
+                            (center[:, 1] > patch[1]) *
+                            (center[:, 0] < patch[2]) *
+                            (center[:, 1] < patch[3]))
+                    return mask
+
+                mask = is_center_of_bboxes_in_patch(boxes, patch)
+                if not mask.any():
+                    continue
+                #print('BBB', key, boxes.shape)
+                # mask = is_center_of_bboxes_in_patch(boxes, patch)
+                boxes = boxes[mask]
+                if bbox_clip_border:
+                    boxes[:, 2:] = boxes[:, 2:].clip(max=patch[2:])
+                    boxes[:, :2] = boxes[:, :2].clip(min=patch[:2])
+                boxes -= np.tile(patch[:2], 2)
+
+                #print('AAAA', kps_key, keypointss.shape, mask.shape)
+                lnmks = lnmks[mask, :, :]
+                if bbox_clip_border:
+                    lnmks[:, :, :2] = lnmks[:, :, :2].clip(max=patch[2:])
+                    lnmks[:, :, :2] = lnmks[:, :, :2].clip(min=patch[:2])
+                lnmks[:, :, 0] -= patch[0]
+                lnmks[:, :, 1] -= patch[1]
+                rimg = np.ones((ch, cw, 3), dtype=img.dtype) * 128
+                patch_from = patch.copy()
+                patch_from[0] = max(0, patch_from[0])
+                patch_from[1] = max(0, patch_from[1])
+                patch_from[2] = min(img.shape[1], patch_from[2])
+                patch_from[3] = min(img.shape[0], patch_from[3])
+                patch_to = patch.copy()
+                patch_to[0] = max(0, patch_to[0] * -1)
+                patch_to[1] = max(0, patch_to[1] * -1)
+                patch_to[2] = patch_to[0] + (patch_from[2] - patch_from[0])
+                patch_to[3] = patch_to[1] + (patch_from[3] - patch_from[1])
+                rimg[patch_to[1]:patch_to[3], patch_to[0]:patch_to[2], :] = img[
+                    patch_from[1]:patch_from[3], patch_from[0]:patch_from[2], :]
+                #print(img.shape, scale, patch, patch_from, patch_to, rimg.shape)
+                img = rimg
+                aug_h, aug_w = img.shape[:2]
+                img = cv2.resize(img, (h, w))
+                resized_ratio = np.array([w, h]) / np.array([aug_w, aug_h])
+                boxes = boxes.reshape([-1, 2, 2])
+                annos = np.concatenate([boxes, lnmks], axis=-2)
+                annos = np.einsum('n c d, d -> n c d', annos, resized_ratio)
+                return img, annos, cates
 
 
 class RandomPasetWithMeanBackground(imgaug.RandomPaste):

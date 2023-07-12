@@ -46,25 +46,30 @@ def tdmm(annos_path, img_root, save_path):
             kps = tmp_kps
             fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
                 kps[:, ::-1], X_ind, idxs=None, max_iter=5)
-            # transformed_vertices = gen_vertices(bfm, fitted_s, fitted_angles,
-            #                                     fitted_t, fitted_sp, fitted_ep)
-            # landmarks = transformed_vertices[valid_ind]
-            # landmarks = np.reshape(landmarks, (landmarks.shape[0] // 3, 3))
+
+            transformed_vertices = gen_vertices(bfm, fitted_s, fitted_angles,
+                                                fitted_t, fitted_sp, fitted_ep)
+            landmarks = transformed_vertices[valid_ind]
+            landmarks = np.reshape(landmarks, (landmarks.shape[0] // 3, 3))
             fitted_angles *= (180 / np.pi)
             anlges.append(fitted_angles)
             pitch, yaw, roll = fitted_angles
-            # if pitch < 0:
-            #     pitch = -(180 + pitch)
-            # elif pitch > 0:
-            #     pitch = (180 - pitch)
-            # lb["attributes"]["pitch"] = pitch
-            # lb["attributes"]["yaw"] = yaw
-            # lb["attributes"]["roll"] = roll
-        i += 1
-    anlges = np.asarray(anlges)
+            if pitch < 0:
+                pitch = -(180 + pitch)
+            elif pitch > 0:
+                pitch = (180 - pitch)
 
-    np.save("/aidata/anders/data_collection/okay/LS3D-W/angles.npy", anlges)
-    # dump_json(path=save_path, data=annos)
+            # lb["attributes"] = {
+            #     "pose": {
+            #         "pitch": pitch,
+            #         "roll": roll,
+            #         "yaw": yaw
+            #     },
+            #     "valid": True,
+            #     "small": False
+            # }
+        i += 1
+    dump_json(path=save_path, data=annos)
 
 
 def parse_config():

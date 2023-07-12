@@ -1,6 +1,6 @@
 import tensorflow as tf
 from .kernel_initializers import KernelInitializers
-from ..utils.conv_module import ConvBlock, BottleNeck, DW
+from ..utils.conv_module import ConvBlock
 from pprint import pprint
 
 
@@ -90,7 +90,4 @@ def mobilenet(config, input_shape, kernel_initializer):
                                kernel_initializer=kernel_initializer)
     image_inputs = tf.keras.Input(shape=input_shape, name='image_inputs')
     fmaps = mobilenet(image_inputs)
-    # Calculae FLOPS
-    # flops = get_flops(tf.keras.Model(image_inputs, fmaps), batch_size=1)
-    # print(f"FLOPS: {flops / 10 ** 9:.03} G")
     return tf.keras.Model(image_inputs, fmaps)

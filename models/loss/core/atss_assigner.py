@@ -38,6 +38,7 @@ class ATSSAssigner:
         #print('AT1:', num_gt, num_bboxes)
         # compute iou between all bbox and gt
         overlaps = self.iou_calculator(bboxes, gt_bboxes)
+        # mask = overlaps > 0.5
 
         assigned_gt_inds = np.full(shape=(num_bboxes, ),
                                    fill_value=0,
@@ -64,22 +65,18 @@ class ATSSAssigner:
         # compute center distance between all bbox and gt
         gt_cx = (gt_bboxes[:, 0] + gt_bboxes[:, 2]) / 2.0
         gt_cy = (gt_bboxes[:, 1] + gt_bboxes[:, 3]) / 2.0
-
         gt_points = np.stack((gt_cx, gt_cy), axis=-1)
-
         gt_width = gt_bboxes[:, 2] - gt_bboxes[:, 0]
         gt_height = gt_bboxes[:, 3] - gt_bboxes[:, 1]
         gt_area = np.sqrt(np.clip(gt_width * gt_height, a_min=1e-4, a_max=INF))
-
         bboxes_cx = (bboxes[:, 0] + bboxes[:, 2]) / 2.0
         bboxes_cy = (bboxes[:, 1] + bboxes[:, 3]) / 2.0
         bboxes_points = np.stack((bboxes_cx, bboxes_cy), axis=-1)
 
-        # distances = (bboxes_points[:, None, :] -
-        #              gt_points[None, :, :]).pow(2).sum(-1).sqrt()
         distances = np.sqrt(
             np.sum(np.square(bboxes_points[:, None, :] - gt_points[None, :, :]),
                    axis=-1))
+
         if (self.ignore_iof_thr > 0 and gt_bboxes_ignore is not None
                 and np.any(gt_bboxes_ignore == True)):
             ignore_overlaps = self.iou_calculator(bboxes,
@@ -92,6 +89,7 @@ class ATSSAssigner:
         # Selecting candidates based on the center distance
         candidate_idxs = []
         start_idx = 0
+
         for level, bboxes_per_level in enumerate(num_level_bboxes):
             # on each pyramid level, for each gt,
             # select k bbox whose center are closest to the gt center
@@ -111,6 +109,7 @@ class ATSSAssigner:
         # mean and std, set mean + std as the iou threshold
         candidate_overlaps = overlaps[candidate_idxs,
                                       np.arange(num_gt)]  #(AK,G)
+
         overlaps_mean_per_gt = np.mean(candidate_overlaps, axis=0)
         overlaps_std_per_gt = np.std(candidate_overlaps, axis=0)
         overlaps_thr_per_gt = overlaps_mean_per_gt + overlaps_std_per_gt
@@ -118,7 +117,6 @@ class ATSSAssigner:
         is_pos = candidate_overlaps >= overlaps_thr_per_gt[None, :]
         #print('CAND:', candidate_idxs.shape, candidate_overlaps.shape, is_pos.shape)
         #print('BOXES:', bboxes_cx.shape)
-
         # limit the positive sample's center in gt
         for gt_idx in range(num_gt):
             candidate_idxs[:, gt_idx] += gt_idx * num_bboxes

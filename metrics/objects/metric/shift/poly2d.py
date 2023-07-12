@@ -49,7 +49,7 @@ class HausdorffDistance(Metric):
                 assert coord.ndim == 2 and coord.shape[
                     1] == 2, f'Expected dim == 2 and shape: N * 2, got dim: {coord.ndim}, shape: {coord.shape}'
                 assert all(
-                    isinstance(p, (np.integer, np.float))
+                    isinstance(p, (np.integer, np.float32))
                     for p in coord.ravel()
                 ), f'coords must be int or float, got {[type(p) for p in coord.ravel()]}'
         return True
@@ -90,8 +90,7 @@ class HausdorffDistance(Metric):
 
     @staticmethod
     def get_coord_shift_to_match_target(refer_curve: np.ndarray,
-                                        target_curve: np.ndarray
-                                        ) -> np.ndarray:
+                                        target_curve: np.ndarray) -> np.ndarray:
         """ At each pt of [curve], obtain the shift in each coordinate to touch the target_curve
         Args:
             refer_curve (np.ndarray):  an (n,2) numpy array
@@ -108,7 +107,7 @@ class HausdorffDistance(Metric):
     def dist_to_cover_target_curve_in_percentage(
             refer_curve: Union[np.ndarray, List],
             target_curve: Union[np.ndarray, List],
-            cover_percentage=95) -> np.float:
+            cover_percentage=95) -> np.float32:
         """ calculate the distance for refer-curve to cover COVER-PERCENTAGE of points of target-curve.
 
         Args:
@@ -129,8 +128,8 @@ class HausdorffDistance(Metric):
 
         # take minimum along axis 0, got a vector of length m:
         # target_curve: q1, ..., qm -> each component is d(q_i, refer_curve)
-        dist_to_cover_target_curve = np.sqrt(
-            np.min(ptwise_squared_dist, axis=0))
+        dist_to_cover_target_curve = np.sqrt(np.min(ptwise_squared_dist,
+                                                    axis=0))
 
         return np.percentile(dist_to_cover_target_curve, cover_percentage)
 
@@ -138,7 +137,7 @@ class HausdorffDistance(Metric):
     def dist_to_cover_each_other_lane_in_percentage(
             refer_curve: Union[np.ndarray, List],
             target_curve: Union[np.ndarray, List],
-            cover_percentage=95) -> np.float:
+            cover_percentage=95) -> np.float32:
         """ This is the same as the above function 'dist_to_cover_target_curve_in_percentage'.
             But just calculate the case [refer to cover target] and [target to cover refer] in one time.
         Args:

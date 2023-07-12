@@ -1,13 +1,13 @@
 {
-    "batch_size": 64,
-    "epochs": 300,
-    "learn_rate": 0.0025,
-    "model_path": "/aidata/anders/3D-head/LS3D-W/archive/v2",
+    "batch_size": 192,
+    "epochs": 150,
+    "learn_rate": 0.0005,
+    "model_path": "/aidata/anders/data_collection/okay/WF/archives/base",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/3D-head/LS3D-W/archive/v2/logs/"
+        "log_dir": "/aidata/anders/data_collection/okay/WF/archives/base/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -26,8 +26,8 @@
             "read_img": true,
             "num_lnmks": 70,
             "category_path": "./config/face.txt",
-            "train_folder": "/home2/user/anders/3D/LS3D-W/tf_records/train",
-            "test_folder": "/home2/user/anders/3D/LS3D-W/tf_records/test"
+            "train_folder": "/aidata/anders/data_collection/okay/AFLW/tf_records/train",
+            "test_folder": "/aidata/anders/data_collection/okay/AFLW/tf_records/test"
         }],
         "augments": {
             "color_chains": [
@@ -36,7 +36,7 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": ["Flip"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["RandomSquareCrop"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains": {
                 "cutout": {
                     "max_holes": 15,
@@ -48,11 +48,11 @@
                     "fill_value": 0
                 }
             },
-            "do_flip": true
+            "do_flip": false
         },
         "3dmm": {
             "model_path": "/aidata/anders/3D-head/3DDFA/BFM/BFM.mat",
-            "pms_path": "/home2/user/anders/3D/LS3D-W/tf_records/params/param_mean_std.npy",
+            "pms_path": "/home2/user/anders/3D/WF/tf_records/params/param_mean_std.npy",
             "n_s": 1,
             "n_R": 9,
             "n_shp": 50,
@@ -101,11 +101,10 @@
             "feat_channels": 64,
             "norm_cfg": {
                 "type": "GN",
-                "num_groups": 16,
-                "requires_grad": true
+                "num_groups": 16
             },
             "cls_reg_share": true,
-            "strides_share": false,
+            "strides_share": true,
             "dw_conv": true,
             "scale_mode": 2,
             "loss_dfl": false,
@@ -115,7 +114,7 @@
         "anchor_generator": {
             "type": "AnchorGenerator",
             "strides": [8, 16, 32],
-            "ratios": [1.0],
+            "ratios": [1],
             "scales": [1, 2],
             "base_sizes": [16, 64, 256]
 

@@ -225,13 +225,16 @@ def get_2d(box):
 def build_2d_obj(obj, obj_cates, img_info):
     obj_kp = get_2d(obj['box2d'])
     obj_name = obj['category'].split(' ')
+
+    
     cat_key = str()
     for i, l in enumerate(obj_name):
         if i == 0:
             cat_key += l
         else:
             cat_key += '_' + l
-    cat_lb = obj_cates[cat_key]
+    # cat_lb = obj_cates[cat_key]
+    cat_lb = 0
     cat_lb = np.expand_dims(np.asarray([cat_lb, cat_lb]), axis=-1)
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
     bool_mask = np.isinf(obj_kp).astype(np.float32)
@@ -244,10 +247,9 @@ def build_2d_obj(obj, obj_cates, img_info):
     return obj_kp
 
 
-def get_mean_std(tmp_s, tmp_R, tmp_sp, tmp_ep):
+def get_mean_std(tmp_R, tmp_sp, tmp_ep):
     tmp_R = np.asarray(tmp_R)
     N = tmp_R.shape[0]
-    # tmp_s = np.expand_dims(np.stack(np.asarray(tmp_s)), axis=-1)
     tmp_R = np.stack(np.asarray(tmp_R)).reshape([N, -1])
     tmp_sp = np.squeeze(np.stack(np.asarray(tmp_sp)), axis=-1)
     tmp_ep = np.squeeze(np.stack(np.asarray(tmp_ep)), axis=-1)
@@ -337,10 +339,9 @@ def get_coors(img_root,
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
-    # save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
-    save_root = os.path.abspath(
-        os.path.join('/aidata/anders/data_collection/okay/total', 'tf_records'))
-
+    save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
+    # save_root = os.path.abspath(
+    #     os.path.join('/home2/user/anders/3D/WF', 'tf_records'))
     frame_count = 0
     root_dir = "/aidata/anders/3D-head/3DDFA"
     bfm_path = os.path.join(root_dir, "BFM/BFM.mat")
@@ -356,16 +357,21 @@ def get_coors(img_root,
     tri = np.loadtxt(os.path.join(
         root_dir, "mask_data/uv-data/triangles.txt")).astype(np.int32)
     bfm_uv_coords = process_uv(bfm_uv_coords, uv_h=256, uv_w=256)
-    tmp_s, tmp_R, tmp_sp, tmp_ep, = [], [], [], []
+    tmp_R, tmp_sp, tmp_ep, = [], [], []
+    tmp_params = []
+    param_counts = 0
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
         is_masks, frame_kps = [], []
         dataset = frame['dataset']
         img_name = frame['name']
-        img_path = os.path.join(img_root, dataset, 'imgs', img_name)
-        # img_path = os.path.join(img_root, img_name)
+        folder_names = img_name.split("_")
+        # img_path = os.path.join(img_root, folder_names[0], folder_names[1],
+        #                         folder_names[2], folder_names[3],
+        #                         folder_names[4] + "_" + folder_names[5])
+        # img_path = os.path.join(img_root, dataset, 'imgs', img_name)
+        img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
-
         if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
@@ -374,28 +380,37 @@ def get_coors(img_root,
         scale_factor = np.array(list(resized) + list(resized), dtype=np.float32)
         for obj in frame['labels']:
             bbox = build_2d_obj(obj, obj_cates, img_info)
-            lnmks = build_keypoints(obj, obj_cates, img_info)
-            fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
-                lnmks[:, :2][:, ::-1], bfm.kpt_ind, max_iter=5)
-            if 0.5 > np.random.rand():
-                transformed_vertices = gen_vertices(bfm, fitted_s,
-                                                    fitted_angles, fitted_t,
-                                                    fitted_sp, fitted_ep)
-                transformed_vertices = transformed_vertices.reshape((-1, 3))
-                img = aug_mask(img, bbox[:, :2], transformed_vertices,
-                               bfm.full_triangles, bfm_uv_coords, face_ind, tri,
-                               template_name2ref_texture_src,
-                               template_name2uv_mask_src)
-                is_masks.append(True)
+            lnmks = np.zeros(shape=(68, 3))
+            if task == 'keypoints' or task == 'obj_det':
+                lnmks = build_keypoints(obj, obj_cates, img_info)
+
+                fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
+                    lnmks[:, :2][:, ::-1], bfm.kpt_ind, max_iter=3)
+                params = np.concatenate([
+                    np.squeeze(fitted_sp, axis=-1),
+                    np.squeeze(fitted_ep, axis=-1), fitted_s[None],
+                    fitted_angles, fitted_t
+                ],
+                                        axis=-1)
+                tmp_params.append(params)
+                if 0.0 > np.random.rand():
+                    transformed_vertices = gen_vertices(bfm, fitted_s,
+                                                        fitted_angles, fitted_t,
+                                                        fitted_sp, fitted_ep)
+                    transformed_vertices = transformed_vertices.reshape((-1, 3))
+                    img = aug_mask(img, bbox[:, :2], transformed_vertices,
+                                   bfm.full_triangles, bfm_uv_coords, face_ind,
+                                   tri, template_name2ref_texture_src,
+                                   template_name2uv_mask_src)
+                    is_masks.append(True)
+
+            param_counts += 1
             lnmks = np.concatenate([bbox, lnmks], axis=0)
-            # lnmks = np.einsum('n c, c -> n c', lnmks, resized)
             if task == 'obj_det':
                 R = angle2matrix(np.asarray(fitted_angles))
-                tmp_s.append(fitted_s)
                 tmp_R.append(R)
                 tmp_sp.append(fitted_sp)
                 tmp_ep.append(fitted_ep)
-
             frame_kps.append(lnmks)
             obj_counts.total_2d += 1
             obj_counts.total_kps += 1
@@ -445,8 +460,9 @@ def get_coors(img_root,
             writer.write(example.SerializeToString())
         writer.close()
         frame_count += 1
+
     if task == 'obj_det':
-        mean, std = get_mean_std(tmp_s, tmp_R, tmp_sp, tmp_ep)
+        mean, std = get_mean_std(tmp_R, tmp_sp, tmp_ep)
         save_dir = os.path.join(save_root, 'params')
         make_dir(save_dir)
         np.save(os.path.join(save_dir, 'param_mean_std.npy'),
@@ -470,7 +486,7 @@ def parse_config():
     parser.add_argument('--anno_file_names', default=None, nargs='+')
     parser.add_argument('--img_root', type=str)
     parser.add_argument('--obj_cate_file', type=str)
-    parser.add_argument('--img_size', default=(320, 192), type=tuple)
+    parser.add_argument('--img_size', default=(320, 320), type=tuple)
     parser.add_argument('--max_obj', default=15, type=int)
     parser.add_argument('--min_num', default=1, type=int)
     parser.add_argument('--train_ratio', default=0.8, type=float)

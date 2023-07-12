@@ -14,6 +14,14 @@ class Augmentation(Base):
         self.img_resize_size = img_resize_size
         self.batch_size = batch_size
         self.img_channel = 3
+        self.mean = tf.constant([127.5, 127.5, 127.5],
+                                dtype=tf.float32)[tf.newaxis, tf.newaxis,
+                                                  tf.newaxis]
+        self.stdinv = (
+            1 /
+            tf.constant([128.0, 128.0, 128.0], dtype=tf.float32))[tf.newaxis,
+                                                                  tf.newaxis,
+                                                                  tf.newaxis]
 
     def __call__(self, b_imgs, b_coors, num_lnmks, task):
         b_coors = tf.cast(b_coors, tf.float32)
@@ -44,7 +52,10 @@ class Augmentation(Base):
                 self.img_channel
             ])
             b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, aug_imgs)
+        # /255 normalized method
         b_imgs = b_imgs / 255
+        # mean and std  normalized method
+        # b_imgs = self.imnormalize_(b_imgs)
         # for obj det
         if task == "obj_det" or task == "tdmm" or task == "keypoint":
             anno_shape = [self.batch_size, self.max_obj_num, num_lnmks, 3]
@@ -63,3 +74,9 @@ class Augmentation(Base):
         do_flip = tf.random.uniform(
             shape=[self.batch_size], maxval=1, dtype=tf.float16) < flip_thre
         return do_col, do_flip
+
+    def imnormalize_(self, b_imgs):
+        b_imgs = tf.cast(b_imgs, tf.float32)
+        b_imgs -= self.mean
+        b_imgs *= self.stdinv
+        return b_imgs

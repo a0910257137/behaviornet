@@ -40,10 +40,11 @@ def diou_loss(pred, target, eps=1e-7):
     INF = 1e8
     # overlap
     lt = tf.math.maximum(pred[:, :2], target[:, :2])
+
     rb = tf.math.minimum(pred[:, 2:], target[:, 2:])
     wh = tf.clip_by_value((rb - lt), clip_value_min=0, clip_value_max=INF)
-    overlap = wh[:, 0] * wh[:, 1]
 
+    overlap = wh[:, 0] * wh[:, 1]
     # union
     ap = (pred[:, 2] - pred[:, 0]) * (pred[:, 3] - pred[:, 1])
     ag = (target[:, 2] - target[:, 0]) * (target[:, 3] - target[:, 1])
@@ -51,28 +52,23 @@ def diou_loss(pred, target, eps=1e-7):
 
     # IoU
     ious = overlap / union
-
     # enclose area
     enclose_x1y1 = tf.math.minimum(pred[:, :2], target[:, :2])
     enclose_x2y2 = tf.math.maximum(pred[:, 2:], target[:, 2:])
     enclose_wh = tf.clip_by_value((enclose_x2y2 - enclose_x1y1),
                                   clip_value_min=0,
                                   clip_value_max=INF)
-
     cw = enclose_wh[:, 0]
     ch = enclose_wh[:, 1]
-
     c2 = cw**2 + ch**2 + eps
-
     b1_x1, b1_y1 = pred[:, 0], pred[:, 1]
     b1_x2, b1_y2 = pred[:, 2], pred[:, 3]
+
     b2_x1, b2_y1 = target[:, 0], target[:, 1]
     b2_x2, b2_y2 = target[:, 2], target[:, 3]
-
     left = ((b2_x1 + b2_x2) - (b1_x1 + b1_x2))**2 / 4
     right = ((b2_y1 + b2_y2) - (b1_y1 + b1_y2))**2 / 4
     rho2 = left + right
-
     # DIoU
     dious = ious - rho2 / c2
     loss = 1 - dious
@@ -102,7 +98,10 @@ class DIoULoss:
         # if weight is not None and len(tf.shape(weight)) > 1:
         #     assert tf.shape(weight) == tf.shape(pred)
         #     weight = tf.math.reduce_mean(weight, axis=-1)
+
         loss = diou_loss(pred, target)
+        # weight = tf.ones_like(weight)
         loss = self.loss_weight * weight_reduce_loss(loss, weight, reduction,
                                                      avg_factor)
+
         return loss

@@ -75,7 +75,6 @@ class QualityFocalLoss:
         r"""Quality Focal Loss (QFL) is from `Generalized Focal Loss: Learning
         Qualified and Distributed Bounding Boxes for Dense Object Detection
         <https://arxiv.org/abs/2006.04388>`_.
-
         Args:
             pred (torch.Tensor): Predicted joint representation of classification
                 and quality (IoU) estimation with shape (N, C), C is the number of
@@ -112,7 +111,6 @@ class QualityFocalLoss:
         scale_factor = tf.gather_nd(score, pos) - tf.gather_nd(
             pred_sigmoid, pred_pos)
         pos_score = tf.expand_dims(tf.gather_nd(score, pos), axis=-1)
-
         pos_pred = tf.expand_dims(tf.gather_nd(pred, pred_pos), axis=-1)
         pos_loss = self.bce2(pos_score, pos_pred) * tf.math.pow(
             tf.math.abs(scale_factor), beta)

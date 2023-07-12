@@ -11,7 +11,7 @@ class AnchorObjDet(tf.keras.Model):
         self.neck = neck
         self.head = head
 
-    @tf.function
+    # @tf.function
     def call(self, x):
         x = self.backbone(x)
         x = self.neck(x)

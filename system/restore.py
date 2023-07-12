@@ -24,7 +24,10 @@ class Restore:
         flat_model = get_layers(nested_model.layers)
         return flat_model
 
-    def build_restoration(self, model, excluded_layers):
+    def build_restoration(self,
+                          model,
+                          excluded_layers,
+                          model_type='mobile_net_model'):
         # load by saved model
         restore_keys = ['backbone', 'neck', 'head']
         restored_model = tf.keras.models.load_model(self.cp_dir)
@@ -32,8 +35,6 @@ class Restore:
                     training=False)
         # load_weights = restored_model.backbone.get_layer(
         #     'mobile_net_model').get_weights()
-        # model.model.backbone.get_layer('mobile_net_model').set_weights(
-        #     load_weights)
         # model.model.set_weights(restored_model.get_weights())
         logger.info(f'Train from restoration')
         logger.info(f'Initialize for building')
@@ -45,8 +46,8 @@ class Restore:
                     continue
                 elif key == 'backbone':
                     load_weights = restored_model.backbone.get_layer(
-                        'hard_net').get_weights()
-                    model.model.backbone.get_layer('hard_net').set_weights(
+                        model_type).get_weights()
+                    model.model.backbone.get_layer(model_type).set_weights(
                         load_weights)
                 elif key == 'neck':
                     restore_layers = self.flatten_model(
@@ -57,15 +58,14 @@ class Restore:
                             zip(restore_layers, model_layers)):
                         model_layer.set_weights(restore_layer.get_weights())
                 else:
-                    load_weights = restored_model.get_layer(key).get_weights()
+                    # load_weights = restored_model.get_layer(key).get_weights()
                     restore_layers = self.flatten_model(
                         restored_model.get_layer(key))
                     model_layers = self.flatten_model(
                         model.model.get_layer(key))
                     for i, (restore_layer, model_layer) in enumerate(
                             zip(restore_layers, model_layers)):
-                        if i < 3:
-                            model_layer.set_weights(restore_layer.get_weights())
+                        model_layer.set_weights(restore_layer.get_weights())
             except KeyError:
                 print('Restore key error, please check you model')
         logger.info(f'Finish load-wights')

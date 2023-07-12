@@ -8,6 +8,8 @@ import tensorflow_addons as tfa
 conv_mode = 'sp_conv2d'
 norm_method = 'bn'
 
+norma_init_layer = tf.keras.initializers.RandomNormal
+
 
 class SCRFDHead(tf.keras.Model):
 
@@ -19,7 +21,6 @@ class SCRFDHead(tf.keras.Model):
         self.feat_channels = self.config.feat_channels
         self.in_channels = self.config.in_channels
         self.num_classes = self.config.num_classes
-
         self.stacked_convs = self.config.stacked_convs
         self.feat_mults = None
         self.conv_cfg = None
@@ -56,7 +57,7 @@ class SCRFDHead(tf.keras.Model):
         self.num_anchors = 2
         self.__init_layers()
 
-    @tf.function
+    # @tf.function
     def call(self, x):
         pred_branches = {"multi_lv_feats": []}
         for xx, scale, stride in zip(x, self.scales,
@@ -89,7 +90,6 @@ class SCRFDHead(tf.keras.Model):
         reg_pred_module = self.stride_reg[
             '0'] if self.strides_share else self.stride_reg[str(stride)]
         _bbox_pred = reg_pred_module(reg_feat)
-
         if self.use_scale:
             bbox_pred = scale * _bbox_pred
         else:
@@ -99,15 +99,16 @@ class SCRFDHead(tf.keras.Model):
             kps_pred_module = self.stride_kps[
                 '0'] if self.strides_share else self.stride_kps[str(stride)]
             kps_pred = kps_pred_module(reg_feat)
-        else:
-            kps_pred = tf.zeros(shape=(tf.shape(bbox_pred)[0],
-                                       tf.shape(bbox_pred)[1],
-                                       tf.shape(bbox_pred)[2], self.NK * 2))
-        return cls_score, bbox_pred, kps_pred
+
+            return cls_score, bbox_pred, kps_pred
+        # else:
+        #     kps_pred = tf.zeros(shape=(tf.shape(bbox_pred)[0],
+        #                                tf.shape(bbox_pred)[1],
+        #                                tf.shape(bbox_pred)[2], self.NK * 2))
+        return cls_score, bbox_pred
 
     def multi_apply(self, func, *args, **kwargs):
         """Apply function to a list of arguments.
-
         Note:
             This function applies the ``func`` to multiple inputs and
             map the multiple outputs of the ``func`` into different
@@ -127,14 +128,22 @@ class SCRFDHead(tf.keras.Model):
         return tuple(map(list, zip(*map_results)))
 
     def _get_conv_module(self, in_channel, out_channel):
+        # conv = ConvBlock(filters=out_channel,
+        #                  kernel_size=3,
+        #                  strides=1,
+        #                  norm_method='bn',
+        #                  activation=None,
+        #                  conv_mode=conv_mode,
+        #                  kernel_initializer=norma_init_layer(mean=0.0,
+        #                                                      stddev=0.01))
         if not self.dw_conv:
-            conv = ConvBlock(
-                filters=out_channel,
-                kernel_size=3,
-                strides=1,
-                norm_method=self.norm_cfg.type.lower(),
-                activation=None,
-                kernel_initializer=tf.keras.initializers.HeNormal())
+            conv = ConvBlock(filters=out_channel,
+                             kernel_size=3,
+                             strides=1,
+                             norm_method=self.norm_cfg.type.lower(),
+                             activation=None,
+                             kernel_initializer=norma_init_layer(mean=0.0,
+                                                                 stddev=0.01))
         else:
             conv = DepthwiseSeparableConv(
                 in_channel=in_channel,
@@ -143,7 +152,7 @@ class SCRFDHead(tf.keras.Model):
                 strides=1,
                 groups=self.norm_cfg.num_groups,
                 norm_method=self.norm_cfg.type.lower(),
-                kernel_initializer=tf.keras.initializers.HeNormal())
+                kernel_initializer=norma_init_layer(mean=0.0, stddev=0.01))
 
         return conv
 
@@ -176,17 +185,17 @@ class SCRFDHead(tf.keras.Model):
                 if not self.cls_reg_share:
                     reg_convs.append(self._get_conv_module(chn, feat_ch))
                 last_feat_ch = feat_ch
+
             self.cls_stride_convs[key] = cls_convs
             self.reg_stride_convs[key] = reg_convs
-
             self.stride_cls[key] = ConvBlock(
                 filters=self.cls_out_channels * self.num_anchors,
                 kernel_size=3,
                 strides=1,
                 norm_method=None,
                 activation=None,
-                conv_mode='sp_conv2d',
-                kernel_initializer=tf.keras.initializers.HeNormal(),
+                conv_mode='conv2d',
+                kernel_initializer=norma_init_layer(mean=0.0, stddev=0.01),
                 bias_initializer=tf.constant_initializer(value=-4.595))
             if not self.use_dfl:
                 self.stride_reg[key] = ConvBlock(
@@ -195,8 +204,8 @@ class SCRFDHead(tf.keras.Model):
                     strides=1,
                     norm_method=None,
                     activation=None,
-                    conv_mode='sp_conv2d',
-                    kernel_initializer=tf.keras.initializers.HeNormal())
+                    conv_mode='conv2d',
+                    kernel_initializer=norma_init_layer(mean=0.0, stddev=0.01))
             else:
                 self.stride_reg[key] = ConvBlock(
                     filters=4 * (self.reg_max + 1) * self.num_anchors,
@@ -204,8 +213,8 @@ class SCRFDHead(tf.keras.Model):
                     strides=1,
                     norm_method=None,
                     activation=None,
-                    conv_mode='sp_conv2d',
-                    kernel_initializer=tf.keras.initializers.HeNormal())
+                    conv_mode='conv2d',
+                    kernel_initializer=norma_init_layer(mean=0.0, stddev=0.01))
             if self.use_kps:
                 self.stride_kps[key] = ConvBlock(
                     filters=self.NK * 2 * self.num_anchors,
@@ -213,10 +222,11 @@ class SCRFDHead(tf.keras.Model):
                     strides=1,
                     norm_method=None,
                     activation=None,
-                    conv_mode='sp_conv2d',
-                    kernel_initializer=tf.keras.initializers.HeNormal())
+                    conv_mode='conv2d',
+                    kernel_initializer=norma_init_layer(mean=0.0, stddev=0.01))
 
         if self.use_scale:
-            self.scales = [1.0 for _ in self.anchor_generator.strides]
+            s = tf.Variable(initial_value=1., trainable=True)
+            self.scales = [s for _ in self.anchor_generator.strides]
         else:
             self.scales = [None for _ in self.anchor_generator.strides]

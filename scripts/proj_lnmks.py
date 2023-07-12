@@ -74,8 +74,8 @@ def run(bfm):
         X = np.reshape(image_vertices, (-1, 1))[valid_ind]
         X = np.reshape(X, (68, 3))
         for i, kp in enumerate(X):
-            fitted_image = cv2.circle(fitted_image, (int(kp[0]), int(kp[1])), 3,
-                                      (255, 255, 255), 1)
+            fitted_image = cv2.circle(fitted_image, (int(kp[0]), int(kp[1])),
+                                      3, (255, 255, 255), 1)
             if i < 17:
                 fitted_image = cv2.circle(fitted_image,
                                           (int(kp[0]), int(kp[1])), 3,

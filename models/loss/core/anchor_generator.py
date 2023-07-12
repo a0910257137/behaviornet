@@ -4,7 +4,6 @@ import numpy as np
 
 class AnchorGenerator(object):
     """Standard anchor generator for 2D anchor-based detectors.
-
     Args:
         strides (list[int] | list[tuple[int, int]]): Strides of anchors
             in multiple feature levels in order (w, h).
@@ -73,12 +72,13 @@ class AnchorGenerator(object):
             assert len(centers) == len(strides), \
                 'The number of strides should be the same as centers, got ' \
                 f'{strides} and {centers}'
-
         # calculate base sizes of anchors
         self.strides = [tuple([stride, stride]) for stride in strides]
 
         self.base_sizes = [min(stride) for stride in self.strides
                            ] if base_sizes is None else base_sizes
+
+        # base size and strides
         assert len(self.base_sizes) == len(self.strides), \
             'The number of strides should be the same as base sizes, got ' \
             f'{self.strides} and {self.base_sizes}'
@@ -110,12 +110,12 @@ class AnchorGenerator(object):
 
     def gen_base_anchors(self):
         """Generate base anchors.
-
         Returns:
             list(torch.Tensor): Base anchors of a feature grid in multiple \
                 feature levels.
         """
         multi_level_base_anchors = []
+
         for i, base_size in enumerate(self.base_sizes):
             center = None
             if self.centers is not None:
@@ -125,6 +125,7 @@ class AnchorGenerator(object):
                                                    scales=self.scales,
                                                    ratios=self.ratios,
                                                    center=center))
+
         return multi_level_base_anchors
 
     def gen_single_level_base_anchors(self,
@@ -141,7 +142,6 @@ class AnchorGenerator(object):
                 and width of anchors in a single level.
             center (tuple[float], optional): The center of the base anchor
                 related to a single feature grid. Defaults to None.
-
         Returns:
             torch.Tensor: Anchors in a single-level feature maps.
         """
@@ -152,7 +152,6 @@ class AnchorGenerator(object):
             y_center = self.center_offset * h
         else:
             x_center, y_center = center
-
         h_ratios = tf.math.sqrt(ratios)
         w_ratios = 1 / h_ratios
         if self.scale_major:
@@ -189,6 +188,7 @@ class AnchorGenerator(object):
 
         assert self.num_levels == len(featmap_sizes)
         multi_level_anchors, num_level_anchors = [], []
+
         for i in range(self.num_levels):
             anchors = self.single_level_grid_anchors(self.base_anchors[i],
                                                      featmap_sizes[i],
@@ -196,7 +196,7 @@ class AnchorGenerator(object):
             num_level_anchors.append(tf.shape(anchors)[0])
             anchors = tf.tile(anchors[None, :, :], [batch, 1, 1])
             multi_level_anchors.append(anchors)
-
+        # xxxx
         num_level_anchors = tf.tile(
             tf.cast(num_level_anchors, tf.int32)[None, :], [batch, 1])
         return multi_level_anchors, num_level_anchors
@@ -224,17 +224,13 @@ class AnchorGenerator(object):
 
         feat_h = featmap_size[0]
         feat_w = featmap_size[1]
-
         shift_x = tf.range(0, feat_w) * stride[0]
         shift_y = tf.range(0, feat_h) * stride[1]
-
         shift_xx, shift_yy = self._meshgrid(shift_x, shift_y)
-
         shifts = tf.stack([shift_xx, shift_yy, shift_xx, shift_yy], axis=-1)
         # first feat_w elements correspond to the first row of shifts
         # add A anchors (1, A, 4) to K shifts (K, 1, 4) to get
         # shifted anchors (K, A, 4), reshape to (K*A, 4)
-
         all_anchors = base_anchors[None, :, :] + tf.cast(
             shifts[:, None, :], tf.float32)
         all_anchors = tf.reshape(all_anchors, [-1, 4])

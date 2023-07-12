@@ -16,7 +16,6 @@ class GeneralTasks:
         self.model_name = self.config.model_name
         self.map_height, self.map_width = tf.cast(
             self.config.resize_size, tf.float32) * self.config.img_down_ratio
-
         self.is_do_filp = self.config.augments.do_flip
         self.img_resize_size = tf.cast(self.config.resize_size, dtype=tf.int32)
         self.max_obj_num = self.config.max_obj_num
@@ -30,7 +29,6 @@ class GeneralTasks:
             "is_masks": tf.io.FixedLenFeature([], dtype=tf.string),
             "scale_factor": tf.io.FixedLenFeature([], dtype=tf.string)
         }
-
         self._multi_aug_funcs = Augmentation(self.config, self.batch_size,
                                              self.img_resize_size)
         self.MorphabelModel = MorphabelModel(self.batch_size, self.max_obj_num,
@@ -45,6 +43,7 @@ class GeneralTasks:
                 task, infos)
             b_imgs, b_coords = self._multi_aug_funcs(b_imgs, b_coords,
                                                      self.num_lnmks, task)
+
             b_bboxes = tf.identity(b_coords[:, :, :2, :2])
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_lnmks = tf.identity(b_coords)
@@ -106,13 +105,15 @@ class GeneralTasks:
                                              5, 1))
                 b_coords = tf.concat(
                     [b_coords[:, :, 1:, :][..., ::-1], b_cates], axis=-1)
+                targets["b_lnmks"] = b_lnmks[:, :, 2:, :2]
                 targets['b_keypoints'] = b_coords
                 targets['b_bboxes'] = b_bboxes[..., ::-1]
-                targets['b_scale_factors'] = b_scale_factors
                 targets['b_origin_sizes'] = b_origin_sizes
+
                 b_labels = tf.math.reduce_all(tf.math.is_finite(b_bboxes),
                                               axis=[2, 3])
                 b_labels = tf.where(b_labels == True, 0., np.inf)
+                # b_labels = tf.where(b_face_masks == np.inf, 0., b_face_masks)
                 targets['b_labels'] = b_labels
 
         return tf.cast(b_imgs, dtype=tf.float32), targets
@@ -210,15 +211,10 @@ class GeneralTasks:
                     i = 1
                     if face_mask == np.inf:
                         i = 0
-                    # i = int(face_mask)
                     for i_kp in kp:
                         hms[int(i)] = draw_msra_gaussian(
                             hms[int(i)], np.asarray(i_kp, dtype=np.float32),
                             np.asarray(sigma, dtype=np.float32))
-                    # for i, i_kp in enumerate(kp):
-                    #     hms[int(i)] = draw_msra_gaussian(
-                    #         hms[int(i)], np.asarray(i_kp, dtype=np.float32),
-                    #         np.asarray(sigma, dtype=np.float32))
                 b_hms.append(hms)
             b_hms = np.stack(b_hms)
         return np.transpose(b_hms, [0, 2, 3, 1])

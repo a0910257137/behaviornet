@@ -57,7 +57,7 @@ class LM:
         self.iteration = 0  # iteration counter
         self.func_calls = 0  # running count of function evaluations
         self.MaxIter = 5000
-        self.trans_constraint = 90
+        self.trans_constraint = 100
 
     def __call__(self, x2d, x3d, K, angles, params, img_wh):
         x2d = x2d / img_wh
@@ -86,7 +86,6 @@ class LM:
         # fractional increment of 'p' for numerical derivatives
         dp = [-0.0001]
         # # # upper bounds for parameter values
-
         epsilon_1 = 1e-8  # convergence tolerance for gradient
         epsilon_2 = 1e-8  # convergence tolerance for parameters
         epsilon_4 = 1e-1  # determines acceptance of a L-M step
@@ -94,7 +93,6 @@ class LM:
         lambda_UP_fac = 11  # factor for increasing lambda
         lambda_DN_fac = 9  # factor for decreasing lambda
         Update_Type = 1  # 1: Levenberg-Marquardt lambda update, 2: Quadratic update, 3: Nielsen's lambda update equations
-
         if len(dp) == 1:
             dp = dp * np.ones((Npar, 1))
 
@@ -266,12 +264,10 @@ class LM:
         JtWJ, JtWdy, X2, preds, J = self.lm_matx(x3d, K, img_wh, p_old, y_old,
                                                  -1, J, angles, params, x2d,
                                                  weight, dp)
-
         # standard error of parameters
         covar_p = np.linalg.inv(JtWJ)
         sigma_p = np.sqrt(np.diag(covar_p))
         error_p = sigma_p / params
-
         # standard error of the fit
         sigma_y = np.zeros((Npnt, 1))
         for i in range(Npnt):
@@ -288,11 +284,11 @@ class LM:
         # convergence history
         cvg_hst = cvg_hst[:self.iteration, :]
         iters = list(range(cvg_hst.shape[0]))
-        from matplotlib import pyplot as plt
-        for i in range(cvg_hst.shape[1] - 1):
-            plt.plot(iters, cvg_hst[:, i + 1], label="list_{}".format(i))
-        plt.legend()
-        plt.savefig("foo.jpg")
+        # from matplotlib import pyplot as plt
+        # for i in range(cvg_hst.shape[1] - 1):
+        #     plt.plot(iters, cvg_hst[:, i + 1], label="list_{}".format(i))
+        # plt.legend()
+        # plt.savefig("foo.jpg")
         return preds, params, redX2, sigma_p, sigma_y, corr_p, R_sq, cvg_hst
 
     def lm_matx(self, x3d, K, img_wh, p_old, y_old, dX2, J, angles, params, x2d,
@@ -492,7 +488,6 @@ def main(annos_path, img_root):
                 x2d, x3d, K, angles, params, img_wh)
             preds = preds.reshape([68, 2]) * img_wh
             kps = preds.astype(np.int32)
-
             for l in range(kps.shape[0]):
                 if 0 <= l < 17:
                     color = [205, 133, 63]
@@ -538,16 +533,13 @@ def main(annos_path, img_root):
             # for kp in preds:
             #     kp = kp.astype(np.int32)
             #     img = cv2.circle(img, kp, 10, (0, 255, 0), -1)
-            cv2.imwrite("output.jpg", img)
+            # cv2.imwrite("output.jpg", img)
             print('\nLM fitting results:')
             for i in range(len(p_fit)):
                 print('----------------------------- ')
                 print('parameter      = p%i' % (i + 1))
                 print('fitted value   = %0.4f' % p_fit[i, 0])
             # print('standard error = %0.2f %%' % error_p[i, 0])
-
-            xxx
-
     # lm(x2d, x3d, K, angles, params, img_wh)
     return p_fit, Chi_sq, sigma_p, sigma_y, corr, R_sq, cvg_hst
 

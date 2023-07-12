@@ -131,3 +131,19 @@ def draw_tdmm(b_orig_imgs, b_rets):
                               (0, 0, 225), 2, cv2.LINE_AA)
         outputs_imgs.append(img)
     return outputs_imgs
+
+
+def draw_scrfd(b_orig_imgs, b_rets):
+    b_bboexes = b_rets.numpy()
+    outputs_imgs = []
+    for img, bboexes in zip(b_orig_imgs, b_bboexes):
+        mask = np.all(np.isfinite(bboexes), axis=-1)
+        bboexes = bboexes[mask]
+        for bbox in bboexes:
+            tl, br = bbox[:2], bbox[2:4]
+            img = cv2.rectangle(img, tuple(tl[::-1].astype(np.int32)),
+                                tuple(br[::-1].astype(np.int32)), (0, 255, 0),
+                                3)
+
+        outputs_imgs.append(img)
+    return outputs_imgs

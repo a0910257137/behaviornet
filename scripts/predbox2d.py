@@ -9,7 +9,7 @@ import copy
 from pathlib import Path
 from tqdm import tqdm
 
-path = "/aidata/anders/data_collection/okay/LS3D-W/imgs/*.jpg"
+path = "/aidata/anders/data_collection/okay/pose/anders/2023-07-03/imgs/*.jpg"
 img_paths = glob(path)
 
 
@@ -48,9 +48,8 @@ for img_path in tqdm(img_paths):
     face_landmarks_list = face_recognition.face_landmarks(image)
     name = img_path.split("/")[-1]
     bdd = copy.deepcopy(bdd_base)
-    bdd['dataset'] = "LS3D-W"
+    bdd['dataset'] = "pose"
     bdd['name'] = name
-
     for lb in face_landmarks_list:
         keys = lb.keys()
         tmp = [lb[k] for k in keys]
@@ -66,5 +65,6 @@ for img_path in tqdm(img_paths):
         bdd['labels'].append(lb_base)
     bdd_results["frame_list"].append(bdd)
 dump_json(
-    path="/aidata/anders/data_collection/okay/LS3D-W/annos/BDD_correct.json",
+    path=
+    "/aidata/anders/data_collection/okay/pose/anders/2023-07-03/annos/BDD_pose_3d_lnmks.json",
     data=bdd_results)
