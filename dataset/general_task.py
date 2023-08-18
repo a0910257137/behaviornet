@@ -43,7 +43,6 @@ class GeneralTasks:
                 task, infos)
             b_imgs, b_coords = self._multi_aug_funcs(b_imgs, b_coords,
                                                      self.num_lnmks, task)
-
             b_bboxes = tf.identity(b_coords[:, :, :2, :2])
             offer_kps_func = OFFER_ANNOS_FACTORY[task]().offer_kps
             b_lnmks = tf.identity(b_coords)
@@ -103,19 +102,19 @@ class GeneralTasks:
                 b_cates = tf.constant(1.,
                                       shape=(self.batch_size, self.max_obj_num,
                                              5, 1))
-                b_coords = tf.concat(
-                    [b_coords[:, :, 1:, :][..., ::-1], b_cates], axis=-1)
-                targets["b_lnmks"] = b_lnmks[:, :, 2:, :2]
-                targets['b_keypoints'] = b_coords
-                targets['b_bboxes'] = b_bboxes[..., ::-1]
-                targets['b_origin_sizes'] = b_origin_sizes
-
+                # b_lnmks = b_lnmks[:, :, 2:, :2]
+                # params = self.MorphabelModel.fit_points(b_lnmks, b_origin_sizes)
+                # targets['params'] = tf.cast(params, tf.float32)
                 b_labels = tf.math.reduce_all(tf.math.is_finite(b_bboxes),
                                               axis=[2, 3])
-                b_labels = tf.where(b_labels == True, 0., np.inf)
-                # b_labels = tf.where(b_face_masks == np.inf, 0., b_face_masks)
-                targets['b_labels'] = b_labels
-
+                b_face_masks = tf.where(b_labels == True, 0., np.inf)
+                b_coords = tf.concat(
+                    [b_coords[:, :, 1:, :][..., ::-1], b_cates], axis=-1)
+                targets["b_lnmks"] = b_lnmks
+                targets['b_keypoints'] = b_coords
+                targets['b_bboxes'] = b_bboxes[..., ::-1]
+                targets['b_labels'] = b_face_masks
+                targets['b_origin_sizes'] = b_origin_sizes
         return tf.cast(b_imgs, dtype=tf.float32), targets
 
     def _draw_mask(self, b_objs_kps, b_cates, h, w, flip_probs, is_do_filp):

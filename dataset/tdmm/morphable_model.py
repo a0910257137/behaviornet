@@ -55,8 +55,8 @@ class MorphabelModel:
         self.shapeMU = tf.reshape(self.shapeMU,
                                   (self.batch_size, self.max_obj_num,
                                    tf.shape(self.shapeMU)[-2] // 3, 3))
-        mean = tf.math.reduce_mean(self.shapeMU, axis=-2, keepdims=True)
-        self.shapeMU -= mean
+        # mean = tf.math.reduce_mean(self.shapeMU, axis=-2, keepdims=True)
+        # self.shapeMU -= mean
         self.shapeMU = tf.reshape(self.shapeMU,
                                   (self.batch_size, self.max_obj_num, -1, 1))
         self.shapePC = tf.tile(self.shapePC[tf.newaxis, tf.newaxis, ...],

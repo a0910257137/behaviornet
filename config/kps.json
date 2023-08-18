@@ -1,15 +1,15 @@
 {
     "predictor": {
         "visible_gpu": "-1",
-        "pb_path": "/aidata/anders/data_collection/okay/WF/archives/base",
-        "weight_root":"/aidata/anders/data_collection/okay/WF/archives/base", 
+        "pb_path": "/aidata/anders/data_collection/okay/WF/archives/param_base",
+        "weight_root":"/aidata/anders/data_collection/okay/WF/archives/param_base", 
         "top_k_n": 15,
         "nms_iou_thres": 0.5,
-        "kp_thres": 0.1,
-        "n_objs": 500,
+        "kp_thres": 0.2,
+        "n_objs": 15,
         "gpu_fraction":0.5, 
         "eval_method":"IoU",
-        "mode": "scrfd",
+        "mode": "scrfd_tdmm",
         "img_input_size": [
             320,
             320
@@ -18,11 +18,11 @@
             320,
             320
         ],
-        "cat_path": "./config/face.txt"
+        "cat_path": "./config/mask_face.txt"
     },
     "tdmm":{
-        "model_path":"/home3/user/anders/objects/3D-head/3DDFA/BFM/BFM.mat",
-        "pms_path":"/home2/user/anders/3D/exp/tf_records/params/param_mean_std.npy",
+        "model_path":"/aidata/anders/3D-head/3DDFA/BFM/BFM.mat",
+        "pms_path":"/aidata/anders/data_collection/okay/LFW/tf_records/params/param_mean_std.npy",
         "n_s":1,
         "n_R":9,
         "n_shp":50,

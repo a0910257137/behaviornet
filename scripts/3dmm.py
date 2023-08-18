@@ -58,7 +58,6 @@ def tdmm(annos_path, img_root, save_path):
                 pitch = -(180 + pitch)
             elif pitch > 0:
                 pitch = (180 - pitch)
-
             # lb["attributes"] = {
             #     "pose": {
             #         "pitch": pitch,

@@ -57,7 +57,8 @@ def build_keypoints(obj, obj_cates, img_info):
                             img_info['width'] - 1)
     bool_mask = np.isinf(obj_kp).astype(np.float32)
     obj_kp = np.where(bool_mask, np.inf, obj_kp)
-    cat_lb = obj_cates[obj['category']]
+    # cat_lb = obj_cates[obj['category']]
+    cat_lb = 0
     cat_lb = np.expand_dims(np.asarray([cat_lb]), axis=-1)
     cat_lb = np.tile(cat_lb, [obj_kp.shape[0], 1])
     obj_kp = np.concatenate([obj_kp, cat_lb], axis=-1)
@@ -225,8 +226,6 @@ def get_2d(box):
 def build_2d_obj(obj, obj_cates, img_info):
     obj_kp = get_2d(obj['box2d'])
     obj_name = obj['category'].split(' ')
-
-    
     cat_key = str()
     for i, l in enumerate(obj_name):
         if i == 0:
@@ -250,9 +249,11 @@ def build_2d_obj(obj, obj_cates, img_info):
 def get_mean_std(tmp_R, tmp_sp, tmp_ep):
     tmp_R = np.asarray(tmp_R)
     N = tmp_R.shape[0]
+    # tmp_s = np.stack(np.asarray(tmp_s)).reshape([N, -1])
     tmp_R = np.stack(np.asarray(tmp_R)).reshape([N, -1])
     tmp_sp = np.squeeze(np.stack(np.asarray(tmp_sp)), axis=-1)
     tmp_ep = np.squeeze(np.stack(np.asarray(tmp_ep)), axis=-1)
+    # tmp_t3d = np.stack(np.asarray(tmp_t3d))
     params = np.concatenate([tmp_R, tmp_sp, tmp_ep], axis=-1)
     mean = np.mean(params, axis=0)
     std = np.std(params, axis=0)
@@ -340,8 +341,10 @@ def get_coors(img_root,
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
     save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
+
     # save_root = os.path.abspath(
-    #     os.path.join('/home2/user/anders/3D/WF', 'tf_records'))
+    #     os.path.join("/aidata/anders/data_collection/okay/FFHQ/ds",
+    #                  'tf_records'))
     frame_count = 0
     root_dir = "/aidata/anders/3D-head/3DDFA"
     bfm_path = os.path.join(root_dir, "BFM/BFM.mat")
@@ -357,18 +360,13 @@ def get_coors(img_root,
     tri = np.loadtxt(os.path.join(
         root_dir, "mask_data/uv-data/triangles.txt")).astype(np.int32)
     bfm_uv_coords = process_uv(bfm_uv_coords, uv_h=256, uv_w=256)
-    tmp_R, tmp_sp, tmp_ep, = [], [], []
-    tmp_params = []
+    tmp_s, tmp_R, tmp_sp, tmp_ep, tmp_t3d, = [], [], [], [], []
     param_counts = 0
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
         is_masks, frame_kps = [], []
         dataset = frame['dataset']
         img_name = frame['name']
-        folder_names = img_name.split("_")
-        # img_path = os.path.join(img_root, folder_names[0], folder_names[1],
-        #                         folder_names[2], folder_names[3],
-        #                         folder_names[4] + "_" + folder_names[5])
         # img_path = os.path.join(img_root, dataset, 'imgs', img_name)
         img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
@@ -380,37 +378,36 @@ def get_coors(img_root,
         scale_factor = np.array(list(resized) + list(resized), dtype=np.float32)
         for obj in frame['labels']:
             bbox = build_2d_obj(obj, obj_cates, img_info)
+            # if obj['category'] == 'MASK':
+            #     is_masks.append(True)
+            # else:
+            #     is_masks.append(False)
             lnmks = np.zeros(shape=(68, 3))
             if task == 'keypoints' or task == 'obj_det':
                 lnmks = build_keypoints(obj, obj_cates, img_info)
-
                 fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
                     lnmks[:, :2][:, ::-1], bfm.kpt_ind, max_iter=3)
-                params = np.concatenate([
-                    np.squeeze(fitted_sp, axis=-1),
-                    np.squeeze(fitted_ep, axis=-1), fitted_s[None],
-                    fitted_angles, fitted_t
-                ],
-                                        axis=-1)
-                tmp_params.append(params)
-                if 0.0 > np.random.rand():
-                    transformed_vertices = gen_vertices(bfm, fitted_s,
-                                                        fitted_angles, fitted_t,
-                                                        fitted_sp, fitted_ep)
-                    transformed_vertices = transformed_vertices.reshape((-1, 3))
-                    img = aug_mask(img, bbox[:, :2], transformed_vertices,
-                                   bfm.full_triangles, bfm_uv_coords, face_ind,
-                                   tri, template_name2ref_texture_src,
-                                   template_name2uv_mask_src)
-                    is_masks.append(True)
-
+                # if 0.5 > np.random.rand():
+                #     transformed_vertices = gen_vertices(bfm, fitted_s,
+                #                                         fitted_angles, fitted_t,
+                #                                         fitted_sp, fitted_ep)
+                #     transformed_vertices = transformed_vertices.reshape((-1, 3))
+                #     img = aug_mask(img, bbox[:, :2], transformed_vertices,
+                #                    bfm.full_triangles, bfm_uv_coords, face_ind,
+                #                    tri, template_name2ref_texture_src,
+                #                    template_name2uv_mask_src)
+                #     is_masks.append(True)
+                # else:
+                #     is_masks.append(False)
             param_counts += 1
             lnmks = np.concatenate([bbox, lnmks], axis=0)
             if task == 'obj_det':
                 R = angle2matrix(np.asarray(fitted_angles))
+                # tmp_s.append(fitted_s)
                 tmp_R.append(R)
                 tmp_sp.append(fitted_sp)
                 tmp_ep.append(fitted_ep)
+                # tmp_t3d.append(fitted_t)
             frame_kps.append(lnmks)
             obj_counts.total_2d += 1
             obj_counts.total_kps += 1

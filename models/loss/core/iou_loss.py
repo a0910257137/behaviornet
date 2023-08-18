@@ -89,19 +89,9 @@ class DIoULoss:
                  avg_factor=None,
                  reduction_override=None,
                  **kwargs):
-
-        # if weight is not None and not tf.math.reduce_any(weight > 0):
-        #     return tf.math.reduce_sum(pred * weight)  # 0
-        # assert reduction_override in (None, 'none', 'mean', 'sum')
         reduction = (reduction_override
                      if reduction_override else self.reduction)
-        # if weight is not None and len(tf.shape(weight)) > 1:
-        #     assert tf.shape(weight) == tf.shape(pred)
-        #     weight = tf.math.reduce_mean(weight, axis=-1)
-
         loss = diou_loss(pred, target)
-        # weight = tf.ones_like(weight)
         loss = self.loss_weight * weight_reduce_loss(loss, weight, reduction,
                                                      avg_factor)
-
         return loss

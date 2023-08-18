@@ -9,7 +9,8 @@ from dataset.general import GeneralDataset
 from system.restore import Restore
 from utils.sys_tools import set_gpu
 from models.model_factory import ModelFactory
-
+from tensorflow.python.tools import freeze_graph
+from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 from utils.tools import get_callbacks, load_configger
 from pprint import pprint
 from utils.tools import *
@@ -22,9 +23,9 @@ def train(config, is_restore, excluded_layers):
     general_dataset = GeneralDataset(config.data_reader, mirrored_strategy)
 
     datasets = general_dataset.get_datasets()
-
-    train_datasets = datasets['train']
-    test_datasets = datasets['test']
+    train_datasets, test_datasets = datasets['train'], datasets['test']
+    training_length, testing_length = datasets['training_length'], datasets[
+        'testing_length']
     with mirrored_strategy.scope():
         model, optimizer = ModelFactory(config.models,
                                         config.learn_rate).build_model()
@@ -34,7 +35,7 @@ def train(config, is_restore, excluded_layers):
                                 model, excluded_layers)
 
     callbacks = get_callbacks(config, model, optimizer, train_datasets,
-                              test_datasets)
+                              test_datasets, training_length, testing_length)
 
     model.fit(train_datasets,
               validation_data=test_datasets,

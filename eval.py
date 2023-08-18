@@ -56,32 +56,27 @@ class Eval:
         return eval_files
 
     def iou_report(self, iou, cates_order):
-        precs, recs = [], []
-        cates = []
-        threshold = [0.95, 0.75, 0.5, 0.25, 0.1, 0.01]
-        for thres in threshold:
-            result_prec = iou.report('AP', thres)
-            result_rec = iou.report('AR', thres)
-
-            for cate in cates_order:
-                try:
-                    prec_val = result_prec[cate]
-                    rec_val = result_rec[cate]
-                except:
-                    prec_val = '0'
-                    rec_val = '0'
-                precs.append(prec_val)
-                recs.append(rec_val)
-                cates.append(cate)
-
-        dict = {
-            "Category": cates,
-            "Threshold": threshold,
-            "Precision": precs,
-            'Recall': recs
+        evaluation_results = {
+            k: {
+                "Threshold": [],
+                "Precision": [],
+                "Recall": []
+            }
+            for k in cates_order
         }
+        threshold = [0.950, 0.750, 0.50, 0.250, 0.10, 0.010]
 
-        df = pd.DataFrame(dict)
+        for cate in cates_order:
+            eval_res = evaluation_results[cate]
+            for thres in threshold:
+                result_prec = iou.report('AP', thres)
+                result_rec = iou.report('AR', thres)
+                prec_val = result_prec[cate]
+                rec_val = result_rec[cate]
+                eval_res["Threshold"].append(thres)
+                eval_res["Precision"].append(np.round(prec_val, 3))
+                eval_res["Recall"].append(np.round(rec_val, 3))
+        df = pd.DataFrame(evaluation_results)
         pprint(df)
         # df.to_csv('infer_test_iou.csv', float_format='%.3f')
     def split_batchs(self, elems, n):
@@ -139,7 +134,7 @@ class Eval:
 
     def run(self):
         eval_files = self.get_eval_path()
-        self.cates = ["FACE"]
+        self.cates = ["NOT MASK", "MASK"]
         print('Eval categories')
         pprint(self.cates)
         total_imgs = 0
@@ -171,8 +166,8 @@ class Eval:
                     elif self.mode == 'tdmm':
                         eval_bdd_annos = tdmm_to_bdd(bdd_results, batch_results,
                                                      batch_frames, self.cates)
-
                     elif self.mode == 'scrfd':
+
                         eval_bdd_annos = scrfd_to_bdd(bdd_results,
                                                       batch_results,
                                                       batch_frames, self.cates)

@@ -134,6 +134,13 @@ def draw_tdmm(b_orig_imgs, b_rets):
 
 
 def draw_scrfd(b_orig_imgs, b_rets):
+    FONT_SCALE = 2
+    FONT_THICKNESS = 2
+    INIT_FLAG = False
+    FONT_STYLE = cv2.FONT_HERSHEY_COMPLEX_SMALL
+    text_info = "Test123"
+    (_, text_height), _ = cv2.getTextSize(text_info, FONT_STYLE, FONT_SCALE,
+                                          FONT_THICKNESS)
     b_bboexes = b_rets.numpy()
     outputs_imgs = []
     for img, bboexes in zip(b_orig_imgs, b_bboexes):
@@ -141,9 +148,14 @@ def draw_scrfd(b_orig_imgs, b_rets):
         bboexes = bboexes[mask]
         for bbox in bboexes:
             tl, br = bbox[:2], bbox[2:4]
+            c = int(bbox[-1])
+            c_text = 'w.o. mask' if c == 0 else 'w. mask'
+            text_info = "Category: {}".format(c_text)
             img = cv2.rectangle(img, tuple(tl[::-1].astype(np.int32)),
                                 tuple(br[::-1].astype(np.int32)), (0, 255, 0),
                                 3)
-
+            img = cv2.putText(img, text_info, (5, text_height), FONT_STYLE,
+                              FONT_SCALE, (127, 127, 0), FONT_THICKNESS,
+                              cv2.LINE_AA)
         outputs_imgs.append(img)
     return outputs_imgs

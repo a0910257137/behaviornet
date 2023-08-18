@@ -12,6 +12,7 @@ class Network(tf.keras.Model):
         self.config = config
         self._model_keys = _model_keys
         self.task = self.config.tasks[0]['preprocess']
+        # if self.task == 'tdmm' or self.task == 'keypoint':
         if self.task == 'tdmm':
             pms = np.load(self.config['3dmm']['pms_path'])
             n_R, n_shp, n_exp = self.config['3dmm']["n_R"], self.config['3dmm'][
@@ -31,7 +32,6 @@ class Network(tf.keras.Model):
         # image_inputs = tf.keras.Input(shape=(320, 320, 3), name='image_inputs')
         # preds = self.model(image_inputs, training=False)
         # fully_models = tf.keras.Model(image_inputs, preds, name='fully')
-        # print(fully_models.summary())
         # flops = get_flops(fully_models, batch_size=1)
         # print(f"FLOPS: {flops / 10 ** 9:.03} G")
         # exit(1)
@@ -39,6 +39,7 @@ class Network(tf.keras.Model):
     def train_step(self, data):
         training = True
         imgs, labels = data
+        # if self.task == 'tdmm' or self.task == 'keypoint':
         if self.task == 'tdmm':
             labels['Z_params'] = (labels['params'] -
                                   self.train_mean_std[0][None, None, :]
@@ -60,6 +61,7 @@ class Network(tf.keras.Model):
     def test_step(self, data):
         training = False
         imgs, labels = data
+        # if self.task == 'tdmm' or self.task == 'keypoint':
         if self.task == 'tdmm':
             labels['Z_params'] = (labels['params'] -
                                   self.train_mean_std[0][None, None, :]

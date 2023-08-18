@@ -36,10 +36,12 @@ class GeneralDataset:
         for task in self.config.tasks:
             if is_train:
                 filenames = glob(os.path.join(task.train_folder, '*.tfrecords'))
+                num_files = len(filenames)
                 ds = tf.data.TFRecordDataset(filenames,
                                              num_parallel_reads=threads)
             else:
                 filenames = glob(os.path.join(task.test_folder, '*.tfrecords'))
+                num_files = len(filenames)
                 ds = tf.data.TFRecordDataset(filenames,
                                              num_parallel_reads=threads)
             datasets.append(ds)
@@ -63,10 +65,8 @@ class GeneralDataset:
         # shapeMU = tf.gather(tf.cast(head_model['shapeMU'], tf.float32),
         #                     valid_ind).numpy()
         # shapeMU = tf.reshape(shapeMU, (tf.shape(shapeMU)[0] // 3, 3))
-        # mean = tf.math.reduce_mean(shapeMU, axis=-2, keepdims=True)
-        # shapeMU -= mean
         # shapeMU = tf.reshape(shapeMU, (tf.shape(shapeMU)[0] * 3, 1))
-        # shapePC = tf.gather(tf.cast(head_model['shapePC'][:, :100], tf.float32),
+        # shapePC = tf.gather(tf.cast(head_model['shapePC'][:, :50], tf.float32),
         #                     valid_ind).numpy()
         # expPC = tf.gather(tf.cast(head_model['expPC'][:, :29], tf.float32),
         #                   valid_ind).numpy()
@@ -113,7 +113,6 @@ class GeneralDataset:
         #             scales = size_vals / (br - tl)
         #             lnmks = lnmks[:, ::-1]
         #             lnmks = vertices[:, :2] * scales + coords[::-1] * resized
-
         #             img = cv2.resize(img,
         #                              tuple(origin_sizes[::-1]),
         #                              interpolation=cv2.INTER_AREA)
@@ -131,29 +130,54 @@ class GeneralDataset:
         #     b_img = b_img.numpy() * 255.
         #     b_bboxes = targets['b_bboxes'].numpy()
         #     b_lnmks = targets['b_lnmks'].numpy()
+        #     b_params = targets['params']
         #     b_origin_sizes = targets['b_origin_sizes'].numpy()
         #     resized = b_origin_sizes[:, ::-1] / np.array([320., 320.])
         #     resized = np.expand_dims(resized, axis=[1, 2])
-        #     for i, (img, lnmks,
-        #             bboxes) in enumerate(zip(b_img, b_lnmks, b_bboxes)):
-        #         for bbox, lnmk in zip(bboxes, lnmks):
+        #     for i, (img, lnmks, bboxes,
+        #             params) in enumerate(zip(b_img, b_lnmks, b_bboxes,
+        #                                      b_params)):
+        #         for bbox, lnmk, param in zip(bboxes, lnmks, params):
         #             if np.any(bbox == np.inf):
         #                 continue
+        #             R, shp, exp = param[:9], param[9:59], param[59:]
+        #             R = np.reshape(R, (3, 3))
+        #             vertices = shapeMU + shapePC.dot(shp[:, None]) + expPC.dot(
+        #                 exp[:, None])
+        #             vertices = np.asarray(vertices)
+        #             vertices = vertices.reshape(68, 3)
+        #             vertices = vertices.dot(R.T)
+        #             vertices = vertices[:, :2]
         #             tl, br = bbox.astype(np.int32)
+        #             bbox_wh = br - tl
         #             img = cv2.rectangle(img, tuple(tl), tuple(br), (0, 255, 0),
         #                                 2)
-        #             for l in lnmk:
-        #                 l = l.astype(np.int32)
-        #                 img = cv2.circle(img, tuple(l[::-1]), 2, (0, 255, 0),
-        #                                  -1)
+        #             box_centers = (tl + br) / 2
+        #             tl, br = np.min(vertices, axis=0), np.max(vertices, axis=0)
+        #             lnmk_wh = br - tl
+        #             scale = bbox_wh / lnmk_wh
+        #             vertices = scale * vertices
+        #             tl, br = np.min(vertices, axis=0), np.max(vertices, axis=0)
+        #             lnmk_centers = (tl + br) / 2
+        #             shifts = box_centers - lnmk_centers
+        #             vertices = vertices + shifts[None, :]
+        #             vertices = vertices.astype(np.int32)
+        #             for kp in vertices:
+        #                 img = cv2.circle(img, tuple(kp), 2, (0, 255, 0), -1)
         #         cv2.imwrite("output_{}.jpg".format(i), img[..., ::-1])
         #     xxx
-
         datasets = datasets.map(
             lambda *x: self.gener_task.build_maps(x),
             num_parallel_calls=tf.data.experimental.AUTOTUNE)
         datasets = datasets.prefetch(tf.data.experimental.AUTOTUNE)
-        return datasets
+        return datasets, num_files
 
     def get_datasets(self):
-        return {"train": self._dataset(True), "test": self._dataset(False)}
+        training_ds, num_training_ds = self._dataset(True)
+        testing_ds, num_testing_ds = self._dataset(False)
+        return {
+            "train": training_ds,
+            "test": testing_ds,
+            "training_length": num_training_ds,
+            "testing_length": num_testing_ds
+        }

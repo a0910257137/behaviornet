@@ -6,6 +6,7 @@ import tensorflow as tf
 from .network import Network
 from .backbone.hardnet import *
 from .backbone.mobilenet import *
+from .backbone.mobilenext import *
 from .loss.core.anchor_generator import AnchorGenerator
 from pprint import pprint
 
@@ -21,6 +22,11 @@ class ModelFactory:
                                                self.config.resize_size[1],
                                                self.img_channel),
                                   kernel_initializer='he_uniform')
+        # self.backbone = mobilenextnet(self.config.backbone,
+        #                               input_shape=(self.config.resize_size[0],
+        #                                            self.config.resize_size[1],
+        #                                            self.img_channel),
+        #                               kernel_initializer='he_uniform')
         anchor_generator = self.build_anchor_generator(
             self.config.anchor_generator)
         self.config.head["anchor_generator"] = anchor_generator
@@ -57,6 +63,7 @@ class ModelFactory:
         if self.config.multi_optimizer:
             for model_key in self._model_keys:
                 optimizer_key = self.config[model_key].optimizer
+
                 lr = self.config[model_key].lr
                 if optimizer_key == 'adam':
                     optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
@@ -69,6 +76,15 @@ class ModelFactory:
                     optimizer = tf.train.MomentumOptimizer(learning_rate=lr,
                                                            momentum=0.9,
                                                            use_nesterov=True)
+
+                elif optimizer_key == 'adamw':
+                    optimizer = tf.keras.optimizers.experimental.AdamW(
+                        learning_rate=lr,
+                        weight_decay=0.004,
+                        beta_1=0.9,
+                        beta_2=0.999,
+                        epsilon=1e-07,
+                    )
                 optimizers[model_key] = optimizer
             return optimizers
         else:
@@ -85,6 +101,15 @@ class ModelFactory:
                 return tf.train.MomentumOptimizer(learning_rate=lr,
                                                   momentum=0.9,
                                                   use_nesterov=True)
+
+            elif optimizer_key == 'adamw':
+                return tf.optimizers.experimental.AdamW(
+                    learning_rate=lr,
+                    weight_decay=0.004,
+                    beta_1=0.9,
+                    beta_2=0.999,
+                    epsilon=1e-07,
+                )
 
     def build_anchor_generator(self, anchor_generator):
         return AnchorGenerator(strides=anchor_generator['strides'],

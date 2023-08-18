@@ -75,7 +75,7 @@ class Base:
         b_imgs = b_imgs.numpy().astype(np.uint8)
         flip_probs = flip_probs.numpy()
         _, h, w, c = b_imgs.shape
-        aug_prob = 1.
+        aug_prob = 0.4
         tmp_imgs, tmp_coors = [], []
         for img, coors, flip_prob in zip(b_imgs, b_coors, flip_probs):
             valid_mask = np.all(np.isfinite(coors), axis=-1)
@@ -149,7 +149,7 @@ class Base:
         L_eyes = objs_kps[:, 29:35][:, [3, 2, 1, 0, 5, 4]]
 
         R_eyes = objs_kps[:, 35:41][:, [3, 2, 1, 0, 5, 4]]
-        nose = objs_kps[:, 41:50]
+        nose = objs_kps[:, 41:50][:, [0, 1, 2, 3, 8, 7, 6, 5, 4]]
         out_lips = objs_kps[:, 50:62][:, [6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8, 7]]
 
         in_lips = objs_kps[:, 62:70][:, [4, 3, 2, 1, 0, 7, 6, 5]]

@@ -37,21 +37,26 @@ def dump_json(path, data):
 
 annos = load_json("/aidata/relabel/pose/annos/BDD_demo_test_model3.json")
 base_infos = annos['frame_list'][0]['labels'][0]
-lb_dir = "/aidata/relabel/analyze"
-save_dir = "/aidata/relabel/analyze/imgs"
+lb_dir = "/aidata/relabel/lnmks/Stage3_06_01_06_30/evian/CelebA"
+save_dir = "/aidata/relabel/lnmks/Stage3_06_01_06_30/evian/CelebA/imgs"
 bdd_results = {"frame_list": []}
 path_list = glob(os.path.join(lb_dir, "*.json"))
 
 for path in tqdm(path_list):
     annos = load_json(path)
     shapes = annos['shapes']
+    img_path = path.replace(".json", ".jpg")
+    name = img_path.split("/")[-1]
+    img = cv2.imread(img_path)
+    if img is None:
+        continue
+    if len(shapes) != 6:
+        continue
     angles = shapes[0]['angles']
     VALIDATE_FLAG = angles['validate']
     if VALIDATE_FLAG != True:
         continue
-    img_path = path.replace(".json", ".jpg")
-    name = img_path.split("/")[-1]
-    lb_infos = {"dataset": "analyze", "name": name, "labels": []}
+    lb_infos = {"dataset": "AFLW", "name": name, "labels": []}
     copy_base_infos = copy.deepcopy(base_infos)
     copy_base_infos['attributes'] = {
         "pose": {
@@ -67,6 +72,9 @@ for path in tqdm(path_list):
         keys = keypoint_infos.keys()
         for kp in keypoint_infos['points']:
             tmp_kps.append(kp[::-1])
+
+    if len(tmp_kps) != 68:
+        break
     kps = np.asarray(tmp_kps)
     tl = kps.min(axis=0)
     br = kps.max(axis=0)
@@ -76,9 +84,12 @@ for path in tqdm(path_list):
     copy_base_infos['box2d']['y1'] = int(tl[0])
     copy_base_infos['box2d']['x2'] = int(br[1])
     copy_base_infos['box2d']['y2'] = int(br[0])
+    copy_base_infos["category"] = "FACE"
     lb_infos['labels'].append(copy_base_infos)
 
-    img = cv2.imread(img_path)
     cv2.imwrite(os.path.join(save_dir, name), img)
     bdd_results['frame_list'].append(lb_infos)
-dump_json(path="/aidata/relabel/analyze/annos/analyze.json", data=bdd_results)
+dump_json(
+    path=
+    "/aidata/relabel/lnmks/Stage3_06_01_06_30/evian/CelebA/annos/BDD_CelebA.json",
+    data=bdd_results)

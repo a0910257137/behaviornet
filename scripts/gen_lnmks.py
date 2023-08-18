@@ -115,11 +115,11 @@ bdd_base = {
 def get_lnmks_from_synth(img, model, tl, br, is_cuda):
     USE_FLIP = False
     input_size = 256
-    flip_parts = ([1, 17], [2, 16], [3, 15], [4, 14], [5, 13], [6, 12],
-                  [7, 11], [8, 10], [18, 27], [19, 26], [20, 25], [21, 24],
-                  [22, 23], [32, 36], [33, 35], [37, 46], [38, 45], [39, 44],
-                  [40, 43], [41, 48], [42, 47], [49, 55], [50, 54], [51, 53],
-                  [62, 64], [61, 65], [68, 66], [59, 57], [60, 56])
+    flip_parts = ([1, 17], [2, 16], [3, 15], [4, 14], [5, 13], [6, 12], [7, 11],
+                  [8, 10], [18, 27], [19, 26], [20, 25], [21, 24], [22, 23],
+                  [32, 36], [33, 35], [37, 46], [38, 45], [39, 44], [40, 43],
+                  [41, 48], [42, 47], [49, 55], [50, 54], [51, 53], [62, 64],
+                  [61, 65], [68, 66], [59, 57], [60, 56])
     tl -= 10
     br += 10
     w, h = br - tl
@@ -129,9 +129,7 @@ def get_lnmks_from_synth(img, model, tl, br, is_cuda):
     aimg, M = face_align.transform(img, center, input_size, _scale, rotate)
     aimg = cv2.cvtColor(aimg, cv2.COLOR_BGR2RGB)
     kps = None
-
     flips = [0, 1] if USE_FLIP else [0]
-
     for flip in flips:
         input = aimg.copy()
         if flip:
@@ -169,12 +167,14 @@ def get_lnmks_from_synth(img, model, tl, br, is_cuda):
     return kps
 
 
-def run(img_root, save_path, is_synthetics=False):
+def run(root_dir, save_path, is_synthetics=False):
     is_cuda = torch.cuda.is_available()
     gpu_count = torch.cuda.device_count()
-    instrument_dir = "/aidata/anders/data_collection/okay/pose/2023-07-05/003171"
-    gt_text_lines = load_text(os.path.join(instrument_dir, "annos/output.txt"))
-    gt_init_pose = np.load(os.path.join(instrument_dir, "initial_values.npy"))
+
+    gt_text_lines = load_text(os.path.join(root_dir, "annos/output.txt"))
+    gt_init_pose = np.load(os.path.join(root_dir, "initial_values.npy"))
+    img_root = os.path.join(root_dir, "imgs")
+
     if is_synthetics:
         app = FaceAnalysis()
         app.prepare(ctx_id=0, det_size=(224, 224))
@@ -203,7 +203,7 @@ def run(img_root, save_path, is_synthetics=False):
     m = len(img_paths)
     tmp = []
 
-    lag_len = 2
+    lag_len = 3
     for i in range(m):
         if i < lag_len:
             continue
@@ -289,7 +289,7 @@ def run(img_root, save_path, is_synthetics=False):
 
 def parse_config():
     parser = argparse.ArgumentParser("Argparser for generating 3d landmarks")
-    parser.add_argument('--img_root')
+    parser.add_argument('--root_dir')
     parser.add_argument('--save_path')
     parser.add_argument('--is_synthetic', action='store_true', default=False)
 
@@ -298,4 +298,4 @@ def parse_config():
 
 if __name__ == '__main__':
     args = parse_config()
-    bdd_annos = run(args.img_root, args.save_path, args.is_synthetic)
+    bdd_annos = run(args.root_dir, args.save_path, args.is_synthetic)

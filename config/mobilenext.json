@@ -1,13 +1,13 @@
 {
-    "batch_size": 64,
-    "epochs": 100,
+    "batch_size": 56,
+    "epochs": 200,
     "learn_rate": 0.001,
-    "model_path": "/aidata/anders/data_collection/okay/WF/archives/param_base",
+    "model_path": "/aidata/anders/data_collection/okay/WF/archives/mobilenext",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/data_collection/okay/WF/archives/param_base/logs/"
+        "log_dir": "/aidata/anders/data_collection/okay/WF/archives/mobilenext/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -26,8 +26,8 @@
             "read_img": true,
             "num_lnmks": 70,
             "category_path": "./config/face.txt",
-            "train_folder": "/aidata/anders/box2d/coco/tf_records/train",
-            "test_folder": "/aidata/anders/box2d/coco/tf_records/test"
+            "train_folder": "/aidata/anders/data_collection/okay/FFHQ/tf_records/train",
+            "test_folder": "/aidata/anders/data_collection/okay/FFHQ/tf_records/test"
         }],
         "augments": {
             "color_chains": [
@@ -36,7 +36,7 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": [], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["Flip", "RandomSquareCrop"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
             "album_chains": {
                 "cutout": {
                     "max_holes": 15,
@@ -52,7 +52,7 @@
         },
         "3dmm": {
             "model_path": "/aidata/anders/3D-head/3DDFA/BFM/BFM.mat",
-            "pms_path": "/aidata/anders/box2d/coco/tf_records/params/param_mean_std.npy",
+            "pms_path": "/aidata/anders/data_collection/okay/FFHQ/tf_records/params/param_mean_std.npy",
             "n_s": 0,
             "n_R": 9,
             "n_shp": 50,
@@ -66,15 +66,22 @@
         "multi_optimizer": false,
         "optimizer": "adamw",
         "backbone": {
-            "module_name": "mobilenet",
+            "module_name": "mobilenextnet",
             "optimizer": "adam",
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,
-            "block_cfg": {
-                "stage_blocks": [2, 3, 2, 6],
-                "stage_planes": [16, 16, 40, 72, 152, 288]
-            }
+            // t, c, n, s
+            "block_cfg": [
+                [2,  96, 1, 2],
+                [6, 144, 1, 1],
+                [6, 192, 3, 2],
+                [6, 288, 3, 2],
+                [6, 384, 4, 1],
+                [6, 576, 4, 2],
+                [6, 960, 3, 1],
+                [6,1280, 1, 1]
+            ]
         },
         "neck": {
             "module_name": "pafpn",
@@ -95,7 +102,7 @@
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,
-            "num_classes": 1,
+            "num_classes": 2,
             "in_channels": 16,
             "stacked_convs": 2,
             "feat_channels": 64,
@@ -108,7 +115,8 @@
             "dw_conv": true,
             "scale_mode": 2,
             "loss_dfl": false,
-            "reg_max": 8
+            "reg_max": 8,
+            "use_kps": false
         },
         "anchor_generator": {
             "type": "AnchorGenerator",
@@ -120,7 +128,7 @@
         },
         "loss": {
             "module_name": "anchor_loss",
-            "num_classes": 1,
+            "num_classes": 2,
             "loss_cls": {
                 "type": "QualityFocalLoss",
                 "use_sigmoid": true,

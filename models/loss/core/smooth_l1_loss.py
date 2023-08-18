@@ -63,6 +63,7 @@ class SmoothL1Loss:
         reduction = (reduction_override
                      if reduction_override else self.reduction)
         loss = smooth_l1_loss(pred, target, beta=self.beta)
+        
         loss_bbox = self.loss_weight * weight_reduce_loss(
             loss, weight, reduction, avg_factor)
         return loss_bbox

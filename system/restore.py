@@ -45,6 +45,7 @@ class Restore:
                 if excluded_layers is not None and key in excluded_layers:
                     continue
                 elif key == 'backbone':
+
                     load_weights = restored_model.backbone.get_layer(
                         model_type).get_weights()
                     model.model.backbone.get_layer(model_type).set_weights(

@@ -26,7 +26,8 @@ class ConvBlock(tf.keras.layers.Layer):
         self.kernel_size = (kernel_size, kernel_size)
         self.strides = (strides, strides)
         self.dilation_rate = (dilation_rate, dilation_rate)
-        reg_layer = tf.keras.regularizers.L2(l2=1e-3)
+        # reg_layer = tf.keras.regularizers.L2(l2=1e-3)
+        reg_layer = None
         if conv_mode == 'conv2d':
             self.conv = tf.keras.layers.Conv2D(
                 filters,
