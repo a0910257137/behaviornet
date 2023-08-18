@@ -1,3 +1,6 @@
+./third_party/TDDFA/weights/*
+./third_party/synthetics/weights/*
+./third_party/TDDFA/FaceBoxes/weights/FaceBoxesProd.pth
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
