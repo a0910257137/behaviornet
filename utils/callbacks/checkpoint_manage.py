@@ -41,6 +41,7 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
         self.model = model
 
     # def on_batch_begin(self, epoch, logs=None):
+    #     self.model.epochs += 1
     #     imgs = tf.constant(0., shape=(1, 320, 320, 3))
     #     self.model.model(imgs, training=False)
     # model_dir = "/aidata/anders/3D-head/LS3D-W/archive/v1"
@@ -53,6 +54,7 @@ class CheckpointManagerCallback(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         epochs_finished = epoch + 1
+        self.model.epochs = epochs_finished
         self._epoch_count = epochs_finished
         if epochs_finished % self._period == 0:
             self._save()

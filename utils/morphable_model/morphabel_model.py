@@ -40,6 +40,8 @@ class MorphabelModel(object):
         self.n_shape_para = self.model['shapePC'].shape[1]
         self.n_exp_para = self.model['expPC'].shape[1]
         self.n_tex_para = self.model['texMU'].shape[1]
+        self.n_shape_para = 40
+        self.n_exp_para = 11
 
         self.kpt_ind = self.model['kpt_ind']
         self.triangles = self.model['tri']
@@ -71,8 +73,10 @@ class MorphabelModel(object):
         Returns:
             vertices: (nver, 3)
         '''
-        vertices = self.model['shapeMU'] + self.model['shapePC'].dot(
-            shape_para) + self.model['expPC'].dot(exp_para)
+        vertices = self.model['shapeMU'] + (
+            self.model['shapePC'][:, :self.n_shape_para]
+        ).dot(shape_para) + self.model['expPC'][:, :self.n_exp_para].dot(
+            exp_para)
         vertices = np.reshape(vertices, [int(3), int(len(vertices) / 3)], 'F').T
         return vertices
 

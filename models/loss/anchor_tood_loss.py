@@ -1,45 +1,56 @@
 import tensorflow as tf
 import numpy as np
 from .loss_base import LossBase
-from .core.task_aligned_assigner import TaskAlignedAssigner
 from .core.atss_assigner import ATSSAssigner
 from .core.pseudo_sampler import PseudoSampler
-from .core.wpdc_loss import WPDCLoss, lnmk_loss
+from .core.task_aligned_assigner import TaskAlignedAssigner
 from .core.transform import distance2bbox, bbox2distance, kps2distance
-from .core.iou2d_calculator import bbox_overlapping
 from .core.utils import anchor_inside_flags, unmap, multi_apply
 from pprint import pprint
 from utils.io import load_BFM
-import cv2
 from .core import LOSS_FUNCS_FACTORY
+import cv2
+
+EPS = 1e-12
 
 
-class AnchorLoss(LossBase):
+class AnchorTOODLoss(LossBase):
 
     def __init__(self, config):
         self.max_obj_num = config.max_obj_num
         self.config = config['loss']
         self.train_cfg = self.config['train_cfg']
         self.test_cfg = self.config['test_cfg']
+
+        self.init_loss_cls_cfg = self.config['initial_loss_cls']
         self.loss_cls_cfg = self.config['loss_cls']
+
         self.loss_bbox_cfg = self.config['loss_bbox']
         self.loss_kps_cfg = self.config['loss_kps']
         self.anchor_generator = self.config["anchor_generator"]
+        self.num_anchors = len(self.anchor_generator.scales)
         self.use_sigmoid_cls = True
         self.num_classes = self.config.num_classes
         self.height, self.width = self.config.resize_size
         self.batch_size = self.config.batch_size
         self.initial_epoch = self.train_cfg.initial_epoch
-        self.NK = 5
-        self.anchor_generator_strides = [(8, 8), (16, 16), (32, 32)]
+        self.alpha = self.train_cfg.alpha
+        self.beta = self.train_cfg.beta
         self.num_level_anchors = [3200, 800, 200]
+        self.anchor_generator_strides = [(8, 8), (16, 16), (32, 32)]
         self.pad_shape = tf.constant([self.height, self.width],
                                      dtype=tf.dtypes.float32)
         if self.use_sigmoid_cls:
             self.cls_out_channels = self.num_classes
         else:
             self.cls_out_channels = self.num_classes + 1
-        self.assigner = ATSSAssigner(topk=self.train_cfg["assigner"]["topk"])
+        self.initial_assigner = ATSSAssigner(
+            topk=self.train_cfg["initial_assigner"]["topk"])
+
+        self.task_assigner = TaskAlignedAssigner(
+            topk=self.train_cfg["task_assigner"]["topk"],
+            num_level_anchors=self.num_level_anchors,
+            anchor_generator_strides=self.anchor_generator_strides)
         self.sampler = PseudoSampler()
         # configurize
         self.use_dfl = False
@@ -48,13 +59,15 @@ class AnchorLoss(LossBase):
         self.reg_max = 8
         self.loss_kps_std = 1.0
         self.diou_func = LOSS_FUNCS_FACTORY["DIoULoss"](loss_weight=1.0)
-        self.smooth_func = LOSS_FUNCS_FACTORY[self.loss_kps_cfg["type"]](
-            beta=self.loss_kps_cfg["beta"],
-            loss_weight=self.loss_kps_cfg["loss_weight"])
+        self.init_cls_func = LOSS_FUNCS_FACTORY[self.init_loss_cls_cfg["type"]](
+            ["use_sigmoid"],
+            gamma=self.init_loss_cls_cfg["gamma"],
+            alpha=self.init_loss_cls_cfg["alpha"],
+            loss_weight=self.init_loss_cls_cfg["loss_weight"])
         self.cls_func = LOSS_FUNCS_FACTORY[self.loss_cls_cfg["type"]](
-            self.loss_cls_cfg["use_sigmoid"],
-            beta=self.loss_cls_cfg["beta"],
-        )
+            ["use_sigmoid"], gamma=self.loss_cls_cfg["gamma"])
+        self.loss_bbox_func = LOSS_FUNCS_FACTORY[self.loss_bbox_cfg["type"]](
+            self.loss_bbox_cfg["loss_weight"])
         self.feat_size = tf.constant([(40, 40), (20, 20), (10, 10)])
         multi_level_anchors, self.target_num_lv_anchors, multi_level_flags = self.get_anchors(
             self.batch_size, self.feat_size)
@@ -65,33 +78,6 @@ class AnchorLoss(LossBase):
                                                   self.max_obj_num)).astype(
                                                       np.bool_)
 
-        self.n_s = config['3dmm']["n_s"]
-        self.n_R = config['3dmm']["n_R"]
-        # self.n_t3d = config['3dmm']["n_t3d"]
-        self.n_shp = config['3dmm']["n_shp"]
-        self.n_exp = config['3dmm']["n_exp"]
-        self.params_channels = self.n_s + self.n_R + self.n_shp + self.n_exp
-        if self.use_params:
-            self.head_model = load_BFM(config['3dmm']['model_path'])
-            self.shapeMU = tf.cast(self.head_model['shapeMU'], tf.float32)
-            self.shapeMU = tf.reshape(self.shapeMU,
-                                      (tf.shape(self.shapeMU)[-2] // 3, 3))
-            self.shapeMU = tf.reshape(self.shapeMU, [-1, 1])
-
-            self.shapePC = tf.cast(self.head_model['shapePC'][:, :self.n_shp],
-                                   tf.float32)
-            self.expPC = tf.cast(self.head_model['expPC'][:, :self.n_exp],
-                                 tf.float32)
-
-            kpt_ind = self.head_model['kpt_ind']
-            kpt_ind = np.stack([kpt_ind * 3, kpt_ind * 3 + 1, kpt_ind * 3 + 2])
-            self.kpt_ind = tf.concat([
-                kpt_ind[:, :17], kpt_ind[:, 17:27], kpt_ind[:, 36:48],
-                kpt_ind[:, 27:36], kpt_ind[:, 48:68]
-            ],
-                                     axis=-1)
-            self.wpdc_func = WPDCLoss(config['3dmm'])
-
     def build_loss(self, epochs, logits, targets, training):
         """
             Get targets for GFL head.
@@ -100,22 +86,25 @@ class AnchorLoss(LossBase):
             anchors as the first element of the returned tuple.
         """
         self.epochs = epochs
-
         b_gt_bboxes, b_gt_labels = targets['b_bboxes'], targets['b_labels']
         b_gt_kps, b_origin_sizes = targets['b_kps'], targets['b_origin_sizes']
-        if self.use_params:
-            b_gt_params, pms = targets['params'], targets["mean_std"]
-            u_base, shp_base, exp_base = self.resample(self.shapeMU,
-                                                       self.shapePC, self.expPC,
-                                                       self.kpt_ind)
-        else:
-            u_base, shp_base, exp_base, pms = 0., 0., 0., 0.
-            b_gt_params = tf.zeros(shape=(self.batch_size, self.max_obj_num,
-                                          self.params_channels))
+        b_gt_params = targets['params']
+        tmp_cls_preds, tmp_reg_dist_preds = [], []
+        for lv_feats in logits['multi_lv_feats']:
+            b_cls_preds, b_reg_dist, _ = lv_feats
+            b_cls_preds = tf.reshape(
+                b_cls_preds, (self.batch_size, -1, self.cls_out_channels))
+            b_reg_dist = tf.reshape(b_reg_dist, (self.batch_size, -1, 4))
+
+            tmp_cls_preds.append(b_cls_preds)
+            tmp_reg_dist_preds.append(b_reg_dist)
+        all_cls_scores = tf.concat(tmp_cls_preds, axis=1)
+        all_reg_dist_preds = tf.concat(tmp_reg_dist_preds, axis=1)
         with tf.device('CPU'):
-            anchors_0, anchors_1, anchors_2, labels_0, labels_1, labels_2, label_weights_0, label_weights_1, label_weights_2, bbox_targets_0, bbox_targets_1, bbox_targets_2, bbox_weights_0, bbox_weights_1, bbox_weights_2, keypoints_targets_0, keypoints_targets_1, keypoints_targets_2, params_targets_0, params_targets_1, params_targets_2, num_total_samples = tf.py_function(
+            anchors_0, anchors_1, anchors_2, labels_0, labels_1, labels_2, label_weights_0, label_weights_1, label_weights_2, bbox_targets_0, bbox_targets_1, bbox_targets_2, bbox_weights_0, bbox_weights_1, bbox_weights_2, norm_alignment_metric_0, norm_alignment_metric_1, norm_alignment_metric_2, num_total_samples = tf.py_function(
                 self.get_targets,
                 inp=[
+                    all_cls_scores, all_reg_dist_preds,
                     self.target_num_lv_anchors, self.b_anchors, self.b_flags,
                     b_gt_bboxes, b_gt_kps, b_gt_params, b_gt_labels,
                     self.num_classes
@@ -124,48 +113,48 @@ class AnchorLoss(LossBase):
                       tf.float32, tf.float32, tf.float32, tf.float32,
                       tf.float32, tf.float32, tf.float32, tf.float32,
                       tf.float32, tf.float32, tf.float32, tf.float32,
-                      tf.float32, tf.float32, tf.float32, tf.float32,
-                      tf.float32, tf.float32))
-
+                      tf.float32, tf.float32, tf.float32))
         # num_total_samples
         anchors_list = [anchors_0, anchors_1, anchors_2]
         labels_list = [labels_0, labels_1, labels_2]
         label_weights_list = [label_weights_0, label_weights_1, label_weights_2]
         bbox_targets_list = [bbox_targets_0, bbox_targets_1, bbox_targets_2]
         bbox_weights_list = [bbox_weights_0, bbox_weights_1, bbox_weights_2]
-        keypoints_targets_list = [
-            keypoints_targets_0, keypoints_targets_1, keypoints_targets_2
+        # keypoints_targets_list = [
+        #     keypoints_targets_0, keypoints_targets_1, keypoints_targets_2
+        # ]
+        # params_targets_list = [
+        #     params_targets_0, params_targets_1, params_targets_2
+        # ]
+        alignment_metrics_list = [
+            norm_alignment_metric_0, norm_alignment_metric_1,
+            norm_alignment_metric_2
         ]
-        params_targets_list = [
-            params_targets_0, params_targets_1, params_targets_2
-        ]
-        loss_cls_list, loss_bbox_list, loss_param_list, loss_kps_list, loss_llr_list, weight_targets_list = self.compute_loss(
+        loss_cls_list, loss_bbox_list, \
+              cls_avg_factors, bbox_avg_factors = self.compute_loss(
             anchors_list, logits['multi_lv_feats'], labels_list,
-            label_weights_list, bbox_targets_list, params_targets_list,
-            keypoints_targets_list, u_base, shp_base, exp_base, pms,
+            label_weights_list, bbox_targets_list, alignment_metrics_list,
             self.anchor_generator_strides, num_total_samples)
         losses = {'total': 0}
-        avg_factor = tf.math.reduce_sum(weight_targets_list)
-        loss_bbox_list = list(map(lambda x: x / avg_factor, loss_bbox_list))
+        cls_avg_factor = tf.math.reduce_sum(cls_avg_factors)
+        if cls_avg_factor < EPS:
+            cls_avg_factor = 1.
+        loss_cls_list = list(map(lambda x: x / cls_avg_factor, loss_cls_list))
+        bbox_avg_factors = tf.math.reduce_sum(bbox_avg_factors)
+        loss_bbox_list = list(
+            map(lambda x: x / bbox_avg_factors, loss_bbox_list))
         losses['loss_cls'] = tf.math.reduce_mean(loss_cls_list)
         losses['loss_bbox'] = tf.math.reduce_mean(loss_bbox_list)
-        if self.use_params:
-            loss_param_list = list(
-                map(lambda x: x / avg_factor, loss_param_list))
-            losses["loss_param"] = tf.math.reduce_mean(loss_param_list)
-            loss_kps_list = list(map(lambda x: x / avg_factor, loss_kps_list))
-            losses['loss_kps'] = tf.math.reduce_mean(loss_kps_list)
-            loss_llr_list = list(map(lambda x: x / avg_factor, loss_llr_list))
-            losses['loss_llr'] = tf.math.reduce_mean(loss_llr_list)
+
         for key in losses:
             losses['total'] += losses[key]
         return losses
 
     # @tf.function
     def compute_loss(self, anchors_list, multi_lv_feats, labels_list,
-                     label_weights_list, bbox_targets_list, params_targets_list,
-                     keypoints_targets_list, u_base, shp_base, exp_base, pms,
-                     anchor_generator_strides, num_total_samples):
+                     label_weights_list, bbox_targets_list,
+                     alignment_metrics_list, anchor_generator_strides,
+                     num_total_samples):
         """Compute loss of a single scale level.
         Args:
             anchors (Tensor): Box reference for each scale level with shape
@@ -187,32 +176,23 @@ class AnchorLoss(LossBase):
         Returns:
             dict[str, Tensor]: A dictionary of loss components.
         """
-        loss_cls_list, loss_bbox_list, loss_param_list ,loss_kps_list = [], [], [], []
-        weight_targets_list = []
-        loss_llr_list = []
+        loss_cls_list, loss_bbox_list = [], []
+        aligned_metric_list, pos_bbox_weight_list = [], []
         for i, (anchors, lv_feats, labels, label_weights, bbox_targets,
-                params_targets, kps_targets) in enumerate(
+                alignment_metrics) in enumerate(
                     zip(anchors_list, multi_lv_feats, labels_list,
                         label_weights_list, bbox_targets_list,
-                        params_targets_list, keypoints_targets_list)):
-            if self.use_params:
-                b_cls_preds, b_bbox_preds, b_param_preds, b_kps_preds = lv_feats
-                params_targets = tf.reshape(params_targets,
-                                            [-1, self.params_channels])
-                params_preds = tf.reshape(b_param_preds,
-                                          [-1, self.params_channels])
-                b_kps_preds = tf.reshape(b_kps_preds, [-1, 2])
-                kps_targets = tf.reshape(kps_targets, [-1, 2])
-            else:
-                b_cls_preds, b_bbox_preds = lv_feats
+                        alignment_metrics_list)):
+            # if i == 0:
+            #     continue
+            b_cls_preds, b_reg_dist_preds, b_reg_offset = lv_feats
+            b_reg_dist_preds = self.offset_sampling(labels, b_reg_dist_preds,
+                                                    b_reg_offset)
             anchors = tf.reshape(anchors, [-1, 4])
             b_cls_preds = tf.reshape(b_cls_preds, [-1, self.cls_out_channels])
             stride = anchor_generator_strides[i]
-            if not self.use_dfl:
-                b_bbox_preds = tf.reshape(b_bbox_preds, [-1, 4])
-            else:
-                b_bbox_preds = tf.reshape(b_bbox_preds,
-                                          [-1, 4 * (self.reg_max + 1)])
+
+            b_reg_dist_preds = tf.reshape(b_reg_dist_preds, [-1, 4])
             bbox_targets = tf.reshape(bbox_targets, [-1, 4])
             labels = tf.reshape(labels, [-1])
             label_weights = tf.reshape(label_weights, [-1])
@@ -220,82 +200,48 @@ class AnchorLoss(LossBase):
             pos_inds = (labels >= 0.) & (labels < bg_class_ind)
             pos_inds = tf.where(pos_inds == True)
             score = tf.zeros_like(labels)
-            weight_targets = tf.math.sigmoid(b_cls_preds)
-            weight_targets = tf.gather_nd(
-                tf.math.reduce_max(weight_targets, axis=1), pos_inds)
             pos_bbox_targets = tf.gather_nd(bbox_targets, pos_inds)
-            pos_bbox_pred = tf.gather_nd(b_bbox_preds, pos_inds)
+            # poas_bbox_weights = tf.gather_nd(bbox_weights, pos_inds)
+            pos_reg_dist_pred = tf.gather_nd(b_reg_dist_preds, pos_inds)
+            pos_anchors = tf.gather_nd(anchors, pos_inds)
+            # pos_anchor_centers = self.anchor_center(pos_anchors) / stride[0]
             pos_anchor_centers = tf.gather_nd(self.b_anchor_centers[i],
                                               pos_inds)
-            # pos_anchors = tf.gather_nd(anchors, pos_inds)
-            # pos_anchor_centers = self.anchor_center(pos_anchors) / stride[0]
             pos_anchor_centers /= stride[0]
             pos_decode_bbox_targets = pos_bbox_targets / stride[0]
             pos_decode_bbox_pred = distance2bbox(pos_anchor_centers,
-                                                 pos_bbox_pred)
-            if self.use_params:
-                pos_params_targets = tf.gather_nd(params_targets, pos_inds)
-                pos_params_preds = tf.gather_nd(params_preds, pos_inds)
-                param_loss, b_lnmks = self.wpdc_func(pos_params_targets,
-                                                     pms,
-                                                     pos_params_preds,
-                                                     u_base,
-                                                     shp_base,
-                                                     exp_base,
-                                                     weight=weight_targets)
-                llr_loss = lnmk_loss(b_lnmks, pos_params_targets,
-                                     pos_params_preds, u_base, shp_base,
-                                     exp_base, pms, weight_targets)
-                loss_param_list.append(param_loss)
-                pos_kps_targets = tf.gather_nd(kps_targets, pos_inds)
-                pos_kps_pred = tf.gather_nd(b_kps_preds, pos_inds)
-                pos_decode_kps_targets = kps2distance(
-                    pos_anchor_centers, pos_kps_targets / stride[0])
-                pos_decode_kps_pred = pos_kps_pred
-                loss_kps = self.smooth_func(
-                    pos_decode_kps_pred * self.loss_kps_std,
-                    pos_decode_kps_targets * self.loss_kps_std,
-                    weight=1.,
-                    avg_factor=1.0)
+                                                 pos_reg_dist_pred)
+            pos_bbox_weights = self.centerness_target(pos_anchors,
+                                                      pos_bbox_targets)
+            if self.epochs > self.initial_epoch:
+                loss_cls = self.init_cls_func(b_cls_preds,
+                                              labels,
+                                              label_weights,
+                                              avg_factor=1.0)
 
-            if self.use_qscore:
-                s = bbox_overlapping(pos_decode_bbox_pred,
-                                     pos_decode_bbox_targets,
-                                     mode='iou',
-                                     is_aligned=True)
-                score = tf.tensor_scatter_nd_update(score, pos_inds, s)
+                pos_bbox_weights = self.centerness_target(
+                    pos_anchors, pos_bbox_targets)
             else:
-                score = tf.tensor_scatter_nd_update(
-                    score, pos_inds, tf.ones(shape=(tf.shape(pos_inds)[0])))
-            # regression loss
-            loss_bbox = self.diou_func(pos_decode_bbox_pred,
-                                       pos_decode_bbox_targets,
-                                       weight=weight_targets,
-                                       avg_factor=1.0)
-            # if self.use_dfl:
-            #     pred_corners = tf.reshape(pos_bbox_pred, (-1, self.reg_max + 1))
-            #     target_corners = bbox2distance(pos_anchor_centers,
-            #                                    pos_decode_bbox_targets,
-            #                                    self.reg_max).reshape(-1)
-            #     loss_dfl = self.dfl_func(pred_corners,
-            #                              target_corners,
-            #                              weight=weight_targets[:, None].expand(
-            #                                  -1, 4).reshape(-1),
-            #                              avg_factor=4.0)
-            # else:
-            #     loss_dfl = tf.math.reduce_sum(b_bbox_preds) * 0.
-            # classification loss
-            loss_cls = self.cls_func(b_cls_preds, (labels, score),
-                                     weight=label_weights,
-                                     avg_factor=num_total_samples)
+                alignment_metrics = tf.reshape(alignment_metrics, (-1))
+                pos_bbox_weights = tf.gather_nd(alignment_metrics, pos_inds)
+                loss_cls = self.cls_func(b_cls_preds,
+                                         labels,
+                                         alignment_metrics,
+                                         avg_factor=1.0)  # num_total_samples)
+            loss_bbox = self.loss_bbox_func(pos_decode_bbox_pred,
+                                            pos_decode_bbox_targets,
+                                            pos_bbox_weights,
+                                            avg_factor=num_total_samples)
+
+            aligned_metric_list.append(tf.math.reduce_sum(alignment_metrics))
+            pos_bbox_weight_list.append(tf.math.reduce_sum(pos_bbox_weights))
             loss_cls_list.append(loss_cls)
             loss_bbox_list.append(loss_bbox)
-            loss_kps_list.append(loss_kps)
-            loss_llr_list.append(llr_loss)
-            weight_targets_list.append(tf.math.reduce_sum(weight_targets))
-        return loss_cls_list, loss_bbox_list, loss_param_list, loss_kps_list, loss_llr_list, weight_targets_list
+        return loss_cls_list, loss_bbox_list, aligned_metric_list, pos_bbox_weight_list
 
     def get_targets(self,
+                    all_cls_scores,
+                    all_dist_preds,
                     b_num_level_anchors,
                     b_anchors,
                     b_flags,
@@ -311,6 +257,8 @@ class AnchorLoss(LossBase):
         returning the targets as the parent method does, it also returns the
         anchors as the first element of the returned tuple.
         """
+        all_cls_scores = all_cls_scores.numpy()
+        all_dist_preds = all_dist_preds.numpy()
         b_num_level_anchors = b_num_level_anchors.numpy()
         b_anchors = b_anchors.numpy()
         b_flags = b_flags.numpy()
@@ -321,18 +269,22 @@ class AnchorLoss(LossBase):
         b_gt_labels = b_gt_labels.numpy()
         #print('QQQ:', num_imgs, gt_bboxes_list[0].shape)
         (all_anchors, all_labels, all_label_weights, all_bbox_targets,
-         all_bbox_weights, all_kps_targets, all_params_targets, pos_inds_list,
-         neg_inds_list) = multi_apply(self._get_targets_single,
-                                      b_anchors,
-                                      b_flags,
-                                      b_num_level_anchors,
-                                      b_gt_bboxes,
-                                      b_gt_bboxes_ignore,
-                                      b_gt_kps,
-                                      b_gt_params,
-                                      b_gt_labels,
-                                      label_channels=label_channels,
-                                      unmap_outputs=unmap_outputs)
+         all_bbox_weights, pos_inds_list, neg_inds_list,
+         pos_assigned_gt_inds_list, assign_metrics_list, assign_ious_list,
+         inside_flags_list) = multi_apply(self._get_targets_single,
+                                          all_cls_scores,
+                                          all_dist_preds,
+                                          self.b_anchor_centers,
+                                          b_anchors,
+                                          b_flags,
+                                          b_num_level_anchors,
+                                          b_gt_bboxes,
+                                          b_gt_bboxes_ignore,
+                                          b_gt_kps,
+                                          b_gt_params,
+                                          b_gt_labels,
+                                          label_channels=label_channels,
+                                          unmap_outputs=unmap_outputs)
 
         # sampled anchors of all images
         num_total_pos = sum([max(np.size(inds), 1) for inds in pos_inds_list])
@@ -344,25 +296,66 @@ class AnchorLoss(LossBase):
             all_labels, self.num_level_anchors)
         label_weights_0, label_weights_1, label_weights_2 = self.images_to_levels(
             all_label_weights, self.num_level_anchors)
+
         bbox_targets_0, bbox_targets_1, bbox_targets_2 = self.images_to_levels(
             all_bbox_targets, self.num_level_anchors)
         bbox_weights_0, bbox_weights_1, bbox_weights_2 = self.images_to_levels(
             all_bbox_weights, self.num_level_anchors)
-        keypoints_targets_0, keypoints_targets_1, keypoints_targets_2 = self.images_to_levels(
-            all_kps_targets, self.num_level_anchors)
-        params_targets_0, params_targets_1, params_targets_2 = self.images_to_levels(
-            all_params_targets, self.num_level_anchors)
+        # keypoints_targets_0, keypoints_targets_1, keypoints_targets_2 = self.images_to_levels(
+        #     all_kps_targets, self.num_level_anchors)
+        # params_targets_0, params_targets_1, params_targets_2 = self.images_to_levels(
+        #     all_params_targets, self.num_level_anchors)
         num_total_samples = np.mean(num_total_pos, dtype=np.float32)
         num_total_samples = max(num_total_samples, 1.0)
+
+        if self.epochs < self.initial_epoch:
+            norm_alignment_metric_0 = bbox_weights_0[:, :, 0]
+            norm_alignment_metric_1 = bbox_weights_1[:, :, 0]
+            norm_alignment_metric_2 = bbox_weights_2[:, :, 0]
+        else:
+            # for alignment metric
+            all_norm_alignment_metrics = []
+            for i in range(self.batch_size):
+                inside_flags = inside_flags_list[i]
+                image_norm_alignment_metrics = np.zeros(
+                    shape=(all_label_weights[i].shape[0], ))
+                image_norm_alignment_metrics_inside = np.zeros(
+                    shape=(np.sum(inside_flags).astype(np.int32), ))
+                pos_assigned_gt_inds = pos_assigned_gt_inds_list[i]
+                pos_inds = pos_inds_list[i]
+                class_assigned_gt_inds = np.unique(pos_assigned_gt_inds)
+                for gt_inds in class_assigned_gt_inds:
+                    gt_class_inds = pos_inds[pos_assigned_gt_inds == gt_inds]
+                    pos_alignment_metrics = assign_metrics_list[i][
+                        gt_class_inds]
+                    pos_ious = assign_ious_list[i][gt_class_inds]
+                    pos_norm_alignment_metrics = pos_alignment_metrics / (
+                        pos_alignment_metrics.max() + 10e-8) * pos_ious.max()
+
+                    image_norm_alignment_metrics_inside[
+                        gt_class_inds] = pos_norm_alignment_metrics
+
+                image_norm_alignment_metrics[
+                    inside_flags] = image_norm_alignment_metrics_inside
+                all_norm_alignment_metrics.append(image_norm_alignment_metrics)
+
+            norm_alignment_metrics_list = self.images_to_levels(
+                all_norm_alignment_metrics, self.num_level_anchors)
+            norm_alignment_metric_0 = norm_alignment_metrics_list[0]
+            norm_alignment_metric_1 = norm_alignment_metrics_list[1]
+            norm_alignment_metric_2 = norm_alignment_metrics_list[2]
 
         return (anchors_0, anchors_1, anchors_2, labels_0, labels_1, labels_2,
                 label_weights_0, label_weights_1, label_weights_2,
                 bbox_targets_0, bbox_targets_1, bbox_targets_2, bbox_weights_0,
-                bbox_weights_1, bbox_weights_2, keypoints_targets_0,
-                keypoints_targets_1, keypoints_targets_2, params_targets_0,
-                params_targets_1, params_targets_2, num_total_samples)
+                bbox_weights_1, bbox_weights_2, norm_alignment_metric_0,
+                norm_alignment_metric_1, norm_alignment_metric_2,
+                num_total_samples)
 
     def _get_targets_single(self,
+                            cls_scores,
+                            dist_preds,
+                            anchor_centers,
                             flat_anchors,
                             valid_flags,
                             num_level_anchors,
@@ -387,16 +380,26 @@ class AnchorLoss(LossBase):
         gt_kps = gt_kps[valid_mask[:, 0]]
         gt_params = gt_params[valid_mask[:, 0]]
         # implement taskalignment
-        assign_result = self.assigner.assign(anchors, num_level_anchors_inside,
-                                             gt_bboxes, gt_bboxes_ignore,
-                                             gt_labels)
+        if self.epochs < self.initial_epoch:
+            assign_result = self.initial_assigner.assign(
+                anchors, num_level_anchors_inside, gt_bboxes, gt_bboxes_ignore,
+                gt_labels)
+            assign_ious = assign_result.max_overlaps
+            assign_metrics = None
+        else:
+            assign_result = self.task_assigner.assign(
+                cls_scores[inside_flags, :], dist_preds[inside_flags, :],
+                anchor_centers, num_level_anchors_inside, gt_bboxes,
+                gt_bboxes_ignore, gt_labels, self.alpha, self.beta)
+            assign_ious = assign_result.max_overlaps
+            assign_metrics = assign_result.assign_metrics
         sampling_result = self.sampler.sample(assign_result, anchors, gt_bboxes)
         num_valid_anchors = anchors.shape[0]
         bbox_targets = np.zeros_like(anchors)
         bbox_weights = np.zeros_like(anchors)
-        kps_targets = np.zeros(shape=(anchors.shape[0], 2))
-        params_targets = np.zeros(shape=(anchors.shape[0],
-                                         self.params_channels))
+        # kps_targets = np.zeros(shape=(anchors.shape[0], 2))
+        # params_targets = np.zeros(shape=(anchors.shape[0],
+        #                                  self.params_channels))
         labels = np.full(shape=(num_valid_anchors, ),
                          fill_value=self.num_classes,
                          dtype=np.int32)
@@ -407,10 +410,10 @@ class AnchorLoss(LossBase):
             pos_bbox_targets = sampling_result.pos_gt_bboxes
             bbox_targets[pos_inds, :] = pos_bbox_targets
             bbox_weights[pos_inds, :] = 1.0
-            params_targets[pos_inds, :] = gt_params[
-                sampling_result.pos_assigned_gt_inds, :]
-            kps_targets[pos_inds, :] = gt_kps[
-                sampling_result.pos_assigned_gt_inds, :2].reshape((-1, 2))
+            # params_targets[pos_inds, :] = gt_params[
+            #     sampling_result.pos_assigned_gt_inds, :]
+            # kps_targets[pos_inds, :] = gt_kps[
+            #     sampling_result.pos_assigned_gt_inds, :2].reshape((-1, 2))
             if gt_labels is None:
                 # Only rpn gives gt_labels as None
                 # Foreground is the first class
@@ -434,11 +437,39 @@ class AnchorLoss(LossBase):
                            fill=self.num_classes)
             label_weights = unmap(label_weights, num_total_anchors,
                                   inside_flags)
-            kps_targets = unmap(kps_targets, num_total_anchors, inside_flags)
+            # kps_targets = unmap(kps_targets, num_total_anchors, inside_flags)
             bbox_targets = unmap(bbox_targets, num_total_anchors, inside_flags)
             bbox_weights = unmap(bbox_weights, num_total_anchors, inside_flags)
         return (anchors, labels, label_weights, bbox_targets, bbox_weights,
-                kps_targets, params_targets, pos_inds, neg_inds)
+                pos_inds, neg_inds, sampling_result.pos_assigned_gt_inds,
+                assign_metrics, assign_ious, inside_flags)
+
+    @tf.function
+    def offset_sampling(self, labels, b_bbox_preds, b_reg_offset):
+        n, h, w, c = [tf.shape(b_bbox_preds)[i] for i in range(4)]
+        b_map_lbs = tf.reshape(labels, (self.batch_size, h, w, -1))
+        pos_map_idxs = (b_map_lbs >= 0.) & (b_map_lbs < self.num_classes)
+        pos_map_idxs = tf.where(pos_map_idxs == True)[..., :-1]
+        offset_vals = tf.gather_nd(b_reg_offset, pos_map_idxs)
+        pos_map_idxs = tf.cast(pos_map_idxs, tf.int32)
+        b_idxs = pos_map_idxs[:, :1]
+        map_idxs = tf.cast(pos_map_idxs[:, None, 1:], tf.float32) + tf.reshape(
+            offset_vals, (-1, 4, 2)) + 0.5
+
+        map_idxs = tf.cast(map_idxs, tf.int32)
+        map_idxs = tf.tile(map_idxs, [1, self.num_anchors, 1])
+        # (10, 4, 3),
+        N = tf.shape(map_idxs)[0]
+
+        b_idxs = tf.tile(b_idxs[:, None, :], [1, 4 * self.num_anchors, 1])
+        b_map_idxs = tf.concat([b_idxs, map_idxs], axis=-1)
+        c_idxs = tf.range(4 * self.num_anchors, dtype=tf.int32)
+        c_idxs = tf.tile(c_idxs[None, :, None], [N, 1, 1])
+        b_map_idxs = tf.concat([b_map_idxs, c_idxs], axis=-1)
+        b_offset_bboxes = tf.gather_nd(b_bbox_preds, b_map_idxs)
+        b_bbox_preds = tf.tensor_scatter_nd_update(b_bbox_preds, pos_map_idxs,
+                                                   b_offset_bboxes)
+        return b_bbox_preds
 
     def get_num_level_anchors_inside(self, num_level_anchors, inside_flags):
         a1, a2, a3 = num_level_anchors
@@ -465,6 +496,7 @@ class AnchorLoss(LossBase):
             level_targets.append(feats)
             start = end
         return level_targets
+        # return np.concatenate(level_targets, axis=1)
 
     @tf.function
     def get_anchors(self, batch, featmap_sizes):
@@ -509,3 +541,24 @@ class AnchorLoss(LossBase):
         shp_base = tf.gather(shapePC, keypoints_mix)
         exp_base = tf.gather(expPC, keypoints_mix)
         return u_base, shp_base, exp_base
+
+    def centerness_target(self, anchors, bbox_targets):
+        # only calculate pos centerness targets, otherwise there may be nan
+        # for bbox-based
+        # gts = self.bbox_coder.decode(anchors, bbox_targets)
+        # for point-based
+        gts = bbox_targets
+        anchors_cx = (anchors[:, 2] + anchors[:, 0]) / 2
+        anchors_cy = (anchors[:, 3] + anchors[:, 1]) / 2
+        l_ = anchors_cx - gts[:, 0]
+        t_ = anchors_cy - gts[:, 1]
+        r_ = gts[:, 2] - anchors_cx
+        b_ = gts[:, 3] - anchors_cy
+
+        left_right = tf.stack([l_, r_], axis=1)
+        top_bottom = tf.stack([t_, b_], axis=1)
+        centerness = tf.math.sqrt((tf.math.reduce_min(left_right, axis=-1) /
+                                   tf.math.reduce_max(left_right, axis=-1)) *
+                                  (tf.math.reduce_min(top_bottom, axis=-1) /
+                                   tf.math.reduce_max(top_bottom, axis=-1)))
+        return centerness

@@ -74,17 +74,11 @@ def kps2distance(points, kps, max_dis=None, eps=0.1):
     """
 
     preds = []
-    C = 10
+    C = 2
+
     for i in range(0, C, 2):
         px = kps[:, i] - points[:, i % 2]
         py = kps[:, i + 1] - points[:, i % 2 + 1]
-        if max_dis is not None:
-            px = tf.clip_by_value(px,
-                                  clip_value_min=0,
-                                  clip_value_max=max_dis - eps)
-            py = tf.clip_by_value(py,
-                                  clip_value_min=0,
-                                  clip_value_max=max_dis - eps)
         preds.append(px)
         preds.append(py)
     return tf.stack(preds, axis=-1)

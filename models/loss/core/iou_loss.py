@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from .utils import weight_reduce_loss
+from .iou2d_calculator import bbox_overlapping
 
 
 def reduce_loss(loss, reduction):
@@ -82,6 +83,7 @@ class DIoULoss:
         self.reduction = reduction
         self.loss_weight = loss_weight
 
+    @tf.function
     def __call__(self,
                  pred,
                  target,
@@ -94,4 +96,48 @@ class DIoULoss:
         loss = diou_loss(pred, target)
         loss = self.loss_weight * weight_reduce_loss(loss, weight, reduction,
                                                      avg_factor)
+        return loss
+
+
+class GIoULoss:
+
+    def __init__(self, eps=1e-6, reduction='mean', loss_weight=1.0):
+        self.eps = eps
+        self.reduction = reduction
+        self.loss_weight = loss_weight
+
+    def __call__(self,
+                 pred,
+                 target,
+                 weight=None,
+                 avg_factor=None,
+                 reduction_override=None):
+        reduction = (reduction_override
+                     if reduction_override else self.reduction)
+
+        loss = self.giou_loss(pred, target, eps=self.eps)
+        loss = self.loss_weight * weight_reduce_loss(loss, weight, reduction,
+                                                     avg_factor)
+        return loss
+
+    def giou_loss(self, pred, target, eps=1e-7):
+        r"""`Generalized Intersection over Union: A Metric and A Loss for Bounding
+        Box Regression <https://arxiv.org/abs/1902.09630>`_.
+
+        Args:
+            pred (torch.Tensor): Predicted bboxes of format (x1, y1, x2, y2),
+                shape (n, 4).
+            target (torch.Tensor): Corresponding gt bboxes, shape (n, 4).
+            eps (float): Eps to avoid log(0).
+
+        Return:
+            Tensor: Loss tensor.
+        """
+        # TODO: debugs
+        gious = bbox_overlapping(pred,
+                                 target,
+                                 mode='giou',
+                                 is_aligned=True,
+                                 eps=eps)
+        loss = 1 - gious
         return loss

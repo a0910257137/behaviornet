@@ -1,5 +1,6 @@
 import tensorflow as tf
 from pprint import pprint
+from keras_flops import get_flops
 
 
 class AnchorObjDet(tf.keras.Model):

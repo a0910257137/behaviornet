@@ -4,7 +4,7 @@ from .utils import *
 from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
 from .augmentation.augmentation import Augmentation
-from .tdmm import MorphabelModel
+from .tdmm import MorphabelModel, MorphabelModelNumpy
 import cv2
 
 
@@ -88,7 +88,7 @@ class GeneralTasks:
                 b_lnmks = tf.where(tf.math.is_nan(b_lnmks), np.inf, b_lnmks)
                 targets['b_lnmks'] = b_lnmks
 
-                params = self.MorphabelModel.fit_points(b_lnmks, b_origin_sizes)
+                params = self.MorphabelModel.fit_points(b_lnmks)
                 targets['obj_heat_map'] = tf.py_function(
                     self._draw_kps,
                     inp=[
@@ -99,19 +99,21 @@ class GeneralTasks:
                 targets['b_origin_sizes'] = b_origin_sizes
                 targets['params'] = tf.cast(params, tf.float32)
             elif task == "keypoint":
-                b_cates = tf.constant(1.,
-                                      shape=(self.batch_size, self.max_obj_num,
-                                             5, 1))
-                # b_lnmks = b_lnmks[:, :, 2:, :2]
-                # params = self.MorphabelModel.fit_points(b_lnmks, b_origin_sizes)
-                # targets['params'] = tf.cast(params, tf.float32)
-                b_labels = tf.math.reduce_all(tf.math.is_finite(b_bboxes),
-                                              axis=[2, 3])
-                b_face_masks = tf.where(b_labels == True, 0., np.inf)
-                b_coords = tf.concat(
-                    [b_coords[:, :, 1:, :][..., ::-1], b_cates], axis=-1)
-                targets["b_lnmks"] = b_lnmks
-                targets['b_keypoints'] = b_coords
+                b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.concat(
+                    [self.map_height[None], self.map_width[None]], axis=-1)
+                b_lnmks = b_lnmks[:, :, 2:, :2]
+                b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.concat(
+                    [self.map_height[None], self.map_width[None]], axis=-1)
+                b_lnmks = tf.einsum('b n k c, b c -> b n k c', b_lnmks,
+                                    b_resized)
+                # mean = tf.math.reduce_mean(b_lnmks, axis=-2, keepdims=True)
+                # b_lnmks -= mean
+                # b_lnmks = tf.where(tf.math.is_nan(b_lnmks), np.inf, b_lnmks)
+                b_params = self.MorphabelModel.fit_points(b_lnmks)
+                b_kps = tf.einsum('b n c, b c -> b n c', b_params[..., -2:],
+                                  (1 / b_resized)[..., ::-1])
+                targets['b_kps'] = b_kps
+                targets['params'] = b_params[..., :-2]
                 targets['b_bboxes'] = b_bboxes[..., ::-1]
                 targets['b_labels'] = b_face_masks
                 targets['b_origin_sizes'] = b_origin_sizes

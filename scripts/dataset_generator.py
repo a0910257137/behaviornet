@@ -246,15 +246,15 @@ def build_2d_obj(obj, obj_cates, img_info):
     return obj_kp
 
 
-def get_mean_std(tmp_R, tmp_sp, tmp_ep):
+def get_mean_std(tmp_R, tmp_sp, tmp_ep, tmp_t3d):
     tmp_R = np.asarray(tmp_R)
     N = tmp_R.shape[0]
     # tmp_s = np.stack(np.asarray(tmp_s)).reshape([N, -1])
     tmp_R = np.stack(np.asarray(tmp_R)).reshape([N, -1])
     tmp_sp = np.squeeze(np.stack(np.asarray(tmp_sp)), axis=-1)
     tmp_ep = np.squeeze(np.stack(np.asarray(tmp_ep)), axis=-1)
-    # tmp_t3d = np.stack(np.asarray(tmp_t3d))
-    params = np.concatenate([tmp_R, tmp_sp, tmp_ep], axis=-1)
+    tmp_t3d = np.stack(np.asarray(tmp_t3d))
+    params = np.concatenate([tmp_R, tmp_sp, tmp_ep, tmp_t3d], axis=-1)
     mean = np.mean(params, axis=0)
     std = np.std(params, axis=0)
     return mean, std
@@ -341,10 +341,8 @@ def get_coors(img_root,
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
     save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
-
     # save_root = os.path.abspath(
-    #     os.path.join("/aidata/anders/data_collection/okay/FFHQ/ds",
-    #                  'tf_records'))
+    #     os.path.join("/aidata/anders/data_collection/okay/total", 'tf_records'))
     frame_count = 0
     root_dir = "/aidata/anders/3D-head/3DDFA"
     bfm_path = os.path.join(root_dir, "BFM/BFM.mat")
@@ -378,27 +376,31 @@ def get_coors(img_root,
         scale_factor = np.array(list(resized) + list(resized), dtype=np.float32)
         for obj in frame['labels']:
             bbox = build_2d_obj(obj, obj_cates, img_info)
-            # if obj['category'] == 'MASK':
-            #     is_masks.append(True)
-            # else:
-            #     is_masks.append(False)
             lnmks = np.zeros(shape=(68, 3))
             if task == 'keypoints' or task == 'obj_det':
                 lnmks = build_keypoints(obj, obj_cates, img_info)
                 fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
-                    lnmks[:, :2][:, ::-1], bfm.kpt_ind, max_iter=3)
-                # if 0.5 > np.random.rand():
-                #     transformed_vertices = gen_vertices(bfm, fitted_s,
-                #                                         fitted_angles, fitted_t,
-                #                                         fitted_sp, fitted_ep)
-                #     transformed_vertices = transformed_vertices.reshape((-1, 3))
-                #     img = aug_mask(img, bbox[:, :2], transformed_vertices,
-                #                    bfm.full_triangles, bfm_uv_coords, face_ind,
-                #                    tri, template_name2ref_texture_src,
-                #                    template_name2uv_mask_src)
-                #     is_masks.append(True)
-                # else:
-                #     is_masks.append(False)
+                    lnmks[:, :2][:, ::-1], bfm.kpt_ind, max_iter=5)
+                if dataset == 'demo_test':
+                    if obj['category'] == 'MASK':
+                        is_masks.append(True)
+                    else:
+                        is_masks.append(False)
+                else:
+                    if 0.5 > np.random.rand():
+                        transformed_vertices = gen_vertices(
+                            bfm, fitted_s, fitted_angles, fitted_t, fitted_sp,
+                            fitted_ep)
+                        transformed_vertices = transformed_vertices.reshape(
+                            (-1, 3))
+                        img = aug_mask(img, bbox[:, :2], transformed_vertices,
+                                       bfm.full_triangles, bfm_uv_coords,
+                                       face_ind, tri,
+                                       template_name2ref_texture_src,
+                                       template_name2uv_mask_src)
+                        is_masks.append(True)
+                    else:
+                        is_masks.append(False)
             param_counts += 1
             lnmks = np.concatenate([bbox, lnmks], axis=0)
             if task == 'obj_det':
@@ -407,7 +409,7 @@ def get_coors(img_root,
                 tmp_R.append(R)
                 tmp_sp.append(fitted_sp)
                 tmp_ep.append(fitted_ep)
-                # tmp_t3d.append(fitted_t)
+                tmp_t3d.append(fitted_t)
             frame_kps.append(lnmks)
             obj_counts.total_2d += 1
             obj_counts.total_kps += 1
@@ -459,7 +461,7 @@ def get_coors(img_root,
         frame_count += 1
 
     if task == 'obj_det':
-        mean, std = get_mean_std(tmp_R, tmp_sp, tmp_ep)
+        mean, std = get_mean_std(tmp_R, tmp_sp, tmp_ep, tmp_t3d)
         save_dir = os.path.join(save_root, 'params')
         make_dir(save_dir)
         np.save(os.path.join(save_dir, 'param_mean_std.npy'),

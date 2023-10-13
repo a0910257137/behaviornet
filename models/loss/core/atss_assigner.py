@@ -72,7 +72,6 @@ class ATSSAssigner:
         bboxes_cx = (bboxes[:, 0] + bboxes[:, 2]) / 2.0
         bboxes_cy = (bboxes[:, 1] + bboxes[:, 3]) / 2.0
         bboxes_points = np.stack((bboxes_cx, bboxes_cy), axis=-1)
-
         distances = np.sqrt(
             np.sum(np.square(bboxes_points[:, None, :] - gt_points[None, :, :]),
                    axis=-1))
@@ -95,6 +94,7 @@ class ATSSAssigner:
             # select k bbox whose center are closest to the gt center
             end_idx = start_idx + bboxes_per_level
             distances_per_level = distances[start_idx:end_idx, :]  #(A,G)
+
             selectable_k = min(self.topk, bboxes_per_level)
             topk_idxs_per_level = np.argsort(distances_per_level, axis=0)
             topk_idxs_per_level = topk_idxs_per_level[:selectable_k]
@@ -120,6 +120,9 @@ class ATSSAssigner:
         # limit the positive sample's center in gt
         for gt_idx in range(num_gt):
             candidate_idxs[:, gt_idx] += gt_idx * num_bboxes
+
+        # ep_bboxes_cx = bboxes_cx.view(1, -1).expand(
+        #     num_gt, num_bboxes).contiguous().view(-1)
         ep_bboxes_cx = np.tile(np.reshape(bboxes_cx, [1, -1]),
                                [num_gt, 1]).reshape([-1])
         ep_bboxes_cy = np.tile(np.reshape(bboxes_cy, [1, -1]),

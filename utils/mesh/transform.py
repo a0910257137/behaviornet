@@ -255,7 +255,6 @@ def estimate_affine_matrix_3d22d(X, x):
     average_norm = np.mean(np.sqrt(np.sum(x**2, 0)))
 
     scale = np.sqrt(2) / average_norm
-
     x = scale * x
 
     T = np.zeros((3, 3), dtype=np.float32)

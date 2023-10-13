@@ -195,6 +195,49 @@ def tdmm_to_bdd(bdd_results, batches_preds, batches_frames, cates):
     return bdd_results
 
 
+def scrfd_tdmm_to_bdd(bdd_results, batches_preds, batches_frames, cates):
+    b_bboxes, b_lnmks = batches_preds[0].numpy(), batches_preds[1].numpy()
+    for bboxes, lnmks, frames in zip(b_bboxes, b_lnmks, batches_frames):
+        valid_mask = np.all(np.isfinite(bboxes), axis=-1)
+        bboxes = bboxes[valid_mask]
+        valid_mask = np.all(np.isfinite(lnmks), axis=-1)
+        lnmks = lnmks[valid_mask].reshape((-1, 68, 2))
+        lnmk_keys = frames["labels"][0]["keypoints"].keys()
+        pred_frame = {
+            'dataset': frames['dataset'],
+            'sequence': frames['sequence'],
+            'name': frames['name'],
+            'labels': []
+        }
+
+        # print(frames["labels"][0])
+        for bbox, lnmk in zip(bboxes, lnmks):
+
+            # box_centers = (bbox[:2] + bbox[2:4]) / 2
+            # lnmk_centers = (np.min(lnmk, axis=0) + np.max(lnmk, axis=0)) / 2
+            # shifts = box_centers - lnmk_centers
+            # bbox = bbox.astype(np.float32)
+            # lnmk = lnmk + shifts[None, :]
+            lnmk = lnmk.astype(np.float32)
+            cat_num = 0
+            pred_lb = {
+                'category': cates[cat_num].upper(),
+                'box2d': {
+                    'y1': float(bbox[0]),
+                    'x1': float(bbox[1]),
+                    'y2': float(bbox[2]),
+                    'x2': float(bbox[3])
+                },
+                "keypoints": {
+                    k: lnmk[i].astype(np.float32).tolist()
+                    for i, k in enumerate(lnmk_keys)
+                }
+            }
+            pred_frame['labels'].append(pred_lb)
+        bdd_results['frame_list'].append(pred_frame)
+    return bdd_results
+
+
 def scrfd_to_bdd(bdd_results, batches_preds, batches_frames, cates):
     b_bboxes = batches_preds.numpy()
     for bboxes, frames in zip(b_bboxes, batches_frames):
@@ -249,9 +292,7 @@ def transform_pd_data(report_results,
 
     for t in eval_types:
         type_results = report_results[t]
-
-        if mode == 'tdmm':
-
+        if mode == 'tdmm' or mode == 'scrfd_tdmm_v3':
             for k in pd_headers.keys():
                 tmp = []
                 for result_key in type_results.keys():
@@ -280,10 +321,9 @@ def transform_pd_data(report_results,
             array = np.stack(post_mean_infos[post_key])
             array = np.mean(array, axis=0)
             post_mean_infos[post_key] = array
-
         mean_data_frame = copy.deepcopy(data_frame)
         mean_data_frame.update({k: post_mean_infos[k] for k in post_mean_infos})
-
+        print(mean_data_frame)
         mean_df = pd.DataFrame(mean_data_frame)
 
     data_frame.update({k: pd_headers[k] for k in pd_headers})

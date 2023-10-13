@@ -194,7 +194,6 @@ def fit_points(x, X_ind, model, idxs, n_sp, n_ep, max_iter=4):
     X_ind_all = np.tile(X_ind[np.newaxis, :], [3, 1]) * 3
     X_ind_all[1, :] += 1
     X_ind_all[2, :] += 2
-
     # X_ind_all[:, :17]  #countour
     # X_ind_all[:, 17:27]  # eyebrows
     # X_ind_all[:, 27:36]  # nose
@@ -214,18 +213,15 @@ def fit_points(x, X_ind, model, idxs, n_sp, n_ep, max_iter=4):
         X_ind_all = X_ind_all[:, tmp]
 
     # X_idxs = [8, 17, 19, 21, 22, 24, 26, 27, 30, 33, 36, 42, 48, 54]
-    # X_ind_all = X_ind_all[:, X_idxs]
     valid_ind = X_ind_all.flatten('F')
     shapeMU = model['shapeMU'][valid_ind, :]
     shapePC = model['shapePC'][valid_ind, :n_sp]
     expPC = model['expPC'][valid_ind, :n_ep]
-
     for i in range(max_iter):
-        X = shapeMU + shapePC.dot(sp) + expPC.dot(ep)
+        X = (shapeMU + shapePC.dot(sp) + expPC.dot(ep))
         X = np.reshape(X, [int(len(X) / 3), 3]).T
         # ----- estimate pose-----
         P = mesh.transform.estimate_affine_matrix_3d22d(X.T, x.T)
-
         s, R, t = mesh.transform.P2sRt(P)
         rx, ry, rz = mesh.transform.matrix2angle(R)
         # print(
@@ -234,7 +230,6 @@ def fit_points(x, X_ind, model, idxs, n_sp, n_ep, max_iter=4):
 
         #----- estimate shape
         # expression
-
         shape = shapePC.dot(sp)
         shape = np.reshape(shape, [int(len(shape) / 3), 3]).T
         ep = estimate_expression(x,

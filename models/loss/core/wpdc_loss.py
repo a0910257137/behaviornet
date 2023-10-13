@@ -1,17 +1,47 @@
 import numpy as np
 import tensorflow as tf
-from .utils import weight_reduce_loss
+
+
+@tf.function
+def lnmk_loss(b_gt_lnmks, b_gt_params, b_pred_Z_params, u_base, shp_base,
+              exp_base, pms, weights):
+    pred_params = b_pred_Z_params * pms[1][None, :] + pms[0][None, :]
+    b_gt_R = b_gt_params[:, :9]
+    b_pred_R = pred_params[:, :9]
+    pred_shp = pred_params[:, 9:49]
+    pred_exp = pred_params[:, 49:]
+    b_gt_R = tf.reshape(b_gt_R, [-1, 3, 3])
+    b_pred_R = tf.reshape(b_pred_R, [-1, 3, 3])
+    pred_vertices = u_base + tf.linalg.matmul(
+        shp_base, pred_shp[..., None]) + tf.linalg.matmul(
+            exp_base, pred_exp[..., None])
+    pred_vertices = tf.reshape(pred_vertices,
+                               (-1, tf.shape(pred_vertices)[1] // 3, 3))
+    b_pred_lnmks = pred_vertices[:, :68, :]
+    s = 0.001
+    b_gt_lnmks = s * tf.linalg.matmul(b_gt_lnmks, b_gt_R, transpose_b=(0, 2, 1))
+    b_pred_lnmks = s * tf.linalg.matmul(
+        b_pred_lnmks, b_pred_R, transpose_b=(0, 2, 1))
+    b_diffs = (b_pred_lnmks[..., :2] - b_gt_lnmks[..., :2])
+    loss = tf.math.sqrt(
+        tf.math.reduce_sum(tf.math.square(b_diffs), axis=-1) + 1e-9)
+    loss = weights * tf.math.reduce_sum(loss, axis=-1)
+    loss = tf.math.reduce_mean(loss)
+    loss = 0.5 * tf.where(tf.math.is_nan(loss), 0., loss)
+    return loss
 
 
 class WPDCLoss:
 
-    def __init__(self, n_R, n_shp, n_exp, eps=1e-6):
+    def __init__(self, cfg, eps=1e-6):
         self.eps = eps
-        self.n_R = n_R
-        self.n_shp = n_shp
-        self.n_exp = n_exp
+        self.n_s = cfg["n_s"]
+        self.n_R = cfg["n_R"]
+        self.n_t3d = cfg["n_t3d"]
+        self.n_shp = cfg["n_shp"]
+        self.n_exp = cfg["n_exp"]
 
-    # @tf.function
+    @tf.function
     def __call__(self,
                  gt_params,
                  pms,
@@ -22,12 +52,13 @@ class WPDCLoss:
                  weight=None,
                  avg_factor=None,
                  **kwargs):
-        loss, pred_params = self.wpdc(gt_params, pms, pred_Z_params, u_base,
+        loss, gt_vertices = self.wpdc(gt_params, pms, pred_Z_params, u_base,
                                       shp_base, exp_base)
         loss = weight * tf.reduce_sum(loss, axis=-1)
         loss = tf.math.reduce_mean(loss)
-        loss = tf.where(tf.math.is_nan(loss), 0., loss)
-        return loss, pred_params
+        loss = 1.0 * tf.where(tf.math.is_nan(loss), 0., loss)
+
+        return loss, gt_vertices
 
     def wpdc(self, gt_params, pms, pred_Z_params, u_base, shp_base, exp_base):
 
@@ -37,7 +68,6 @@ class WPDCLoss:
             # N_vertices = tf.cast(tf.shape(gt_vertices)[-2], tf.float32)
             # offset_norm = tf.math.sqrt(N_vertices)
             weights = []
-
             for ind in range(9):
                 if ind in [0, 1, 2]:
                     w = pose_diffs[:, ind] * pv_nomrs[:, 0]
@@ -56,14 +86,12 @@ class WPDCLoss:
                              axis=-2)
             return w_norm * tf.math.abs(pred_shp_exp - gt_shp_exp)
 
-        gt_R, gt_shp_exp = gt_params[:, :self.n_R], gt_params[:, self.n_R:]
-        # gt_t = gt_params[:, -3:]
-        # gt_Rt = tf.concat([gt_R, gt_t], axis=-1)
+        gt_Rt = gt_params[:, self.n_s:self.n_s + self.n_R]
+        gt_shp_exp = gt_params[:, self.n_s + self.n_R:]
         shp_base = tf.tile(shp_base[None, :, :],
                            [tf.shape(gt_shp_exp)[0], 1, 1])
         exp_base = tf.tile(exp_base[None, :, :],
                            [tf.shape(gt_shp_exp)[0], 1, 1])
-
         gt_vertices = u_base[None, :, :] + tf.linalg.matmul(
             shp_base, gt_shp_exp[:, :self.n_shp, None]) + tf.linalg.matmul(
                 exp_base, gt_shp_exp[:, self.n_shp:, None])
@@ -72,20 +100,18 @@ class WPDCLoss:
         with tf.name_scope('wpdc_loss'):
             # pred_params are reconstruct params
             pred_params = pred_Z_params * pms[1][None, :] + pms[0][None, :]
-            pred_R, pred_shp_exp = pred_params[:, :self.
-                                               n_R], pred_params[:, self.n_R:]
-            # pred_t = pred_params[:, -3:]
-            # pred_Rt = tf.concat([pred_R, pred_t], axis=-1)
-            R_weights = get_Rt_weights(gt_vertices, pred_R, gt_R)
-
+            pred_Rt = pred_params[:, self.n_s:self.n_s + self.n_R]
+            pred_shp_exp = pred_params[:, self.n_s + self.n_R:]
+            Rt_weights = get_Rt_weights(gt_vertices, pred_Rt, gt_Rt)
             shp_exp_weights = get_shp_exp_weights(shp_base, exp_base,
                                                   pred_shp_exp, gt_shp_exp)
-            R_weights = tf.transpose(R_weights, (1, 0))
-            # R_weights, t_weights = Rt_weights[:, :9], Rt_weights[:, -3:-1]
-            weights = tf.concat([R_weights, shp_exp_weights], axis=-1)
+            Rt_weights = tf.transpose(Rt_weights, (1, 0))
+            weights = tf.concat([Rt_weights, shp_exp_weights], axis=-1)
             weights = (weights + self.eps) / tf.math.reduce_max(
                 weights, keepdims=True, axis=-1)
             gt_Z_params = (gt_params - pms[:1, :]) / pms[1:, :]
-            # loss = tf.math.square(pred_Z_params - gt_Z_params)
-            loss = weights * tf.math.square(pred_Z_params - gt_Z_params)
-        return loss, pred_params
+            loss = weights * tf.math.square(pred_Z_params[:, self.n_s:] -
+                                            gt_Z_params[:, self.n_s:])
+
+        b_lnmks = gt_vertices[:, :68, :]
+        return loss, b_lnmks

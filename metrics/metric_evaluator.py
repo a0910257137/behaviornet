@@ -41,6 +41,10 @@ class BDDMetricEvaluator(Base):
             'frame_list'], bdd_eval_annos['frame_list']
         # users = {'gt', 'eval'}
         users = sorted(set(('gt', 'eval')), reverse=True)
+        # print(bdd_gt_annos)
+        # print('-' * 100)
+        # print(bdd_eval_annos)
+        # xxx
         matched_gt_frames_objects, matched_eval_frames_objects = self._matched_frame(
             bdd_gt_annos, bdd_eval_annos)
         users_matched_dc = {user: [] for user in users}

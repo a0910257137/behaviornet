@@ -227,7 +227,6 @@ class DepthwiseSeparableConv(tf.keras.layers.Layer):
 class TransitionUp(tf.keras.layers.Layer):
 
     def call(self, inputs, up_method, skip=None, concat=True):
-        # _, h, w, _ = [tf.shape(inputs)[i] for i in range(4)]
         _, h, w, _ = inputs.get_shape().as_list()
         h, w = h * 2, w * 2
         out = tf.image.resize(images=inputs,

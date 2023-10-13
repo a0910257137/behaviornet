@@ -19,6 +19,50 @@ def _make_divisible(channels, divisor, min_value=None):
     return new_channels
 
 
+class SGBlockExtra(tf.keras.layers.Layer):
+
+    def __init__(self,
+                 inp,
+                 oup,
+                 stride,
+                 expand_ratio,
+                 last=False,
+                 name="sgb_extra"):
+        super(SGBlockExtra, self).__init__(name=name)
+
+        hidden_dim = int(inp * expand_ratio)
+        self.conv_layers = []
+        self.conv_layers.append(
+            ConvBlock(filters=None,
+                      kernel_size=1,
+                      strides=stride,
+                      norm_method="bn",
+                      activation="relu",
+                      use_bias=False,
+                      conv_mode="dw_conv2d"))
+        self.conv_layers.append(
+            ConvBlock(filters=hidden_dim,
+                      kernel_size=1,
+                      strides=1,
+                      norm_method="bn",
+                      activation=None,
+                      use_bias=False,
+                      conv_mode="pw_conv2d"))
+        self.conv_layers.append(
+            ConvBlock(filters=oup,
+                      kernel_size=1,
+                      strides=stride,
+                      norm_method="bn",
+                      activation="relu",
+                      use_bias=False,
+                      conv_mode="dw_conv2d"))
+
+    def call(self, x):
+        for layer in self.conv_layers:
+            x = layer(x)
+        return x
+
+
 class SGBlock(tf.keras.layers.Layer):
 
     def __init__(self,
@@ -181,7 +225,6 @@ class MobileNextNetModel(tf.keras.Model):
         input_channel = _make_divisible(32 * width_mult,
                                         4 if width_mult == 0.1 else 8)
         self.stem, self.stage_layers = [], []
-
         self.stem.append(
             ConvBlock(filters=input_channel,
                       kernel_size=3,
@@ -205,16 +248,28 @@ class MobileNextNetModel(tf.keras.Model):
                 self.stage_layers.append(
                     SGBlock(input_channel, output_channel, 1, t))
                 input_channel = output_channel
+        # building last several layers
+        input_channel = output_channel
+        output_channel = _make_divisible(input_channel, 4)
+        # self.extra_layers = []
+        # self.extra_layers.append(SGBlockExtra(1280, 512, 2, 0.2))
+        # self.extra_layers.append(SGBlockExtra(512, 256, 2, 0.25))
+        # self.extra_layers.append(SGBlockExtra(256, 256, 2, 0.5))
+        # self.extra_layers.append(SGBlockExtra(256, 128, 2, 0.5))
 
     @tf.function
     def call(self, x):
         output = []
+        # features = []
         for stem_layer in self.stem:
             x = stem_layer(x)
         for i, layer in enumerate(self.stage_layers):
             x = layer(x)
             if i in self.out_indices:
                 output.append(x)
+        # for layer in self.extra_layers:
+        #     x = layer(x)
+        #     features.append(x)
         return tuple(output)
 
 
@@ -223,6 +278,7 @@ def mobilenextnet(config, input_shape, kernel_initializer):
         kernel_initializer)
     mobilenextnet = MobileNextNetModel(config=config,
                                        kernel_initializer=kernel_initializer)
+
     image_inputs = tf.keras.Input(shape=input_shape, name='image_inputs')
     fmaps = mobilenextnet(image_inputs)
     return tf.keras.Model(image_inputs, fmaps)

@@ -1,1 +1,3 @@
 from .morphable_model import MorphabelModel
+
+from .morphable_model_numpy import MorphabelModelNumpy

@@ -37,8 +37,8 @@ def dump_json(path, data):
 
 annos = load_json("/aidata/relabel/pose/annos/BDD_demo_test_model3.json")
 base_infos = annos['frame_list'][0]['labels'][0]
-lb_dir = "/aidata/relabel/lnmks/Stage3_06_01_06_30/evian/CelebA"
-save_dir = "/aidata/relabel/lnmks/Stage3_06_01_06_30/evian/CelebA/imgs"
+lb_dir = "/aidata/relabel/lnmks/Stage4_07_01_08_31/chiamin"
+save_dir = "/aidata/relabel/lnmks/Stage4_07_01_08_31/download/imgs"
 bdd_results = {"frame_list": []}
 path_list = glob(os.path.join(lb_dir, "*.json"))
 
@@ -46,6 +46,7 @@ for path in tqdm(path_list):
     annos = load_json(path)
     shapes = annos['shapes']
     img_path = path.replace(".json", ".jpg")
+
     name = img_path.split("/")[-1]
     img = cv2.imread(img_path)
     if img is None:
@@ -86,10 +87,9 @@ for path in tqdm(path_list):
     copy_base_infos['box2d']['y2'] = int(br[0])
     copy_base_infos["category"] = "FACE"
     lb_infos['labels'].append(copy_base_infos)
-
     cv2.imwrite(os.path.join(save_dir, name), img)
     bdd_results['frame_list'].append(lb_infos)
 dump_json(
     path=
-    "/aidata/relabel/lnmks/Stage3_06_01_06_30/evian/CelebA/annos/BDD_CelebA.json",
+    "/aidata/relabel/lnmks/Stage4_07_01_08_31/download/annos/BDD_download.json",
     data=bdd_results)

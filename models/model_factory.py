@@ -9,6 +9,7 @@ from .backbone.mobilenet import *
 from .backbone.mobilenext import *
 from .loss.core.anchor_generator import AnchorGenerator
 from pprint import pprint
+from keras_flops import get_flops
 
 
 class ModelFactory:
@@ -17,16 +18,16 @@ class ModelFactory:
         self.config = config
         self._model_keys = ['backbone', 'neck', 'head']
         self.img_channel = 3
-        self.backbone = mobilenet(self.config.backbone,
-                                  input_shape=(self.config.resize_size[0],
-                                               self.config.resize_size[1],
-                                               self.img_channel),
-                                  kernel_initializer='he_uniform')
-        # self.backbone = mobilenextnet(self.config.backbone,
-        #                               input_shape=(self.config.resize_size[0],
-        #                                            self.config.resize_size[1],
-        #                                            self.img_channel),
-        #                               kernel_initializer='he_uniform')
+        # self.backbone = mobilenet(self.config.backbone,
+        #                           input_shape=(self.config.resize_size[0],
+        #                                        self.config.resize_size[1],
+        #                                        self.img_channel),
+        #                           kernel_initializer='he_uniform')
+        self.backbone = mobilenextnet(self.config.backbone,
+                                      input_shape=(self.config.resize_size[0],
+                                                   self.config.resize_size[1],
+                                                   self.img_channel),
+                                      kernel_initializer='he_uniform')
         anchor_generator = self.build_anchor_generator(
             self.config.anchor_generator)
         self.config.head["anchor_generator"] = anchor_generator

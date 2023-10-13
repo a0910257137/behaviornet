@@ -55,34 +55,17 @@ def img_gen(config_path, img_path_root, save_root):
             orig_imgs.append(img)
             imgs.append(img)
         rets = predictor.pred(imgs, origin_shapes)
-        b_bboxes, b_lnmks = rets
-        b_bboxes = b_bboxes.numpy()
-        b_lnmks = b_lnmks.numpy()
-        if len(rets) != 0:
-            for img, bboxes, lnmks in zip(imgs, b_bboxes, b_lnmks):
-                mask = np.all(np.isfinite(bboxes), axis=-1)
-                bboxes = bboxes[mask]
-                mask = np.all(np.isfinite(lnmks), axis=-1)
-                lnmks = np.reshape(lnmks[mask], (-1, 68, 2))
+        # b_bboxes = rets.numpy()
+        # for img, bboxes in zip(imgs, b_bboxes):
+        #     for bbox in bboxes:
+        #         if np.all(np.isfinite(bbox), axis=-1):
 
-                for bbox, lnmk in zip(bboxes, lnmks):
-                    tl = bbox[:2].astype(np.int32)
-                    br = bbox[2:4].astype(np.int32)
-                    img = cv2.rectangle(img, tuple(tl[::-1]), tuple(br[::-1]),
-                                        (0, 255, 0), 3)
-                    box_centers = (tl + br) / 2
-                    tl, br = np.min(lnmk, axis=0), np.max(lnmk, axis=0)
-                    lnmk_centers = (tl + br) / 2
-                    shifts = box_centers - lnmk_centers
-                    lnmk = lnmk + shifts[None, :]
-                    lnmk = lnmk.astype(np.int32)
-
-                    for kp in lnmk:
-                        img = cv2.circle(img, tuple(kp[::-1]), 5, (90, 200, 90),
-                                         -1)
-
-                cv2.imwrite("output_{}.jpg".format(i), img)
-            # xxx
+        #             tl, br = bbox[:2].astype(np.int32), bbox[2:4].astype(
+        #                 np.int32)
+        #             img = cv2.rectangle(img, tuple(tl[::-1]), tuple(br[::-1]),
+        #                                 (0, 255, 0), 3)
+        #     # cv2.imwrite("output.jpg", img)
+        #     # xxx
         # if config['predictor']['mode'] == "centernet" or config['predictor'][
         #         'mode'] == "offset" or config['predictor']['mode'] == "tflite":
         #     target_dict = _get_cates(config['predictor']['cat_path'])
@@ -91,9 +74,9 @@ def img_gen(config_path, img_path_root, save_root):
         #     imgs = draw_tdmm(orig_imgs, rets)
         # elif config['predictor']['mode'] == "scrfd":
         #     imgs = draw_scrfd(orig_imgs, rets)
-        # # for img in imgs:
-        # #     cv2.imwrite("output.jpg", img)
-        # # xxx
+        # elif config['predictor']['mode'] == "scrfd_tdmm" or config['predictor'][
+        #         'mode'] == "scrfd_tdmm_opt":
+        #     imgs = draw_scrfd_tdmm(orig_imgs, rets)
         # for img_name, img in zip(img_names, imgs):
         #     # cv2.imwrite("output.jpg", img)
         #     # exit(1)

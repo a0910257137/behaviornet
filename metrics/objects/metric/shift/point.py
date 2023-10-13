@@ -6,6 +6,7 @@ from ..base import Metric
 
 @dataclasses.dataclass
 class PointShift(Metric):
+
     def __call__(self, gt_pts: Union[List[dict], dict],
                  eval_pts: Union[List[dict], dict]) -> dict:
         """deal with single point to point metric and multiple points to points metric
@@ -16,9 +17,7 @@ class PointShift(Metric):
             gt_pts = [gt_pts]
         if isinstance(eval_pts, dict):
             eval_pts = [eval_pts]
-
         assert self.check_shape(gt_pts) and self.check_shape(eval_pts)
-
         # shape will be (Batch, n_dim)
         gt_pts = {
             k: np.array([pt[k].flatten() for pt in gt_pts])
@@ -60,7 +59,7 @@ class PointShift(Metric):
                 # all points from the same source(gt, eval) should be the same shape
                 assert coord.ndim <= 2 and coord.shape == array_shape, f'Expected dim <= 2 and shape: {array_shape}, got dim: {coord.ndim}, shape: {coord.shape}'
                 assert all(
-                    isinstance(p, (np.integer, np.float))
+                    isinstance(p, (np.integer, np.float32))
                     for p in coord.flatten()
                 ), f'coords must be int or float, got {[type(p) for p in coord.flatten()]}'
         return True
@@ -118,6 +117,7 @@ class PointDistance(PointShift):
     shift = metric(gt_pts, eval_pts)
     shift: {'head': 5.0, 'eye': 5.0}
     '''
+
     @staticmethod
     def calculate(gt_pts: dict, eval_pts: dict) -> dict:
         # pts in gt_pts and eval_pts must be (Batch, n_dim)
@@ -156,6 +156,7 @@ class NLE(PointShift):
     shift = metric(gt_pts, eval_pts)
     shift: {'head': 5.0, 'eye': 5.0}
     '''
+
     @staticmethod
     def calculate(gt_pts: dict, eval_pts: dict) -> dict:
         # pts in gt_pts and eval_pts must be (Batch, n_dim)

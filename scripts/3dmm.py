@@ -36,6 +36,11 @@ def tdmm(annos_path, img_root, save_path):
     anlges = []
     for frame in tqdm(annos["frame_list"]):
         name = frame["name"]
+        # img_path = os.path.join(img_root, name)
+        # img = cv2.imread(img_path)
+        # h, w, c = img.shape
+        # resized_ratio = np.array([h, w]) / np.array([320., 320.])
+        # resized_ratio = resized_ratio[::-1]
         for lb in frame["labels"]:
             tmp_kps = []
             keypoints = lb["keypoints"]
@@ -45,28 +50,27 @@ def tdmm(annos_path, img_root, save_path):
             tmp_kps = np.stack(tmp_kps)
             kps = tmp_kps
             fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
-                kps[:, ::-1], X_ind, idxs=None, max_iter=5)
-
-            transformed_vertices = gen_vertices(bfm, fitted_s, fitted_angles,
-                                                fitted_t, fitted_sp, fitted_ep)
-            landmarks = transformed_vertices[valid_ind]
-            landmarks = np.reshape(landmarks, (landmarks.shape[0] // 3, 3))
+                kps[:, ::-1], X_ind, idxs=None, max_iter=3)
+            # transformed_vertices = gen_vertices(bfm, fitted_s, fitted_angles,
+            #                                     fitted_t, fitted_sp, fitted_ep)
+            # landmarks = transformed_vertices[valid_ind]
+            # landmarks = np.reshape(landmarks, (landmarks.shape[0] // 3, 3))
+            # landmarks = landmarks[:, :2]
             fitted_angles *= (180 / np.pi)
-            anlges.append(fitted_angles)
             pitch, yaw, roll = fitted_angles
             if pitch < 0:
                 pitch = -(180 + pitch)
             elif pitch > 0:
                 pitch = (180 - pitch)
-            # lb["attributes"] = {
-            #     "pose": {
-            #         "pitch": pitch,
-            #         "roll": roll,
-            #         "yaw": yaw
-            #     },
-            #     "valid": True,
-            #     "small": False
-            # }
+            lb["attributes"] = {
+                "pose": {
+                    "pitch": pitch,
+                    "roll": roll,
+                    "yaw": yaw
+                },
+                "valid": True,
+                "small": False
+            }
         i += 1
     dump_json(path=save_path, data=annos)
 

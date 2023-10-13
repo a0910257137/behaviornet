@@ -38,6 +38,7 @@ class QualityFocalLoss:
             reduction=tf.keras.losses.Reduction.NONE,
             name='binary_crossentropy')
 
+    # @tf.function
     def __call__(self,
                  pred,
                  target,
@@ -94,6 +95,7 @@ class QualityFocalLoss:
         # label denotes the category id, score denotes the quality score
         # save a score value in
         label, score = target
+        # alignment_metrics = tf.expand_dims(alignment_metrics, axis=-1)
         pred_sigmoid = tf.math.sigmoid(pred)
         zerolabel = tf.zeros_like(pred)
         scale_factor = pred_sigmoid

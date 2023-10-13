@@ -159,3 +159,34 @@ def draw_scrfd(b_orig_imgs, b_rets):
                               cv2.LINE_AA)
         outputs_imgs.append(img)
     return outputs_imgs
+
+
+def draw_scrfd_tdmm(b_orig_imgs, b_rets):
+    FONT_SCALE = 2
+    FONT_THICKNESS = 2
+    FONT_STYLE = cv2.FONT_HERSHEY_COMPLEX_SMALL
+    text_info = "Test123"
+    (_, text_height), _ = cv2.getTextSize(text_info, FONT_STYLE, FONT_SCALE,
+                                          FONT_THICKNESS)
+
+    b_bboxes, b_lnmks = b_rets
+    b_bboxes = b_bboxes.numpy()
+    b_lnmks = b_lnmks.numpy()
+    outputs_imgs = []
+
+    for img, bboxes, lnmks in zip(b_orig_imgs, b_bboxes, b_lnmks):
+        mask = np.all(np.isfinite(bboxes), axis=-1)
+        bboxes = bboxes[mask]
+        mask = np.all(np.isfinite(lnmks), axis=-1)
+        lnmks = np.reshape(lnmks[mask], (-1, 68, 2))
+        for j, (bbox, lnmk) in enumerate(zip(bboxes, lnmks)):
+            tl = bbox[:2]
+            br = bbox[2:4]
+            img = cv2.rectangle(img, tuple(tl[::-1].astype(np.int32)),
+                                tuple(br[::-1].astype(np.int32)), (0, 255, 0),
+                                3)
+            lnmk = lnmk.astype(np.int32)
+            for kp in lnmk:
+                img = cv2.circle(img, tuple(kp[::-1]), 5, (90, 200, 90), -1)
+        outputs_imgs.append(img)
+    return outputs_imgs
