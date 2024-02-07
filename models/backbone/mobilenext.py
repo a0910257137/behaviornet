@@ -1,6 +1,7 @@
 import tensorflow as tf
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock
+from ..utils.common import SPPF
 from pprint import pprint
 import math
 
@@ -82,6 +83,7 @@ class SGBlock(tf.keras.layers.Layer):
         self.identity_div = 1
         self.expand_ratio = expand_ratio
         self.conv_layers = []
+
         if expand_ratio == 2:
             # dw
             self.conv_layers.append(
@@ -242,7 +244,8 @@ class MobileNextNetModel(tf.keras.Model):
             if c == 1280 and width_mult < 1:
                 output_channel = 1280
             self.stage_layers.append(
-                SGBlock(input_channel, output_channel, s, t, n == 1 and s == 1))
+                SGBlock(input_channel, output_channel, s, t, n == 1
+                        and s == 1))
             input_channel = output_channel
             for i in range(n - 1):
                 self.stage_layers.append(
@@ -251,6 +254,7 @@ class MobileNextNetModel(tf.keras.Model):
         # building last several layers
         input_channel = output_channel
         output_channel = _make_divisible(input_channel, 4)
+        # self.sppf = SPPF(960, name="sppf")
         # self.extra_layers = []
         # self.extra_layers.append(SGBlockExtra(1280, 512, 2, 0.2))
         # self.extra_layers.append(SGBlockExtra(512, 256, 2, 0.25))
@@ -265,6 +269,8 @@ class MobileNextNetModel(tf.keras.Model):
             x = stem_layer(x)
         for i, layer in enumerate(self.stage_layers):
             x = layer(x)
+            # if (i == len(self.stage_layers) - 1):
+            #     x = self.sppf(x)
             if i in self.out_indices:
                 output.append(x)
         # for layer in self.extra_layers:

@@ -292,7 +292,7 @@ def transform_pd_data(report_results,
 
     for t in eval_types:
         type_results = report_results[t]
-        if mode == 'tdmm' or mode == 'scrfd_tdmm_v3':
+        if mode == 'tdmm' or mode == 'scrfd_tdmm':
             for k in pd_headers.keys():
                 tmp = []
                 for result_key in type_results.keys():

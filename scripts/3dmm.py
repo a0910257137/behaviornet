@@ -31,48 +31,45 @@ def tdmm(annos_path, img_root, save_path):
                                axis=-1)
     valid_ind = np.reshape(np.transpose(X_ind_all), (-1))
     print('initialize bfm model success')
-    annos = load_json(annos_path)
-    i = 0
-    anlges = []
-    for frame in tqdm(annos["frame_list"]):
-        name = frame["name"]
-        # img_path = os.path.join(img_root, name)
-        # img = cv2.imread(img_path)
-        # h, w, c = img.shape
-        # resized_ratio = np.array([h, w]) / np.array([320., 320.])
-        # resized_ratio = resized_ratio[::-1]
-        for lb in frame["labels"]:
-            tmp_kps = []
-            keypoints = lb["keypoints"]
-            for key in keypoints.keys():
-                kp = keypoints[key]
-                tmp_kps.append(kp)
-            tmp_kps = np.stack(tmp_kps)
-            kps = tmp_kps
-            fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
-                kps[:, ::-1], X_ind, idxs=None, max_iter=3)
-            # transformed_vertices = gen_vertices(bfm, fitted_s, fitted_angles,
-            #                                     fitted_t, fitted_sp, fitted_ep)
-            # landmarks = transformed_vertices[valid_ind]
-            # landmarks = np.reshape(landmarks, (landmarks.shape[0] // 3, 3))
-            # landmarks = landmarks[:, :2]
-            fitted_angles *= (180 / np.pi)
-            pitch, yaw, roll = fitted_angles
-            if pitch < 0:
-                pitch = -(180 + pitch)
-            elif pitch > 0:
-                pitch = (180 - pitch)
-            lb["attributes"] = {
-                "pose": {
-                    "pitch": pitch,
-                    "roll": roll,
-                    "yaw": yaw
-                },
-                "valid": True,
-                "small": False
-            }
-        i += 1
-    dump_json(path=save_path, data=annos)
+    annos_list = []
+    for d in os.listdir(annos_path):
+        path = os.path.join(annos_path, d, "annos", "BDD_{}.json".format(d))
+        annos_list.append(path)
+    for path in tqdm(annos_list):
+        print('-' * 100)
+        print(path)
+        annos = load_json(path)
+        i = 0
+        anlges = []
+        for frame in annos["frame_list"]:
+            for lb in frame["labels"]:
+                tmp_kps = []
+                keypoints = lb["keypoints"]
+                for key in keypoints.keys():
+                    kp = keypoints[key]
+                    tmp_kps.append(kp)
+                tmp_kps = np.stack(tmp_kps)
+                kps = tmp_kps
+                fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
+                    kps[:, ::-1], X_ind, idxs=None, max_iter=4)
+                fitted_angles *= (180 / np.pi)
+                pitch, yaw, roll = fitted_angles
+                if pitch < 0:
+                    pitch = -(180 + pitch)
+                elif pitch > 0:
+                    pitch = (180 - pitch)
+                lb["attributes"] = {
+                    "pose": {
+                        "pitch": pitch,
+                        "roll": roll,
+                        "yaw": yaw
+                    },
+                    "valid": True,
+                    "small": False
+                }
+
+            i += 1
+        dump_json(path=path, data=annos)
 
 
 def parse_config():

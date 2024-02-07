@@ -35,7 +35,8 @@ class GeneralDataset:
         datasets = []
         for task in self.config.tasks:
             if is_train:
-                filenames = glob(os.path.join(task.train_folder, '*.tfrecords'))
+                filenames = glob(os.path.join(task.train_folder,
+                                              '*.tfrecords'))
                 num_files = len(filenames)
                 ds = tf.data.TFRecordDataset(filenames,
                                              num_parallel_reads=threads)
@@ -46,8 +47,8 @@ class GeneralDataset:
                                              num_parallel_reads=threads)
             datasets.append(ds)
         datasets = tf.data.TFRecordDataset.zip(tuple(datasets))
-        # if self.config.shuffle:
-        #     datasets = datasets.shuffle(buffer_size=10000)
+        if self.config.shuffle:
+            datasets = datasets.shuffle(buffer_size=10000)
         options = tf.data.Options()
         options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
         datasets = datasets.with_options(options)
@@ -68,9 +69,9 @@ class GeneralDataset:
         # # mean = tf.math.reduce_mean(shapeMU, axis=-2, keepdims=True)
         # # shapeMU -= mean
         # shapeMU = tf.reshape(shapeMU, (tf.shape(shapeMU)[0] * 3, 1))
-        # shapePC = tf.gather(tf.cast(head_model['shapePC'][:, :25], tf.float32),
+        # shapePC = tf.gather(tf.cast(head_model['shapePC'][:, :40], tf.float32),
         #                     valid_ind).numpy()
-        # expPC = tf.gather(tf.cast(head_model['expPC'][:, :20], tf.float32),
+        # expPC = tf.gather(tf.cast(head_model['expPC'][:, :11], tf.float32),
         #                   valid_ind).numpy()
         # for ds in datasets:
         #     b_img, targets = self.gener_task.build_maps(ds)
@@ -89,8 +90,8 @@ class GeneralDataset:
         #             if np.any(bbox == np.inf):
         #                 continue
         #             R = param[:9]
-        #             shp = param[9:9 + 25]
-        #             exp = param[9 + 25:]
+        #             shp = param[9:9 + 40]
+        #             exp = param[9 + 40:]
         #             kp = kp * resized
         #             R = np.reshape(R, (3, 3))
         #             vertices = shapeMU + shapePC.dot(shp[:, None]) + expPC.dot(

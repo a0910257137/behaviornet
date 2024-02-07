@@ -62,8 +62,8 @@ def draw_box2d(b_imgs, b_obj_kps, target_dict, clr=(0, 255, 0)):
                     n_lnmk = np.reshape(lnmks[max_idx], (5, 2))
                     for lnmk in n_lnmk:
                         lnmk = lnmk.astype(np.int32)
-                        img = cv2.circle(img, tuple(lnmk[::-1]), 3, (0, 255, 0),
-                                         -1)
+                        img = cv2.circle(img, tuple(lnmk[::-1]), 3,
+                                         (0, 255, 0), -1)
                 img = draw_2d(img, kp, score, category)
         result.append(img)
     return result
@@ -74,7 +74,8 @@ def draw_tdmm(b_orig_imgs, b_rets):
     ), b_rets[2].numpy()
     outputs_imgs = []
     for i, (img, n_bboxes, n_lnmks,
-            n_poses) in enumerate(zip(b_orig_imgs, b_bboxes, b_lnmks, b_poses)):
+            n_poses) in enumerate(zip(b_orig_imgs, b_bboxes, b_lnmks,
+                                      b_poses)):
         mask = np.all(np.isfinite(n_bboxes), axis=-1)
         n_bboxes = n_bboxes[mask]
         mask = np.all(np.isfinite(n_lnmks), axis=-1)
@@ -109,26 +110,31 @@ def draw_tdmm(b_orig_imgs, b_rets):
                 if l not in [16, 21, 26, 32, 38, 42, 47, 59, 67]:
                     start_point = (lnmks[l][0], lnmks[l][1])
                     end_point = (lnmks[l + 1][0], lnmks[l + 1][1])
-                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                    cv2.line(img, start_point, end_point, (0, 0, 0),
+                             line_width)
                 elif l == 32:
                     start_point = (lnmks[l][0], lnmks[l][1])
                     end_point = (lnmks[27][0], lnmks[27][1])
-                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                    cv2.line(img, start_point, end_point, (0, 0, 0),
+                             line_width)
                 elif l == 38:
                     start_point = (lnmks[l][0], lnmks[l][1])
                     end_point = (lnmks[33][0], lnmks[33][1])
-                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                    cv2.line(img, start_point, end_point, (0, 0, 0),
+                             line_width)
                 elif l == 59:
                     start_point = (lnmks[l][0], lnmks[l][1])
                     end_point = (lnmks[48][0], lnmks[48][1])
-                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                    cv2.line(img, start_point, end_point, (0, 0, 0),
+                             line_width)
                 elif l == 67:
                     start_point = (lnmks[l][0], lnmks[l][1])
                     end_point = (lnmks[60][0], lnmks[60][1])
-                    cv2.line(img, start_point, end_point, (0, 0, 0), line_width)
+                    cv2.line(img, start_point, end_point, (0, 0, 0),
+                             line_width)
             text = 'mask' if cate == 1 else 'not mask'
-            img = cv2.putText(img, text, up_center, cv2.FONT_HERSHEY_SIMPLEX, 1,
-                              (0, 0, 225), 2, cv2.LINE_AA)
+            img = cv2.putText(img, text, up_center, cv2.FONT_HERSHEY_SIMPLEX,
+                              1, (0, 0, 225), 2, cv2.LINE_AA)
         outputs_imgs.append(img)
     return outputs_imgs
 
@@ -168,7 +174,6 @@ def draw_scrfd_tdmm(b_orig_imgs, b_rets):
     text_info = "Test123"
     (_, text_height), _ = cv2.getTextSize(text_info, FONT_STYLE, FONT_SCALE,
                                           FONT_THICKNESS)
-
     b_bboxes, b_lnmks = b_rets
     b_bboxes = b_bboxes.numpy()
     b_lnmks = b_lnmks.numpy()

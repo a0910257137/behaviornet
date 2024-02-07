@@ -21,14 +21,14 @@ class Network(tf.keras.Model):
             n_shp = self.config['3dmm']["n_shp"]
             n_exp = self.config['3dmm']["n_exp"]
             n_t3d = self.config['3dmm']["n_t3d"]
-            # s = pms[:, :n_s]
-            # s = tf.constant([0., 1.], shape=(2, 1))
             Rt = pms[:, n_s:n_s + n_R]
             shp = pms[:, n_s + n_R:n_s + n_R + n_shp]
             exp = pms[:, n_s + n_R + n_shp:n_s + n_R + n_shp + n_exp]
 
             pms = np.concatenate([Rt, shp, exp], axis=-1)
-            self.train_mean_std = tf.cast(pms[:2, ], tf.float32)
+            self.train_mean_std = tf.cast(pms[
+                :2,
+            ], tf.float32)
 
     def compile(self, optimizer, loss, run_eagerly=None):
         super(Network, self).compile(optimizer=optimizer,
@@ -74,7 +74,7 @@ class Network(tf.keras.Model):
                                   ) / self.train_mean_std[1][None, None, :]
             labels['mean_std'] = self.train_mean_std
         preds = self.model(imgs, training=training)
-        loss = self._loss(preds, labels, training)
+        loss = self._loss(self.epochs, preds, labels, training)
         return loss
 
     def get_trainable_variables(self, model):

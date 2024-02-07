@@ -25,23 +25,24 @@ class Augmentation(Base):
 
     def __call__(self, b_imgs, b_coors, num_lnmks, task):
         b_coors = tf.cast(b_coors, tf.float32)
-        do_clc, flip_probs = self.random_param()
+        do_clc, gray_probs, flip_probs = self.random_param()
         if self.is_do_filp:
             filp_imgs = tf.image.flip_left_right(b_imgs)
             tmp_logic = tf.tile(
                 flip_probs[:, None, None, None],
                 [1, self.img_resize_size[0], self.img_resize_size[1], 3])
 
-            b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, filp_imgs)
+            b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs,
+                              filp_imgs)
 
         if len(self.augments.tensorpack_chains) != 0:
-            b_imgs, b_coors = tf.py_function(self.tensorpack_augs,
-                                             inp=[
-                                                 b_coors, b_imgs, task,
-                                                 flip_probs, self.max_obj_num,
-                                                 self.augments.tensorpack_chains
-                                             ],
-                                             Tout=[tf.uint8, tf.float32])
+            b_imgs, b_coors = tf.py_function(
+                self.tensorpack_augs,
+                inp=[
+                    b_coors, b_imgs, task, flip_probs, self.max_obj_num,
+                    self.augments.tensorpack_chains
+                ],
+                Tout=[tf.uint8, tf.float32])
 
         if len(self.augments.album_chains.keys()) != 0:
             b_imgs = self.album_augs(self.augments.album_chains, b_imgs)
@@ -52,6 +53,14 @@ class Augmentation(Base):
                 self.img_channel
             ])
             b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs, aug_imgs)
+            tmp_logic = tf.tile(gray_probs[:, None, None, None], [
+                1, self.img_resize_size[0], self.img_resize_size[1],
+                self.img_channel
+            ])
+            b_gray_imgs = tf.image.grayscale_to_rgb(
+                tf.image.rgb_to_grayscale(b_imgs))
+            b_imgs = tf.where(tf.math.logical_not(tmp_logic), b_imgs,
+                              b_gray_imgs)
         # /255 normalized method
         b_imgs = b_imgs / 255
         # mean and std  normalized method
@@ -68,12 +77,18 @@ class Augmentation(Base):
 
     def random_param(self):
         col_thre = 0.5 if len(self.augments.color_chains) else 0.0
-        do_col = tf.random.uniform(
-            shape=[self.batch_size], maxval=1, dtype=tf.float16) < col_thre
+        do_col = tf.random.uniform(shape=[self.batch_size],
+                                   maxval=1,
+                                   dtype=tf.float16) < col_thre
+
+        do_gray = tf.random.uniform(shape=[self.batch_size],
+                                    maxval=1,
+                                    dtype=tf.float16) < col_thre
         flip_thre = 0.5 if self.augments.do_flip else 0.0
-        do_flip = tf.random.uniform(
-            shape=[self.batch_size], maxval=1, dtype=tf.float16) < flip_thre
-        return do_col, do_flip
+        do_flip = tf.random.uniform(shape=[self.batch_size],
+                                    maxval=1,
+                                    dtype=tf.float16) < flip_thre
+        return do_col, do_gray, do_flip
 
     def imnormalize_(self, b_imgs):
         b_imgs = tf.cast(b_imgs, tf.float32)

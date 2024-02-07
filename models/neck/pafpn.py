@@ -58,8 +58,7 @@ class PAFPN(tf.keras.Model):
                 kernel_initializer=tf.keras.initializers.HeNormal,
                 norm_method=None,
                 activation=None,
-                use_bias=True,
-                conv_mode='sp_conv2d')
+                use_bias=True)
             fpn_conv = ConvBlock(
                 filters=out_channels,
                 kernel_size=3,
@@ -96,10 +95,8 @@ class PAFPN(tf.keras.Model):
             self.downsample_convs.append(d_conv)
             self.pafpn_convs.append(pafpn_conv)
         # add extra conv layers (e.g., RetinaNet)
-
         extra_levels = self.num_outs - self.backbone_end_level + self.start_level
         if self.add_extra_convs and extra_levels >= 1:
-
             for i in range(extra_levels):
                 if i == 0 and self.add_extra_convs == 'on_input':
                     in_channels = self.in_channels[self.backbone_end_level - 1]
@@ -117,21 +114,22 @@ class PAFPN(tf.keras.Model):
                 self.fpn_convs.append(extra_fpn_conv)
 
         self.resize = tf.image.resize
-        self.max_pool2d = tf.keras.layers.MaxPool2D(pool_size=(2, 2),
-                                                    strides=1,
-                                                    padding='same')
-        self.relu = self.act = tf.keras.layers.Activation(activation='relu')
+        # self.max_pool2d = tf.keras.layers.MaxPool2D(pool_size=(2, 2),
+        #                                             strides=1,
+        #                                             padding='same')
+        # self.relu = self.act = tf.keras.layers.Activation(activation='relu')
 
     def call(self, x):
         assert len(x) == len(self.in_channels)
-
         # build laterals
+
         laterals = [
             lateral_conv(x[i + self.start_level])
             for i, lateral_conv in enumerate(self.lateral_convs)
         ]
         # build top-down path
         used_backbone_levels = len(laterals)
+
         for i in range(used_backbone_levels - 1, 0, -1):
             prev_shape = tf.shape(laterals[i - 1])[1:3]
             laterals[i - 1] += self.resize(
@@ -139,7 +137,6 @@ class PAFPN(tf.keras.Model):
                 size=prev_shape,
                 method=tf.image.ResizeMethod.NEAREST_NEIGHBOR,
             )
-
         # build outputs
         # part 1: from original levels
         inter_outs = [
@@ -178,4 +175,5 @@ class PAFPN(tf.keras.Model):
                         outs.append(self.fpn_convs[i](self.relu(outs[-1])))
                     else:
                         outs.append(self.fpn_convs[i](outs[-1]))
+
         return outs[0], outs[1], outs[2]

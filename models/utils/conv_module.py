@@ -23,7 +23,10 @@ class ConvBlock(tf.keras.layers.Layer):
         super().__init__(**kwargs)
         self.activation = activation
         self.norm_method = norm_method
-        self.kernel_size = (kernel_size, kernel_size)
+        if isinstance(kernel_size, tuple):
+            self.kernel_size = kernel_size
+        else:
+            self.kernel_size = (kernel_size, kernel_size)
         self.strides = (strides, strides)
         self.dilation_rate = (dilation_rate, dilation_rate)
         # reg_layer = tf.keras.regularizers.L2(l2=1e-3)
@@ -66,15 +69,20 @@ class ConvBlock(tf.keras.layers.Layer):
                 bias_initializer=bias_initializer,
                 padding='same',
                 name='dw_conv')
-
         if norm_method == 'bn':
             self.norm = tf.keras.layers.BatchNormalization(name='bn')
-
         elif norm_method == 'range_bn':
             self.norm = RangeBN(filters=filters, name='range_bn')
         elif norm_method == 'gn':
             self.norm = tfa.layers.GroupNormalization(groups=groups, axis=-1)
-        if activation in ['relu', 'swish', 'LeakyReLU', 'sigmoid', 'softmax']:
+        if activation in [
+                'relu',
+                'swish',
+                'LeakyReLU',
+                'sigmoid',
+                'hard_sigmoid',
+                'softmax',
+        ]:
             self.act = tf.keras.layers.Activation(activation=activation,
                                                   name='act_' + activation)
         elif activation == 'silu':

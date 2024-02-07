@@ -95,7 +95,7 @@ class QualityFocalLoss:
         # label denotes the category id, score denotes the quality score
         # save a score value in
         label, score = target
-        # alignment_metrics = tf.expand_dims(alignment_metrics, axis=-1)
+        # pred_sigmoid = pred
         pred_sigmoid = tf.math.sigmoid(pred)
         zerolabel = tf.zeros_like(pred)
         scale_factor = pred_sigmoid

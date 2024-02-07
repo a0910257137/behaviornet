@@ -114,7 +114,6 @@ class GIoULoss:
                  reduction_override=None):
         reduction = (reduction_override
                      if reduction_override else self.reduction)
-
         loss = self.giou_loss(pred, target, eps=self.eps)
         loss = self.loss_weight * weight_reduce_loss(loss, weight, reduction,
                                                      avg_factor)
