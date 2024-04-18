@@ -39,7 +39,6 @@ class ATSSAssigner:
         # compute iou between all bbox and gt
         overlaps = self.iou_calculator(bboxes, gt_bboxes)
         # mask = overlaps > 0.5
-
         assigned_gt_inds = np.full(shape=(num_bboxes, ),
                                    fill_value=0,
                                    dtype=np.int32)
@@ -73,7 +72,8 @@ class ATSSAssigner:
         bboxes_cy = (bboxes[:, 1] + bboxes[:, 3]) / 2.0
         bboxes_points = np.stack((bboxes_cx, bboxes_cy), axis=-1)
         distances = np.sqrt(
-            np.sum(np.square(bboxes_points[:, None, :] - gt_points[None, :, :]),
+            np.sum(np.square(bboxes_points[:, None, :] -
+                             gt_points[None, :, :]),
                    axis=-1))
 
         if (self.ignore_iof_thr > 0 and gt_bboxes_ignore is not None
@@ -183,17 +183,24 @@ class ATSSAssigner:
         max_overlaps = np.max(overlaps_inf, axis=1)
         argmax_overlaps = np.argmax(overlaps_inf, axis=1)
 
-        assigned_gt_inds[
-            max_overlaps != -INF] = argmax_overlaps[max_overlaps != -INF] + 1
+        assigned_gt_inds[max_overlaps !=
+                         -INF] = argmax_overlaps[max_overlaps != -INF] + 1
 
         if gt_labels is not None:
             assigned_labels = np.full(shape=(num_bboxes, ),
                                       fill_value=-1,
                                       dtype=np.int32)
             pos_inds = np.nonzero(assigned_gt_inds > 0)[0]
+
             if np.size(pos_inds) > 0:
-                assigned_labels[pos_inds] = gt_labels[assigned_gt_inds[pos_inds]
-                                                      - 1]
+
+                assigned_labels[pos_inds] = gt_labels[
+                    assigned_gt_inds[pos_inds] - 1]
+                # stride_8 = assigned_labels[:3200].reshape([40, 40, 2])
+                # stride_16 = assigned_labels[3200:4000].reshape([20, 20, 2])
+                # stride_32 = assigned_labels[4000:4200].reshape([10, 10, 2])
+                # idxs = np.where(stride_16 != 0)
+                # stride_8 = stride_8.reshape([40, 40, 2])
         else:
             assigned_labels = None
         return AssignResult(num_gt,

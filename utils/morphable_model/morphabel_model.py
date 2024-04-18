@@ -47,6 +47,9 @@ class MorphabelModel(object):
         self.triangles = self.model['tri']
         self.full_triangles = np.vstack(
             (self.model['tri'], self.model['tri_mouth']))
+        # R = np.array([-180., 0, 0]) / (180. / np.pi)
+        # shapeMU = self.rotate(self.model['shapeMU'].reshape([-1, 3]), R)
+        # self.model['shapeMU'] = shapeMU.reshape([-1, 1])
 
     # ------------------------------------- shape: represented with mesh(vertices & triangles(fixed))
     def get_shape_para(self, type='random'):

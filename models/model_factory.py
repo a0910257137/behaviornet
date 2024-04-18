@@ -5,8 +5,8 @@ from .loss import LOSS_FACTORY
 import tensorflow as tf
 from .network import Network
 from .backbone.hardnet import *
-from .backbone.mobilenet import *
 from .backbone.mobilenext import *
+from .backbone.ghostnext import *
 from .loss.core.anchor_generator import AnchorGenerator
 from pprint import pprint
 from keras_flops import get_flops
@@ -18,7 +18,7 @@ class ModelFactory:
         self.config = config
         self._model_keys = ['backbone', 'neck', 'head']
         self.img_channel = 3
-        # self.backbone = mobilenet(self.config.backbone,
+        # self.backbone = ghostnext(self.config.backbone,
         #                           input_shape=(self.config.resize_size[0],
         #                                        self.config.resize_size[1],
         #                                        self.img_channel),
@@ -45,10 +45,8 @@ class ModelFactory:
             self.config.head, name='head')
         self.loss = LOSS_FACTORY.get(self.config.loss.module_name)(
             self.config).build_loss
-        self.modules = MODULE_FACTORY.get(self.config.model_name)(self.config,
-                                                                  self.backbone,
-                                                                  self.neck,
-                                                                  self.head)
+        self.modules = MODULE_FACTORY.get(self.config.model_name)(
+            self.config, self.backbone, self.neck, self.head)
 
     def build_model(self):
         network = Network(self.config,
@@ -56,7 +54,9 @@ class ModelFactory:
                           self._model_keys,
                           name='network')
         optimizers = self._optimizer()
-        network.compile(optimizer=optimizers, loss=self.loss, run_eagerly=False)
+        network.compile(optimizer=optimizers,
+                        loss=self.loss,
+                        run_eagerly=False)
         return network, optimizers
 
     def _optimizer(self):
@@ -69,10 +69,8 @@ class ModelFactory:
                 if optimizer_key == 'adam':
                     optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
                 elif optimizer_key == 'sgd':
-                    optimizer = tf.keras.optimizers.SGD(learning_rate=lr,
-                                                        momentum=0.9,
-                                                        weight_decay=0.0005,
-                                                        nesterov=False)
+                    optimizer = tf.keras.optimizers.legacy.SGD(
+                        learning_rate=lr, momentum=0.9, nesterov=False)
                 elif optimizer_key == 'nesterov_mom':
                     optimizer = tf.train.MomentumOptimizer(learning_rate=lr,
                                                            momentum=0.9,
@@ -94,10 +92,10 @@ class ModelFactory:
             if optimizer_key == 'adam':
                 return tf.keras.optimizers.Adam(learning_rate=lr)
             elif optimizer_key == 'sgd':
-                return tf.keras.optimizers.experimental.SGD(learning_rate=lr,
-                                                            momentum=0.9,
-                                                            decay=0.0005,
-                                                            nesterov=True)
+                return tf.keras.optimizers.legacy.SGD(learning_rate=lr,
+                                                      momentum=0.9,
+                                                      decay=0.0005,
+                                                      nesterov=True)
             elif optimizer_key == 'nesterov_mom':
                 return tf.train.MomentumOptimizer(learning_rate=lr,
                                                   momentum=0.9,

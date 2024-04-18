@@ -3,8 +3,6 @@ import cv2
 import os
 import argparse
 import commentjson
-import numpy as np
-from pprint import pprint
 from pathlib import Path
 from draw import *
 
@@ -13,12 +11,6 @@ from utils.io import load_text
 from behavior_predictor.inference import BehaviorPredictor
 
 BATCH_SIZE = 1
-
-
-def save_bin(arr, filename):
-    output_file = open(filename, 'wb')
-    arr.tofile(output_file)
-    output_file.close
 
 
 def img_gen(config_path, img_path_root, save_root):
@@ -55,37 +47,26 @@ def img_gen(config_path, img_path_root, save_root):
             orig_imgs.append(img)
             imgs.append(img)
         rets = predictor.pred(imgs, origin_shapes)
-        # b_bboxes = rets.numpy()
-        # for img, bboxes in zip(imgs, b_bboxes):
-        #     for bbox in bboxes:
-        #         if np.all(np.isfinite(bbox), axis=-1):
-
-        #             tl, br = bbox[:2].astype(np.int32), bbox[2:4].astype(
-        #                 np.int32)
-        #             img = cv2.rectangle(img, tuple(tl[::-1]), tuple(br[::-1]),
-        #                                 (0, 255, 0), 3)
-        #     # cv2.imwrite("output.jpg", img)
-        #     # xxx
-        # if config['predictor']['mode'] == "centernet" or config['predictor'][
-        #         'mode'] == "offset" or config['predictor']['mode'] == "tflite":
-        #     target_dict = _get_cates(config['predictor']['cat_path'])
-        #     imgs = draw_box2d(orig_imgs, rets, target_dict)
-        # elif config['predictor']['mode'] == "tdmm":
-        #     imgs = draw_tdmm(orig_imgs, rets)
-        # elif config['predictor']['mode'] == "scrfd":
-        #     imgs = draw_scrfd(orig_imgs, rets)
-        # elif config['predictor']['mode'] == "scrfd_tdmm" or config['predictor'][
-        #         'mode'] == "scrfd_tdmm_opt":
-        #     imgs = draw_scrfd_tdmm(orig_imgs, rets)
-        # for img_name, img in zip(img_names, imgs):
-        #     # cv2.imwrite("output.jpg", img)
-        #     # exit(1)
-        #     name = img_name.split('_')[-1]
-        #     save_path = os.path.join(save_root, 'det_results')
-        #     if not os.path.exists(save_path):
-        #         os.mkdir(save_path)
-        #     print('writing %s' % os.path.join(save_path, img_name))
-        #     cv2.imwrite(os.path.join(save_path, img_name), img)
+        if config['predictor']['mode'] == "centernet" or config['predictor'][
+                'mode'] == "offset" or config['predictor']['mode'] == "tflite":
+            target_dict = _get_cates(config['predictor']['cat_path'])
+            imgs = draw_box2d(orig_imgs, rets, target_dict)
+        elif config['predictor']['mode'] == "tdmm":
+            imgs = draw_tdmm(orig_imgs, rets)
+        elif config['predictor']['mode'] == "scrfd":
+            imgs = draw_scrfd(orig_imgs, rets)
+        elif config['predictor']['predictor_mode'] == "scrfd_tdmm" or config[
+                'predictor']['predictor_mode'] == "scrfd_tdmm_opt":
+            imgs = draw_scrfd_tdmm(orig_imgs, rets)
+        for img_name, img in zip(img_names, imgs):
+            cv2.imwrite("output.jpg", img)
+            xxxx
+            name = img_name.split('_')[-1]
+            save_path = os.path.join(save_root, 'det_results')
+            if not os.path.exists(save_path):
+                os.mkdir(save_path)
+            print('writing %s' % os.path.join(save_path, img_name))
+            cv2.imwrite(os.path.join(save_path, img_name), img)
 
 
 def parse_config():

@@ -30,7 +30,6 @@ def mian(root_dir):
     # init camera matrix
     cam_mtx = np.load(os.path.join(root_dir, "cam2_mtx.npy"))
     dist_coeefs = np.zeros((4, 1))
-
     bfm = MorphabelModel('/aidata/anders/3D-head/3DDFA/BFM/BFM.mat')
     X_ind = bfm.kpt_ind
     X_ind_all = np.stack([X_ind * 3, X_ind * 3 + 1, X_ind * 3 + 2])
@@ -46,7 +45,6 @@ def mian(root_dir):
     for frame in annos["frame_list"]:
         img = cv2.imread(os.path.join(img_root, frame["name"]))
         cv2.imwrite("output.jpg", img)
-
         for lb in frame["labels"]:
             attrs = lb["attributes"]
             gt_roll, gt_pitch, gt_yaw = attrs["pose"]["roll"], attrs["pose"][
@@ -91,8 +89,6 @@ def mian(root_dir):
                                                         pred_yaw))
             print("roll: {}, pitch: {}, yaw: {}".format(gt_roll, gt_pitch,
                                                         gt_yaw))
-
-    
 
 
 def parse_config():

@@ -52,20 +52,31 @@ class AnchorTOODLoss(LossBase):
             num_level_anchors=self.num_level_anchors,
             anchor_generator_strides=self.anchor_generator_strides)
         self.sampler = PseudoSampler()
+
         # configurize
         self.use_dfl = False
         self.use_params = True
         self.use_qscore = False
         self.reg_max = 8
         self.loss_kps_std = 1.0
+        # self.diou_func = LOSS_FUNCS_FACTORY["DIoULoss"](loss_weight=1.0)
+        # self.init_cls_func = LOSS_FUNCS_FACTORY[self.init_loss_cls_cfg["type"]](
+        #     ["use_sigmoid"],
+        #     gamma=self.init_loss_cls_cfg["gamma"],
+        #     alpha=self.init_loss_cls_cfg["alpha"],
+        #     loss_weight=self.init_loss_cls_cfg["loss_weight"])
+        # self.cls_func = LOSS_FUNCS_FACTORY[self.loss_cls_cfg["type"]](
+        #     ["use_sigmoid"], gamma=self.loss_cls_cfg["gamma"])
         self.diou_func = LOSS_FUNCS_FACTORY["DIoULoss"](loss_weight=1.0)
-        self.init_cls_func = LOSS_FUNCS_FACTORY[self.init_loss_cls_cfg["type"]](
-            ["use_sigmoid"],
-            gamma=self.init_loss_cls_cfg["gamma"],
-            alpha=self.init_loss_cls_cfg["alpha"],
-            loss_weight=self.init_loss_cls_cfg["loss_weight"])
+
         self.cls_func = LOSS_FUNCS_FACTORY[self.loss_cls_cfg["type"]](
-            ["use_sigmoid"], gamma=self.loss_cls_cfg["gamma"])
+            self.loss_cls_cfg["use_sigmoid"],
+            beta=self.loss_cls_cfg["beta"],
+        )
+        # self.cls_func = LOSS_FUNCS_FACTORY[self.loss_cls_cfg["type"]](
+        #     self.loss_cls_cfg["use_sigmoid"],
+        #     beta=self.loss_cls_cfg["beta"],
+        # )
         self.loss_bbox_func = LOSS_FUNCS_FACTORY[self.loss_bbox_cfg["type"]](
             self.loss_bbox_cfg["loss_weight"])
         self.feat_size = tf.constant([(40, 40), (20, 20), (10, 10)])
@@ -90,16 +101,17 @@ class AnchorTOODLoss(LossBase):
         b_gt_kps, b_origin_sizes = targets['b_kps'], targets['b_origin_sizes']
         b_gt_params = targets['params']
         tmp_cls_preds, tmp_reg_dist_preds = [], []
-        for lv_feats in logits['multi_lv_feats']:
+        copy_logits = logits['multi_lv_feats']
+        for lv_feats in copy_logits:
             b_cls_preds, b_reg_dist, _ = lv_feats
             b_cls_preds = tf.reshape(
                 b_cls_preds, (self.batch_size, -1, self.cls_out_channels))
             b_reg_dist = tf.reshape(b_reg_dist, (self.batch_size, -1, 4))
-
             tmp_cls_preds.append(b_cls_preds)
             tmp_reg_dist_preds.append(b_reg_dist)
-        all_cls_scores = tf.concat(tmp_cls_preds, axis=1)
-        all_reg_dist_preds = tf.concat(tmp_reg_dist_preds, axis=1)
+        all_cls_scores = tf.stop_gradient(tf.concat(tmp_cls_preds, axis=1))
+        all_reg_dist_preds = tf.stop_gradient(
+            tf.concat(tmp_reg_dist_preds, axis=1))
         with tf.device('CPU'):
             anchors_0, anchors_1, anchors_2, labels_0, labels_1, labels_2, label_weights_0, label_weights_1, label_weights_2, bbox_targets_0, bbox_targets_1, bbox_targets_2, bbox_weights_0, bbox_weights_1, bbox_weights_2, norm_alignment_metric_0, norm_alignment_metric_1, norm_alignment_metric_2, num_total_samples = tf.py_function(
                 self.get_targets,
@@ -130,22 +142,32 @@ class AnchorTOODLoss(LossBase):
             norm_alignment_metric_0, norm_alignment_metric_1,
             norm_alignment_metric_2
         ]
-        loss_cls_list, loss_bbox_list, \
-              cls_avg_factors, bbox_avg_factors = self.compute_loss(
+        # loss_cls_list, loss_bbox_list, \
+        #       cls_avg_factors, bbox_avg_factors = self.compute_loss(
+        #     anchors_list, logits['multi_lv_feats'], labels_list,
+        #     label_weights_list, bbox_targets_list, alignment_metrics_list,
+        #     self.anchor_generator_strides, num_total_samples)
+        # losses = {'total': 0}
+        # cls_avg_factor = tf.math.reduce_sum(cls_avg_factors)
+        # cls_avg_factor = tf.where(cls_avg_factor < EPS, 1., cls_avg_factor)
+        # loss_cls_list = list(map(lambda x: x / cls_avg_factor, loss_cls_list))
+        # bbox_avg_factors = tf.math.reduce_sum(bbox_avg_factors)
+        # loss_bbox_list = list(
+        #     map(lambda x: x / bbox_avg_factors, loss_bbox_list))
+        # losses['loss_cls'] = tf.math.reduce_mean(loss_cls_list)
+        # losses['loss_bbox'] = tf.math.reduce_mean(loss_bbox_list)
+        # for key in losses:
+        #     losses['total'] += losses[key]
+
+        loss_cls_list, loss_bbox_list, weight_targets_list = self.compute_loss(
             anchors_list, logits['multi_lv_feats'], labels_list,
             label_weights_list, bbox_targets_list, alignment_metrics_list,
             self.anchor_generator_strides, num_total_samples)
         losses = {'total': 0}
-        cls_avg_factor = tf.math.reduce_sum(cls_avg_factors)
-        if cls_avg_factor < EPS:
-            cls_avg_factor = 1.
-        loss_cls_list = list(map(lambda x: x / cls_avg_factor, loss_cls_list))
-        bbox_avg_factors = tf.math.reduce_sum(bbox_avg_factors)
-        loss_bbox_list = list(
-            map(lambda x: x / bbox_avg_factors, loss_bbox_list))
+        avg_factor = tf.math.reduce_sum(weight_targets_list)
+        loss_bbox_list = list(map(lambda x: x / avg_factor, loss_bbox_list))
         losses['loss_cls'] = tf.math.reduce_mean(loss_cls_list)
         losses['loss_bbox'] = tf.math.reduce_mean(loss_bbox_list)
-
         for key in losses:
             losses['total'] += losses[key]
         return losses
@@ -178,20 +200,18 @@ class AnchorTOODLoss(LossBase):
         """
         loss_cls_list, loss_bbox_list = [], []
         aligned_metric_list, pos_bbox_weight_list = [], []
+        weight_targets_list = []
         for i, (anchors, lv_feats, labels, label_weights, bbox_targets,
                 alignment_metrics) in enumerate(
                     zip(anchors_list, multi_lv_feats, labels_list,
                         label_weights_list, bbox_targets_list,
                         alignment_metrics_list)):
-            # if i == 0:
-            #     continue
             b_cls_preds, b_reg_dist_preds, b_reg_offset = lv_feats
-            b_reg_dist_preds = self.offset_sampling(labels, b_reg_dist_preds,
-                                                    b_reg_offset)
+            # b_reg_dist_preds = self.offset_sampling(labels, b_reg_dist_preds,
+            #                                         b_reg_offset)
             anchors = tf.reshape(anchors, [-1, 4])
             b_cls_preds = tf.reshape(b_cls_preds, [-1, self.cls_out_channels])
             stride = anchor_generator_strides[i]
-
             b_reg_dist_preds = tf.reshape(b_reg_dist_preds, [-1, 4])
             bbox_targets = tf.reshape(bbox_targets, [-1, 4])
             labels = tf.reshape(labels, [-1])
@@ -200,44 +220,55 @@ class AnchorTOODLoss(LossBase):
             pos_inds = (labels >= 0.) & (labels < bg_class_ind)
             pos_inds = tf.where(pos_inds == True)
             score = tf.zeros_like(labels)
+            weight_targets = tf.gather_nd(
+                tf.math.reduce_max(b_cls_preds, axis=1), pos_inds)
             pos_bbox_targets = tf.gather_nd(bbox_targets, pos_inds)
             # poas_bbox_weights = tf.gather_nd(bbox_weights, pos_inds)
             pos_reg_dist_pred = tf.gather_nd(b_reg_dist_preds, pos_inds)
             pos_anchors = tf.gather_nd(anchors, pos_inds)
-            # pos_anchor_centers = self.anchor_center(pos_anchors) / stride[0]
             pos_anchor_centers = tf.gather_nd(self.b_anchor_centers[i],
                                               pos_inds)
-            pos_anchor_centers /= stride[0]
+            pos_anchor_centers = pos_anchor_centers / stride[0]
             pos_decode_bbox_targets = pos_bbox_targets / stride[0]
             pos_decode_bbox_pred = distance2bbox(pos_anchor_centers,
                                                  pos_reg_dist_pred)
+            score = tf.tensor_scatter_nd_update(
+                score, pos_inds, tf.ones(shape=(tf.shape(pos_inds)[0])))
             pos_bbox_weights = self.centerness_target(pos_anchors,
                                                       pos_bbox_targets)
-            if self.epochs > self.initial_epoch:
-                loss_cls = self.init_cls_func(b_cls_preds,
-                                              labels,
-                                              label_weights,
-                                              avg_factor=1.0)
+            # if self.epochs < self.initial_epoch:
+            #     pos_bbox_weights = self.centerness_target(
+            #         pos_anchors, pos_bbox_targets)
+            #     loss_cls = self.init_cls_func(b_cls_preds,
+            #                                   labels,
+            #                                   label_weights,
+            #                                   avg_factor=1.0)
+            # else:
+            #     alignment_metrics = tf.reshape(alignment_metrics, [-1])
+            #     pos_bbox_weights = tf.gather_nd(alignment_metrics, pos_inds)
+            #     loss_cls = self.cls_func(b_cls_preds,
+            #                              labels,
+            #                              alignment_metrics,
+            #                              avg_factor=1.0)  # num_total_samples)
 
-                pos_bbox_weights = self.centerness_target(
-                    pos_anchors, pos_bbox_targets)
-            else:
-                alignment_metrics = tf.reshape(alignment_metrics, (-1))
-                pos_bbox_weights = tf.gather_nd(alignment_metrics, pos_inds)
-                loss_cls = self.cls_func(b_cls_preds,
-                                         labels,
-                                         alignment_metrics,
-                                         avg_factor=1.0)  # num_total_samples)
-            loss_bbox = self.loss_bbox_func(pos_decode_bbox_pred,
-                                            pos_decode_bbox_targets,
-                                            pos_bbox_weights,
-                                            avg_factor=num_total_samples)
-
-            aligned_metric_list.append(tf.math.reduce_sum(alignment_metrics))
-            pos_bbox_weight_list.append(tf.math.reduce_sum(pos_bbox_weights))
+            loss_cls = self.cls_func(b_cls_preds, (labels, score),
+                                     weight=label_weights,
+                                     avg_factor=num_total_samples)
+            loss_bbox = self.diou_func(pos_decode_bbox_pred,
+                                       pos_decode_bbox_targets,
+                                       weight=weight_targets,
+                                       avg_factor=1.0)
+            # loss_bbox = self.loss_bbox_func(pos_decode_bbox_pred,
+            #                                 pos_decode_bbox_targets,
+            #                                 pos_bbox_weights,
+            #                                 avg_factor=num_total_samples)
+            weight_targets_list.append(tf.math.reduce_sum(weight_targets))
+            # aligned_metric_list.append(tf.math.reduce_sum(alignment_metrics))
+            # pos_bbox_weight_list.append(tf.math.reduce_sum(pos_bbox_weights))
             loss_cls_list.append(loss_cls)
             loss_bbox_list.append(loss_bbox)
-        return loss_cls_list, loss_bbox_list, aligned_metric_list, pos_bbox_weight_list
+        return loss_cls_list, loss_bbox_list, weight_targets_list
+        # return loss_cls_list, loss_bbox_list, aligned_metric_list, pos_bbox_weight_list
 
     def get_targets(self,
                     all_cls_scores,
@@ -307,7 +338,6 @@ class AnchorTOODLoss(LossBase):
         #     all_params_targets, self.num_level_anchors)
         num_total_samples = np.mean(num_total_pos, dtype=np.float32)
         num_total_samples = max(num_total_samples, 1.0)
-
         if self.epochs < self.initial_epoch:
             norm_alignment_metric_0 = bbox_weights_0[:, :, 0]
             norm_alignment_metric_1 = bbox_weights_1[:, :, 0]
@@ -320,7 +350,7 @@ class AnchorTOODLoss(LossBase):
                 image_norm_alignment_metrics = np.zeros(
                     shape=(all_label_weights[i].shape[0], ))
                 image_norm_alignment_metrics_inside = np.zeros(
-                    shape=(np.sum(inside_flags).astype(np.int32), ))
+                    shape=(np.sum(inside_flags).astype(np.float32), ))
                 pos_assigned_gt_inds = pos_assigned_gt_inds_list[i]
                 pos_inds = pos_inds_list[i]
                 class_assigned_gt_inds = np.unique(pos_assigned_gt_inds)
@@ -344,7 +374,6 @@ class AnchorTOODLoss(LossBase):
             norm_alignment_metric_0 = norm_alignment_metrics_list[0]
             norm_alignment_metric_1 = norm_alignment_metrics_list[1]
             norm_alignment_metric_2 = norm_alignment_metrics_list[2]
-
         return (anchors_0, anchors_1, anchors_2, labels_0, labels_1, labels_2,
                 label_weights_0, label_weights_1, label_weights_2,
                 bbox_targets_0, bbox_targets_1, bbox_targets_2, bbox_weights_0,

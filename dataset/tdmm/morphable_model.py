@@ -1,5 +1,6 @@
 from pprint import pprint
 from utils.io import load_BFM
+from utils.transform import rotate
 import numpy as np
 import tensorflow as tf
 
@@ -41,19 +42,18 @@ class MorphabelModel:
         ],
                               axis=-1)
         valid_ind = tf.reshape(tf.transpose(X_ind_all), (-1))
-
         self.shapeMU = tf.gather(self.model['shapeMU'], valid_ind)
         self.shapePC = tf.gather(self.model['shapePC'][:, :self.n_shp],
                                  valid_ind)
         self.expPC = tf.gather(self.model['expPC'][:, :self.n_exp], valid_ind)
+
         self.shapeMU = tf.tile(self.shapeMU[tf.newaxis, tf.newaxis, ...],
                                [self.batch_size, self.max_obj_num, 1, 1])
 
         self.shapeMU = tf.reshape(self.shapeMU,
                                   (self.batch_size, self.max_obj_num,
                                    tf.shape(self.shapeMU)[-2] // 3, 3))
-        # mean = tf.math.reduce_mean(self.shapeMU, axis=-2, keepdims=True)
-        # self.shapeMU -= mean
+
         self.shapeMU = tf.reshape(self.shapeMU,
                                   (self.batch_size, self.max_obj_num, -1, 1))
         self.shapePC = tf.tile(self.shapePC[tf.newaxis, tf.newaxis, ...],

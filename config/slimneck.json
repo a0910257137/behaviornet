@@ -1,13 +1,13 @@
 {
-    "batch_size": 48,
-    "epochs": 200,
+    "batch_size": 32,
+    "epochs": 100,
     "learn_rate": 0.001,
-    "model_path": "/aidata/anders/data_collection/okay/total/archives/whole/mobilenext_neck",
+    "model_path": "/aidata/anders/data_collection/okay/total/archives/whole/VoVGSCSP",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/data_collection/okay/total/archives/whole/mobilenext_neck/logs/"
+        "log_dir": "/aidata/anders/data_collection/okay/total/archives/whole/VoVGSCSP/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -26,8 +26,8 @@
             "read_img": true,
             "num_lnmks": 70,
             "category_path": "./config/face.txt",
-            "train_folder": "/aidata/anders/data_collection/okay/total/backups/tf_records/train",
-            "test_folder": "/aidata/anders/data_collection/okay/total/backups/tf_records/test"
+            "train_folder": "/aidata/anders/data_collection/okay/total/tf_records/train",
+            "test_folder": "/aidata/anders/data_collection/okay/total/tf_records/test"
         }],
         "augments": {
             "color_chains": [
@@ -52,7 +52,7 @@
         },
         "3dmm": {
             "model_path": "/aidata/anders/3D-head/3DDFA/BFM/BFM.mat",
-            "pms_path": "/aidata/anders/data_collection/okay/total/backups/tf_records/params/param_mean_std.npy",
+            "pms_path": "/aidata/anders/data_collection/okay/total/tf_records/params/param_mean_std.npy",
             "n_s": 0,
             "n_R": 9,
             "n_shp": 40,
@@ -85,21 +85,22 @@
             ]
         },
         "neck": {
-            "module_name": "pafpn",
+            "module_name": "slim_neck",
             "optimizer": "adam",
             "num_vars": null,
             "variables": null,
-            "out_channels": 32,
             "start_level": 1,
             "backbone_end_level": 4,
-            "add_extra_convs": "on_output",
             "num_outs": 3,
+            "l_out_channels":128,
+            "gs_out_channels": [128, 64, 64, 128],
             "in_channels": [40, 72, 152, 288],
             "lr": 1e-3
         },
         "head": {
             "module_name": "scrfd",
             "optimizer": "adam",
+            "head_branch":1, 
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,

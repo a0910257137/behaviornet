@@ -11,6 +11,12 @@ norm_method = 'bn'
 norma_init_layer = tf.keras.initializers.RandomNormal
 
 
+def bias_init_with_prob(prior_prob):
+    """initialize conv/fc bias value according to a given probability value."""
+    bias_init = float(-tf.math.log((1 - prior_prob) / prior_prob))
+    return bias_init
+
+
 class TaskDecomposition(tf.keras.layers.Layer):
 
     def __init__(self,
@@ -27,12 +33,16 @@ class TaskDecomposition(tf.keras.layers.Layer):
                                   kernel_size=1,
                                   strides=1,
                                   norm_method=None,
-                                  activation="relu")
+                                  activation="relu",
+                                  kernel_initializer=norma_init_layer(
+                                      mean=0.0, stddev=0.001))
         self.la_conv2 = ConvBlock(self.stacked_convs,
                                   kernel_size=1,
                                   strides=1,
                                   norm_method=None,
-                                  activation='sigmoid')
+                                  activation='sigmoid',
+                                  kernel_initializer=norma_init_layer(
+                                      mean=0.0, stddev=0.001))
 
         self.reduction_weights = self.add_weight(
             name='reduction_weights',
@@ -40,16 +50,13 @@ class TaskDecomposition(tf.keras.layers.Layer):
                    self.feat_channels),
             initializer=norma_init_layer(mean=0.0, stddev=0.01),
             trainable=True)
-        self.adap_avg_pool = tf.keras.layers.GlobalAvgPool2D()
+        # self.adap_avg_pool = tf.keras.layers.GlobalAvgPool2D()
         self.bn_norm = tf.keras.layers.BatchNormalization(name='bn')
-
         self.relu = tf.keras.layers.Activation(activation='relu',
                                                name='act_relu')
 
     def __call__(self, x, avg_x=None):
         b, h, w, c = x.get_shape().as_list()
-        if avg_x is None:
-            avg_x = self.adap_avg_pool(x)
         weight = self.la_conv1(avg_x)
         weight = self.la_conv2(weight)
         # here we first compute the product between layer attention weight and conv weight,
@@ -63,6 +70,7 @@ class TaskDecomposition(tf.keras.layers.Layer):
         # B, C, H, W
         x = tf.reshape(tf.matmul(conv_weight, x, transpose_b=(0, 2, 1)),
                        (-1, self.feat_channels, h, w))
+
         # B, H, W, C
         x = tf.transpose(x, (0, 2, 3, 1))
         # gn?
@@ -86,9 +94,8 @@ class TOODHead(tf.keras.Model):
         self.norm_cfg = self.config.norm_cfg
         self.reg_max = 8
         self.cls_reg_share = self.config.cls_reg_share
-
         self.strides_share = self.config.strides_share
-        self.params_share = self.config.params_share
+        # self.params_share = self.config.params_share
         self.scale_mode = self.config.scale_mode
         self.use_dfl = True
         self.dw_conv = self.config.dw_conv
@@ -102,7 +109,6 @@ class TOODHead(tf.keras.Model):
         self.use_sigmoid_cls = True
         # TODO better way to determine whether sample or not
         self.sampling = False
-
         if self.use_sigmoid_cls:
             self.cls_out_channels = self.num_classes
         else:
@@ -113,8 +119,8 @@ class TOODHead(tf.keras.Model):
         #print('USE-SCALE:', self.use_scale)
         self.reg_decoded_bbox = False
         self.num_anchors = 2
-        self.sigmoid_activation = tf.keras.layers.Activation(
-            activation='sigmoid', name='act_sigmoid')
+        self.sig_act = tf.keras.layers.Activation(activation='sigmoid',
+                                                  name='act_sigmoid')
         self.__init_layers()
 
     # @tf.function
@@ -128,30 +134,27 @@ class TOODHead(tf.keras.Model):
             #     tuple(self.single_run(xx, scale, stride)))
         return pred_branches
 
-    def single_run(self, xx, scale, stride):
-        b, h, w, c = xx.get_shape().as_list()
+    def single_run(self, x, scale, stride):
+        b, h, w, c = x.get_shape().as_list()
         # extract task interactive features
         inter_feats = []
         for i, inter_conv in enumerate(self.inter_convs):
-            xx = inter_conv(xx)
-            inter_feats.append(xx)
-
-        xx = tf.concat(inter_feats, axis=-1)
-        avg_xx = self.adap_avg_pool(xx)
-        cls_xx = self.cls_decomp(xx, avg_xx)
-        reg_xx = self.reg_decomp(xx, avg_xx)
+            x = inter_conv(x)
+            inter_feats.append(x)
+        feat = tf.concat(inter_feats, axis=-1)
+        avg_feat = self.adap_avg_pool(feat)
+        cls_feat = self.cls_decomp(feat, avg_feat)
         # cls prediction and alignment
-        cls_logits = self.tood_cls(cls_xx)
-        cls_prob = self.cls_prob_conv1(xx)
+        cls_logits = self.tood_cls(cls_feat)
+        cls_prob = self.cls_prob_conv1(feat)
         cls_prob = self.cls_prob_conv2(cls_prob)
         cls_score = tf.math.sqrt(
-            self.sigmoid_activation(cls_logits) *
-            self.sigmoid_activation(cls_prob))
-
-        reg_dist = scale * tf.math.exp(self.tood_reg(reg_xx))
+            self.sig_act(cls_logits) * self.sig_act(cls_prob))
+        reg_feat = self.reg_decomp(feat, avg_feat)
+        reg_dist = scale * tf.math.exp(self.tood_reg(reg_feat))
         # reg_dist = tf.reshape(reg_dist, (-1, 4))
         # offset for precise bbox
-        reg_offset = self.reg_offset_conv1(xx)
+        reg_offset = self.reg_offset_conv1(feat)
         reg_offset = self.reg_offset_conv2(reg_offset)
         return cls_score, reg_dist, reg_offset
 
@@ -161,13 +164,13 @@ class TOODHead(tf.keras.Model):
         for i in range(self.stacked_convs):
             chn = self.in_channels if i == 0 else self.feat_channels
             self.inter_convs.append(
-                ConvBlock(
-                    self.feat_channels,
-                    kernel_size=3,
-                    strides=1,
-                    norm_method=None,
-                    activation='relu',
-                ))
+                ConvBlock(self.feat_channels,
+                          kernel_size=3,
+                          strides=1,
+                          norm_method='bn',
+                          activation='relu',
+                          kernel_initializer=norma_init_layer(mean=0.0,
+                                                              stddev=0.01)))
 
         self.cls_decomp = TaskDecomposition(self.feat_channels,
                                             self.stacked_convs,
@@ -175,12 +178,15 @@ class TOODHead(tf.keras.Model):
         self.reg_decomp = TaskDecomposition(self.feat_channels,
                                             self.stacked_convs,
                                             self.stacked_convs * 8)
+        bias_cls = bias_init_with_prob(0.01)
+
         self.tood_cls = ConvBlock(
             filters=self.num_anchors * self.cls_out_channels,
             kernel_size=3,
             strides=1,
             norm_method=None,
             activation=None,
+            bias_initializer=tf.constant_initializer(value=bias_cls),
             kernel_initializer=norma_init_layer(mean=0.0, stddev=0.01))
         self.tood_reg = ConvBlock(self.num_anchors * 4,
                                   kernel_size=3,
@@ -197,13 +203,14 @@ class TOODHead(tf.keras.Model):
                                         activation='relu',
                                         kernel_initializer=norma_init_layer(
                                             mean=0.0, stddev=0.01))
-        self.cls_prob_conv2 = ConvBlock(1,
-                                        kernel_size=3,
-                                        strides=1,
-                                        norm_method=None,
-                                        activation=None,
-                                        kernel_initializer=norma_init_layer(
-                                            mean=0.0, stddev=0.01))
+        self.cls_prob_conv2 = ConvBlock(
+            1,
+            kernel_size=3,
+            strides=1,
+            norm_method=None,
+            activation=None,
+            bias_initializer=tf.constant_initializer(value=bias_cls),
+            kernel_initializer=norma_init_layer(mean=0.0, stddev=0.01))
 
         self.reg_offset_conv1 = ConvBlock(self.feat_channels // 4,
                                           kernel_size=1,
@@ -211,15 +218,16 @@ class TOODHead(tf.keras.Model):
                                           norm_method=None,
                                           activation='relu',
                                           kernel_initializer=norma_init_layer(
-                                              mean=0.0, stddev=0.5))
+                                              mean=0.0, stddev=0.001))
 
-        self.reg_offset_conv2 = ConvBlock(4 * 2,
-                                          kernel_size=3,
-                                          strides=1,
-                                          norm_method=None,
-                                          activation=None,
-                                          kernel_initializer=norma_init_layer(
-                                              mean=0.0, stddev=0.5))
+        self.reg_offset_conv2 = ConvBlock(
+            4 * 2,
+            kernel_size=3,
+            strides=1,
+            norm_method=None,
+            activation=None,
+            bias_initializer=tf.constant_initializer(value=0.),
+            kernel_initializer=norma_init_layer(mean=0.0, stddev=0.001))
         s0 = tf.Variable(initial_value=1., trainable=True, name="scale_bbox_0")
         s1 = tf.Variable(initial_value=1., trainable=True, name="scale_bbox_1")
         s2 = tf.Variable(initial_value=1., trainable=True, name="scale_bbox_2")

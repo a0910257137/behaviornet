@@ -76,8 +76,8 @@ class BaseSampler(metaclass=ABCMeta):
             assign_result.add_gt_(gt_labels)
             gt_ones = bboxes.new_ones(gt_bboxes.shape[0], dtype=np.uint8)
             gt_flags = np.concatenate([gt_ones, gt_flags])
-
         num_expected_pos = int(self.num * self.pos_fraction)
+
         pos_inds = self.pos_sampler._sample_pos(assign_result,
                                                 num_expected_pos,
                                                 bboxes=bboxes,
@@ -128,6 +128,7 @@ class PseudoSampler(BaseSampler):
         Returns:
             :obj:`SamplingResult`: sampler results
         """
+        
         pos_inds = np.unique(np.nonzero(assign_result.gt_inds > 0)[0])
         neg_inds = np.unique(np.nonzero(assign_result.gt_inds == 0)[0])
         gt_flags = np.zeros(shape=(bboxes.shape[0]), dtype=np.uint8)

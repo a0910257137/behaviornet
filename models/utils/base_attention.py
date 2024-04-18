@@ -1,5 +1,4 @@
 import tensorflow as tf
-import numpy as np
 import math
 from .conv_module import ConvBlock
 
@@ -7,15 +6,16 @@ conv_mode = "sp_conv2d"
 
 
 class SelfAttention(tf.keras.layers.Layer):
+
     def __init__(self, outdim, name, **kwargs):
         super().__init__(**kwargs)
         self.outdim = outdim
-        self.qConv = ConvBlock(self.outdim // 4,
+        self.qConv = ConvBlock(self.outdim,
                                kernel_size=1,
                                strides=1,
                                use_bias=False,
                                activation=None)
-        self.kConv = ConvBlock(self.outdim // 4,
+        self.kConv = ConvBlock(self.outdim,
                                kernel_size=1,
                                strides=1,
                                use_bias=False,
@@ -27,6 +27,11 @@ class SelfAttention(tf.keras.layers.Layer):
                                activation=None)
         self.kMaxpooling = tf.keras.layers.MaxPooling2D(pool_size=2, strides=2)
         self.vMaxpooling = tf.keras.layers.MaxPooling2D(pool_size=2, strides=2)
+
+        # self.kAvgpooling = tf.keras.layers.AveragePooling2D(pool_size=2,
+        #                                                     strides=2)
+        # self.vAvgpooling = tf.keras.layers.AveragePooling2D(pool_size=2,
+        #                                                     strides=2)
         self.cConv = ConvBlock(self.outdim,
                                kernel_size=1,
                                strides=1,
@@ -43,28 +48,28 @@ class SelfAttention(tf.keras.layers.Layer):
             shape=(1, ),
             initializer=tf.keras.initializers.Constant(0.),
             trainable=True)
-        self.alpha = self.add_weight(
-            name='alpha_sp',
-            shape=(1, ),
-            initializer=tf.keras.initializers.Constant(1.),
-            trainable=True)
+        # self.alpha = self.add_weight(
+        #     name='alpha_sp',
+        #     shape=(1, ),
+        #     initializer=tf.keras.initializers.Constant(1.),
+        #     trainable=True)
         super(SelfAttention, self).build(input_shape)
 
     def hw_flatten(self, f_map):
         _, h, w, c = f_map.get_shape().as_list()
         return tf.reshape(f_map, shape=[-1, h * w, c])
 
-    def call(self, inputs, pos, **kwargs):
+    def call(self, inputs, **kwargs):
         # copied_inputs = inputs
-        inputs = inputs + self.alpha * pos
+        # inputs = inputs + self.alpha * pos
 
         query = self.qConv(inputs)
         key = self.kConv(inputs)
         key = self.kMaxpooling(key)
-
+        # key = self.kAvgpooling(key)
         value = self.vConv(inputs)
         value = self.vMaxpooling(value)
-
+        # value = self.vAvgpooling(value)
         query = self.hw_flatten(query)
 
         key = tf.transpose(self.hw_flatten(key), [0, 2, 1])
@@ -89,6 +94,7 @@ class SelfAttention(tf.keras.layers.Layer):
 
 
 class ChannelAttention(tf.keras.layers.Layer):
+
     def __init__(self, name, **kwargs):
         super().__init__(**kwargs)
         self.is_placeholder = True
@@ -135,6 +141,7 @@ class PositionEmbeddingSine(tf.keras.layers.Layer):
     Call returns:
         tf.Tensor: The encoding a tensor of float and shape [batch_size, w, h, output_dim]
     """
+
     def __init__(self, output_dim=64, temperature=10000):
         super().__init__()
         self.temperature = temperature

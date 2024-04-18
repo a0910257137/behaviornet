@@ -1,13 +1,13 @@
 {
-    "batch_size": 64,
-    "epochs": 100,
+    "batch_size": 30,
+    "epochs": 200,
     "learn_rate": 0.001,
-    "model_path": "/aidata/anders/data_collection/okay/WF/archives/param_base",
+    "model_path": "/aidata/anders/data_collection/okay/total/archives/whole/ghostnet",
     "summary": {
         "scalar_freq": 50,
         "hist_freq": 150,
         "img_freq": 250,
-        "log_dir": "/aidata/anders/data_collection/okay/WF/archives/param_base/logs/"
+        "log_dir": "/aidata/anders/data_collection/okay/total/archives/whole/ghostnet/logs/"
     },
     "data_reader": {
         "max_obj_num": 15,
@@ -26,8 +26,8 @@
             "read_img": true,
             "num_lnmks": 70,
             "category_path": "./config/face.txt",
-            "train_folder": "/aidata/anders/box2d/coco/tf_records/train",
-            "test_folder": "/aidata/anders/box2d/coco/tf_records/test"
+            "train_folder": "/aidata/anders/data_collection/okay/total/tf_records/train",
+            "test_folder": "/aidata/anders/data_collection/okay/total/tf_records/test"
         }],
         "augments": {
             "color_chains": [
@@ -36,7 +36,7 @@
                 "bright",
                 "hue"
             ],
-            "tensorpack_chains": [], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise"
+            "tensorpack_chains": ["Flip", "RandomSquareCrop"], //"CropTransform", "WarpAffineTransform","RandomPaste","JpegNoise","GaussianNoise","SaltPepperNoise", "RandomSquareCrop"
             "album_chains": {
                 "cutout": {
                     "max_holes": 15,
@@ -52,29 +52,36 @@
         },
         "3dmm": {
             "model_path": "/aidata/anders/3D-head/3DDFA/BFM/BFM.mat",
-            "pms_path": "/aidata/anders/box2d/coco/tf_records/params/param_mean_std.npy",
+            "pms_path": "/aidata/anders/data_collection/okay/total/tf_records/params/param_mean_std.npy",
             "n_s": 0,
             "n_R": 9,
-            "n_shp": 50,
-            "n_exp": 29,
-            "max_iter": 5
+            "n_shp": 40,
+            "n_exp": 11,
+            "n_t3d" :2,
+            "max_iter": 4
         }
     },
     "models": {
         "model_name": "anchor_obj_det",
         "frozen_backbone": false,
         "multi_optimizer": false,
-        "optimizer": "adamw",
+        "optimizer": "sgd",
         "backbone": {
-            "module_name": "mobilenet",
+            "module_name": "mobilenextnet",
             "optimizer": "adam",
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,
-            "block_cfg": {
-                "stage_blocks": [2, 3, 2, 6],
-                "stage_planes": [16, 16, 40, 72, 152, 288]
-            }
+            "stage_one_width": 20,
+            "stage_one_strides": 1,
+            "num_ghost_module_v1_stacks": 2,
+            "width_mul":1,
+            // t, c, n, s
+            "kernel_size": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+            "first_ghost_channels":[16, 48, 72, 72, 120, 240, 200, 184, 184, 480, 672, 672, 960, 960, 960, 960],
+            "out_channels" :[16, 24, 24, 40, 40, 80, 80, 80, 80, 112, 112, 160, 160, 160, 160, 160], 
+            "se_ratios": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "strides": [1, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1]
         },
         "neck": {
             "module_name": "pafpn",
@@ -95,20 +102,22 @@
             "num_vars": null,
             "variables": null,
             "lr": 1e-3,
-            "num_classes": 1,
+            "num_classes": 2,
             "in_channels": 16,
             "stacked_convs": 2,
             "feat_channels": 64,
             "norm_cfg": {
-                "type": "GN",
+                "type": "BN",
                 "num_groups": 16
             },
             "cls_reg_share": true,
-            "strides_share": true,
+            "strides_share": false,
+            "params_share": false,
             "dw_conv": true,
             "scale_mode": 2,
             "loss_dfl": false,
-            "reg_max": 8
+            "reg_max": 8,
+            "use_kps": false
         },
         "anchor_generator": {
             "type": "AnchorGenerator",
@@ -120,7 +129,7 @@
         },
         "loss": {
             "module_name": "anchor_loss",
-            "num_classes": 1,
+            "num_classes": 2,
             "loss_cls": {
                 "type": "QualityFocalLoss",
                 "use_sigmoid": true,
@@ -134,9 +143,10 @@
             "loss_kps": {
                 "type": "SmoothL1Loss",
                 "beta": 0.1111111111111111,
-                "loss_weight": 0.1
+                "loss_weight": 2.0
             },
             "train_cfg": {
+                "initial_epoch":0,
                 "assigner": {
                     "type": "ATSSAssigner",
                     "topk": 9

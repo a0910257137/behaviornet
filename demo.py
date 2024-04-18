@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import time
 import cv2
 import os
 import argparse
@@ -72,7 +71,8 @@ class Demo:
         self.total_distraction = []
 
     def __call__(self):
-        img_path_list = sorted(list(glob(os.path.join(self.img_root, '*.jpg'))))
+        img_path_list = sorted(list(glob(os.path.join(self.img_root,
+                                                      '*.jpg'))))
         if len(img_path_list) == 0:
             img_path_list = sorted(
                 list(glob(os.path.join(self.img_root, '*.png'))))
@@ -112,7 +112,8 @@ class Demo:
                                     self.temp_lnmk, obj_h)
                             else:
                                 self.mean_lnmk, self.covariance_lnmk = self.kf_lnmk.predict(
-                                    self.mean_lnmk, self.covariance_lnmk, obj_h)
+                                    self.mean_lnmk, self.covariance_lnmk,
+                                    obj_h)
                                 self.mean_lnmk, self.covariance_lnmk = self.kf_lnmk.update(
                                     self.mean_lnmk, self.covariance_lnmk,
                                     self.temp_lnmk)
@@ -131,8 +132,8 @@ class Demo:
                     imgs, post_lnmks = self.business_logics(img, lnmks, eye_hw)
                     for lnmk in post_lnmks:
                         lnmk = (lnmk + .5).astype(np.int32)
-                        img = cv2.circle(img, tuple(lnmk[::-1]), 3, (0, 255, 0),
-                                         -1)
+                        img = cv2.circle(img, tuple(lnmk[::-1]), 3,
+                                         (0, 255, 0), -1)
                     self.video_maker.write(img)
                 progress_bar.update(1)
 
@@ -153,10 +154,10 @@ class Demo:
         y1, x1 = tl
         y2, x2 = br
         nose_lnmks = lnmks[:, 2, :]
-        logical_y = np.logical_and(y1 <= nose_lnmks[:, :1],
-                                   nose_lnmks[:, :1] <= y2)
-        logical_x = np.logical_and(x1 <= nose_lnmks[:, 1:],
-                                   nose_lnmks[:, 1:] <= x2)
+        logical_y = np.logical_and(y1 <= nose_lnmks[:, :1], nose_lnmks[:, :1]
+                                   <= y2)
+        logical_x = np.logical_and(x1 <= nose_lnmks[:, 1:], nose_lnmks[:, 1:]
+                                   <= x2)
         logical_yx = np.concatenate([logical_y, logical_x], axis=-1)
         logical_yx = np.all(logical_yx, axis=-1)
         lnmks, nose_scores = lnmks[logical_yx], nose_scores[logical_yx]
@@ -378,7 +379,8 @@ class Demo:
             self.eyes_status += [np.array([R_status, L_status])]
         else:
             proc_lnmks = []
-            yaw_roll_text = "Yaw: {}; Roll: {}".format("unsupport", "unsupport")
+            yaw_roll_text = "Yaw: {}; Roll: {}".format("unsupport",
+                                                       "unsupport")
             eye_infos = "LE: {}; RE: {}".format("invalid", "invalid")
             img, t_h_o = put_text(img,
                                   yaw_roll_text,

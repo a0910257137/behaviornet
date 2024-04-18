@@ -19,7 +19,8 @@ class BDDMetricEvaluator(Base):
         super(BDDMetricEvaluator, self).__init__(cfg)
 
         self._data = None
-        self.data_fmt = namedtuple('Data', ['raw_data', 'matched', 'unmatched'])
+        self.data_fmt = namedtuple('Data',
+                                   ['raw_data', 'matched', 'unmatched'])
         self.paired_lbs: list = []
         self.cfg = cfg
         self.condition_cfg = self.cfg.conditions
@@ -34,7 +35,8 @@ class BDDMetricEvaluator(Base):
             self.condition_cfg.object_matcher_method)
         self.calculator = CALCULATOR_FACTORY.get(
             self.condition_cfg.calculator_method)
-        self.reporter = REPORTER_FACTORY.get(self.condition_cfg.reporter_method)
+        self.reporter = REPORTER_FACTORY.get(
+            self.condition_cfg.reporter_method)
 
     def __call__(self, bdd_gt_annos, bdd_eval_annos):
         bdd_gt_annos, bdd_eval_annos = bdd_gt_annos[
@@ -60,8 +62,8 @@ class BDDMetricEvaluator(Base):
         for gt_frame, eval_frame in zip(gt_frames, eval_frames):
             users_object_iterable_uc = (gt_frame, eval_frame)
 
-            users_object_iterable_uc = dict(zip(users,
-                                                users_object_iterable_uc))
+            users_object_iterable_uc = dict(
+                zip(users, users_object_iterable_uc))
             gt_frame, eval_frame = self.preprocess(users_object_iterable_uc)
             gt_shapes, eval_shapes, raw_gt_data, raw_eval_data, ret_metric = self.cal_matched_metric(
                 gt_frame, eval_frame)
@@ -125,7 +127,8 @@ class BDDMetricEvaluator(Base):
 
     def cal_nle(self, gt_frames, eval_frames):
         tmp_nle, tmp_interocular = [], []
-        for i, (gt_frame, eval_frame) in enumerate(zip(gt_frames, eval_frames)):
+        for i, (gt_frame, eval_frame) in enumerate(zip(gt_frames,
+                                                       eval_frames)):
             _, _, _, _, ret_metric = self.cal_matched_metric(
                 gt_frame, eval_frame)
             if i > 0:
@@ -189,15 +192,19 @@ class BDDMetricEvaluator(Base):
                 base_frame = {
                     'frame_id':
                     (frame['dataset'], frame['sequence'], frame['name']),
-                    'box2d': lb['box2d'],
-                    'category': lb['category']
+                    'box2d':
+                    lb['box2d'],
+                    'category':
+                    lb['category']
                 }
             elif self.metric_type.lower() in ['keypoints', 'landmarks', 'nle']:
                 base_frame = {
                     'frame_id':
                     (frame['dataset'], frame['sequence'], frame['name']),
-                    'keypoints': lb['keypoints'],
-                    'category': lb['category']
+                    'keypoints':
+                    lb['keypoints'],
+                    'category':
+                    lb['category']
                 }
             outputs.append(base_frame)
             return outputs

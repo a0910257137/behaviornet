@@ -69,19 +69,21 @@ class FocalLossWithProb:
         pos = (target >= 0.) & (target < bg_class_ind)
         pos = tf.where(pos == True)
         target_one_hot = tf.one_hot(tf.cast(target, tf.int32),
-                                    tf.cast(bg_class_ind, tf.int32))
+                                    tf.cast(bg_class_ind, tf.int32),
+                                    dtype=tf.float32)
         N, C = tf.shape(prob)[0], tf.shape(prob)[1]
         flatten_alpha = tf.fill([N, C], (1 - alpha))
         idxs = tf.cast(tf.where(target_one_hot == 1), tf.int32)
-        vals = tf.constant(alpha, shape=(tf.shape(idxs)[0]), dtype=tf.float32)
+        vals = tf.ones(shape=tf.shape(idxs)[0]) * alpha
         flatten_alpha = tf.tensor_scatter_nd_update(flatten_alpha, idxs, vals)
-        pt = tf.where(target_one_hot == 1, prob, 1 - prob)
+        # flatten_alpha = tf.gather_nd(flatten_alpha, idxs)
+        pt = tf.where(target_one_hot == 1., prob, 1 - prob)
         target_one_hot = tf.expand_dims(target_one_hot, axis=-1)
         prob = tf.expand_dims(prob, axis=-1)
         ce_loss = self.bce(target_one_hot, prob)
         loss = flatten_alpha * tf.math.pow(1 - pt, gamma) * ce_loss
         if weight is not None:
-            weight = tf.reshape(weight, (-1, 1))
+            weight = weight[:, None]
             loss = self.loss_weight * weight_reduce_loss(
                 loss, weight, reduction, avg_factor)
         else:

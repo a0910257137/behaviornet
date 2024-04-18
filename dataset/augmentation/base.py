@@ -14,10 +14,11 @@ class Base:
     def __init__(self):
         self.clc_aug_funcs = {
             "bright": partial(tf.image.random_brightness, max_delta=0.1),
-            "saturat": partial(tf.image.random_saturation, lower=0.4,
+            "saturat": partial(tf.image.random_saturation,
+                               lower=0.4,
                                upper=1.8),
             "hue": partial(tf.image.random_hue, max_delta=0.1),
-            "contrast": partial(tf.image.random_contrast, lower=0.6, upper=1.4),
+            "contrast": partial(tf.image.random_contrast, lower=0.6, upper=1.4)
         }
 
     def color_aug(self, b_imgs, aug_chains):
@@ -74,6 +75,7 @@ class Base:
         b_coors = b_coors.numpy().astype(np.float32)
         b_imgs = b_imgs.numpy().astype(np.uint8)
         flip_probs = flip_probs.numpy()
+        # gray_probs = gray_probs.numpy()
         _, h, w, c = b_imgs.shape
         aug_prob = 0.4
         tmp_imgs, tmp_coors = [], []
@@ -150,7 +152,8 @@ class Base:
 
         R_eyes = objs_kps[:, 35:41][:, [3, 2, 1, 0, 5, 4]]
         nose = objs_kps[:, 41:50][:, [0, 1, 2, 3, 8, 7, 6, 5, 4]]
-        out_lips = objs_kps[:, 50:62][:, [6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8, 7]]
+        out_lips = objs_kps[:, 50:62][:,
+                                      [6, 5, 4, 3, 2, 1, 0, 11, 10, 9, 8, 7]]
 
         in_lips = objs_kps[:, 62:70][:, [4, 3, 2, 1, 0, 7, 6, 5]]
 
@@ -389,8 +392,10 @@ class Base:
                 patch_to[1] = max(0, patch_to[1] * -1)
                 patch_to[2] = patch_to[0] + (patch_from[2] - patch_from[0])
                 patch_to[3] = patch_to[1] + (patch_from[3] - patch_from[1])
-                rimg[patch_to[1]:patch_to[3], patch_to[0]:patch_to[2], :] = img[
-                    patch_from[1]:patch_from[3], patch_from[0]:patch_from[2], :]
+                rimg[patch_to[1]:patch_to[3],
+                     patch_to[0]:patch_to[2], :] = img[
+                         patch_from[1]:patch_from[3],
+                         patch_from[0]:patch_from[2], :]
                 #print(img.shape, scale, patch, patch_from, patch_to, rimg.shape)
                 img = rimg
                 aug_h, aug_w = img.shape[:2]

@@ -14,7 +14,9 @@ from utils.io import *
 from utils.bdd_process import *
 from metrics.compute import ComputeIOU
 from metrics.metric_evaluator import BDDMetricEvaluator
+import tensorflow as tf
 
+tf.keras.layers.Conv2DTranspose
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from behavior_predictor.inference import BehaviorPredictor
@@ -29,7 +31,7 @@ class Eval:
         self.eval_path = eval_path
         self.img_root = img_root
         self.batch_size = batch_size
-        self.mode = self.pred_config['mode']
+        self.mode = self.pred_config['predictor_mode']
         self.predictor = model(config)
         self.metric_type = self.metric_config['metric_type']
 
@@ -123,8 +125,9 @@ class Eval:
                                          axis=0)
 
                     keys = [
-                        'left_eye_lnmk_27', 'right_eye_lnmk_33', 'nose_lnmk_42',
-                        'outer_lip_lnmk_48', 'outer_lip_lnmk_54'
+                        'left_eye_lnmk_27', 'right_eye_lnmk_33',
+                        'nose_lnmk_42', 'outer_lip_lnmk_48',
+                        'outer_lip_lnmk_54'
                     ]
                     replace_infos = {}
                     for key, kp in zip(keys, kps):
@@ -135,6 +138,7 @@ class Eval:
     def run(self):
         eval_files = self.get_eval_path()
         self.cates = ["NOT MASK", "MASK"]
+        # self.cates = ["FACE"]
         print('Eval categories')
         pprint(self.cates)
         total_imgs = 0
@@ -164,15 +168,21 @@ class Eval:
                             bdd_results, batch_results, batch_frames,
                             self.cates)
                     elif self.mode == 'tdmm':
-                        eval_bdd_annos = tdmm_to_bdd(bdd_results, batch_results,
+                        eval_bdd_annos = tdmm_to_bdd(bdd_results,
+                                                     batch_results,
                                                      batch_frames, self.cates)
                     elif self.mode == 'scrfd':
-
                         eval_bdd_annos = scrfd_to_bdd(bdd_results,
                                                       batch_results,
                                                       batch_frames, self.cates)
+                    elif self.mode == 'scrfd_tdmm':
+                        eval_bdd_annos = scrfd_tdmm_to_bdd(
+                            bdd_results, batch_results, batch_frames,
+                            self.cates)
+
             gt_bdd_annos, eval_bdd_annos = self.with_bddversion(
-                gt_bdd_list), self.with_bddversion(eval_bdd_annos['frame_list'])
+                gt_bdd_list), self.with_bddversion(
+                    eval_bdd_annos['frame_list'])
             if self.metric_config['metric_type'] == 'IoU':
                 # old version could parse all frame and calculate FP FN
                 iou = ComputeIOU(gt_bdd_annos, eval_bdd_annos)
@@ -180,7 +190,6 @@ class Eval:
 
             elif self.metric_type.lower() in ['keypoints', 'landmarks', 'nle']:
                 evaluator = BDDMetricEvaluator(self.metric_config)
-
                 report_results = evaluator(gt_bdd_annos, eval_bdd_annos)
             if self.metric_type == 'NLE':
                 dump_json(
@@ -200,7 +209,10 @@ class Eval:
 def parse_args():
     parser = argparse.ArgumentParser(description='Evaluate model performance')
     parser.add_argument('--config', default=None, help='eval config')
-    parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+    parser.add_argument('--batch_size',
+                        type=int,
+                        default=32,
+                        help='batch size')
     parser.add_argument('--eval_path',
                         default=None,
                         help='eval data folder or file path')

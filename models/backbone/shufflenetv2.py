@@ -248,7 +248,8 @@ class ShuffleNetV2(tf.keras.Model):
                         mean=0, stddev=.1),
                     use_bias=False))
             self.last_module.add(tf.keras.layers.BatchNormalization())
-            self.last_module.add(tf.keras.layers.Activation(activation="swish"))
+            self.last_module.add(
+                tf.keras.layers.Activation(activation="swish"))
 
         self.skip_layers = [
             "stage_0",

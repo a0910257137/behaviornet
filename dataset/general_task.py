@@ -4,8 +4,7 @@ from .utils import *
 from pprint import pprint
 from .preprocess import OFFER_ANNOS_FACTORY
 from .augmentation.augmentation import Augmentation
-from .tdmm import MorphabelModel, MorphabelModelNumpy
-import cv2
+from .tdmm import MorphabelModel
 
 
 class GeneralTasks:
@@ -50,6 +49,7 @@ class GeneralTasks:
             b_obj_sizes = self._obj_sizes(b_objs_kps)
             b_round_kp_idxs, b_kp_idxs, b_coords, b_offset_vals = offer_kps_func(
                 b_objs_kps, self.map_height, self.map_width)
+
             if task == "obj_det":
                 targets['b_coords'] = b_coords[:, :, 1:, :]
                 b_keypoints = tf.concat(
@@ -92,23 +92,18 @@ class GeneralTasks:
                 targets['obj_heat_map'] = tf.py_function(
                     self._draw_kps,
                     inp=[
-                        b_keypoints, b_face_masks, b_obj_sizes, self.map_height,
-                        self.map_width, m_cates, b_cates
+                        b_keypoints, b_face_masks, b_obj_sizes,
+                        self.map_height, self.map_width, m_cates, b_cates
                     ],
                     Tout=tf.float32)
                 targets['b_origin_sizes'] = b_origin_sizes
                 targets['params'] = tf.cast(params, tf.float32)
             elif task == "keypoint":
-                b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.concat(
-                    [self.map_height[None], self.map_width[None]], axis=-1)
                 b_lnmks = b_lnmks[:, :, 2:, :2]
                 b_resized = tf.cast(b_origin_sizes, tf.float32) / tf.concat(
                     [self.map_height[None], self.map_width[None]], axis=-1)
                 b_lnmks = tf.einsum('b n k c, b c -> b n k c', b_lnmks,
                                     b_resized)
-                # mean = tf.math.reduce_mean(b_lnmks, axis=-2, keepdims=True)
-                # b_lnmks -= mean
-                # b_lnmks = tf.where(tf.math.is_nan(b_lnmks), np.inf, b_lnmks)
                 b_params = self.MorphabelModel.fit_points(b_lnmks)
                 b_kps = tf.einsum('b n c, b c -> b n c', b_params[..., -2:],
                                   (1 / b_resized)[..., ::-1])
@@ -151,7 +146,8 @@ class GeneralTasks:
 
             return mask
 
-        b_fg_mask = tf.map_fn(lambda x: draw(x[0], x[1]), (b_objs_kps, b_cates),
+        b_fg_mask = tf.map_fn(lambda x: draw(x[0], x[1]),
+                              (b_objs_kps, b_cates),
                               parallel_iterations=self.batch_size,
                               fn_output_signature=tf.float32)
 
@@ -163,7 +159,8 @@ class GeneralTasks:
     def _obj_sizes(self, b_objs_kps):
         # B, N, 2, 2
         b_obj_sizes = b_objs_kps[:, :, 1, :] - b_objs_kps[:, :, 0, :]
-        b_obj_sizes = tf.where(tf.math.is_nan(b_obj_sizes), np.inf, b_obj_sizes)
+        b_obj_sizes = tf.where(tf.math.is_nan(b_obj_sizes), np.inf,
+                               b_obj_sizes)
         return b_obj_sizes
 
     def _rounding_offset(self, b_kp_idxs, b_round_kp_idxs):
@@ -198,8 +195,9 @@ class GeneralTasks:
             b_sigmas = b_sigmas.numpy()
             b_cates = b_cates.numpy()
             m = 2
-            for kps, face_masks, sigmas, cates in zip(b_round_kps, b_face_masks,
-                                                      b_sigmas, b_cates):
+            for kps, face_masks, sigmas, cates in zip(b_round_kps,
+                                                      b_face_masks, b_sigmas,
+                                                      b_cates):
                 mask = np.all(np.isfinite(kps), axis=-1)[:, 0]
                 kps, sigmas, cates = kps[mask], sigmas[mask], cates[mask]
                 face_masks = face_masks[mask]

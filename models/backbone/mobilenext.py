@@ -4,6 +4,7 @@ from ..utils.conv_module import ConvBlock
 from pprint import pprint
 import math
 
+act = "relu"
 BN_MOMENTUM = 0.999
 BN_EPSILON = 1e-3
 
@@ -37,7 +38,7 @@ class SGBlockExtra(tf.keras.layers.Layer):
                       kernel_size=1,
                       strides=stride,
                       norm_method="bn",
-                      activation="relu",
+                      activation=act,
                       use_bias=False,
                       conv_mode="dw_conv2d"))
         self.conv_layers.append(
@@ -53,7 +54,7 @@ class SGBlockExtra(tf.keras.layers.Layer):
                       kernel_size=1,
                       strides=stride,
                       norm_method="bn",
-                      activation="relu",
+                      activation=act,
                       use_bias=False,
                       conv_mode="dw_conv2d"))
 
@@ -82,6 +83,7 @@ class SGBlock(tf.keras.layers.Layer):
         self.identity_div = 1
         self.expand_ratio = expand_ratio
         self.conv_layers = []
+
         if expand_ratio == 2:
             # dw
             self.conv_layers.append(
@@ -89,7 +91,7 @@ class SGBlock(tf.keras.layers.Layer):
                           kernel_size=3,
                           strides=1,
                           norm_method="bn",
-                          activation="relu",
+                          activation=act,
                           use_bias=False,
                           conv_mode="dw_conv2d"))
             # pw-linear
@@ -108,7 +110,7 @@ class SGBlock(tf.keras.layers.Layer):
                           kernel_size=1,
                           strides=1,
                           norm_method="bn",
-                          activation="relu",
+                          activation=act,
                           use_bias=False))
             # depthwise
             self.conv_layers.append(
@@ -133,7 +135,7 @@ class SGBlock(tf.keras.layers.Layer):
                           kernel_size=1,
                           strides=1,
                           norm_method="bn",
-                          activation="relu",
+                          activation=act,
                           use_bias=False))
         elif in_channels != out_channels and stride == 2 and keep_3x3 == False:
             self.conv_layers.append(
@@ -148,7 +150,7 @@ class SGBlock(tf.keras.layers.Layer):
                           kernel_size=1,
                           strides=1,
                           norm_method="bn",
-                          activation="relu",
+                          activation=act,
                           use_bias=False))
             self.conv_layers.append(
                 ConvBlock(filters=None,
@@ -167,7 +169,7 @@ class SGBlock(tf.keras.layers.Layer):
                           kernel_size=3,
                           strides=1,
                           norm_method="bn",
-                          activation="relu",
+                          activation=act,
                           use_bias=False,
                           conv_mode="dw_conv2d"))
             # pw
@@ -185,7 +187,7 @@ class SGBlock(tf.keras.layers.Layer):
                           kernel_size=1,
                           strides=1,
                           norm_method="bn",
-                          activation="relu",
+                          activation=act,
                           use_bias=False,
                           conv_mode="dw_conv2d"))
             # dw
@@ -194,7 +196,7 @@ class SGBlock(tf.keras.layers.Layer):
                           kernel_size=3,
                           strides=1,
                           norm_method="bn",
-                          activation="relu",
+                          activation=act,
                           use_bias=False,
                           conv_mode="dw_conv2d"))
         # self.residual = (in_channels == out_channels and stride == 1)
@@ -231,7 +233,7 @@ class MobileNextNetModel(tf.keras.Model):
                       strides=2,
                       use_bias=False,
                       norm_method="bn",
-                      activation="relu",
+                      activation=act,
                       name='conv_stem'))
 
         self.config_blks = self.config.block_cfg
@@ -242,7 +244,8 @@ class MobileNextNetModel(tf.keras.Model):
             if c == 1280 and width_mult < 1:
                 output_channel = 1280
             self.stage_layers.append(
-                SGBlock(input_channel, output_channel, s, t, n == 1 and s == 1))
+                SGBlock(input_channel, output_channel, s, t, n == 1
+                        and s == 1))
             input_channel = output_channel
             for i in range(n - 1):
                 self.stage_layers.append(
@@ -251,6 +254,7 @@ class MobileNextNetModel(tf.keras.Model):
         # building last several layers
         input_channel = output_channel
         output_channel = _make_divisible(input_channel, 4)
+        # self.sppf = SPPF(960, name="sppf")
         # self.extra_layers = []
         # self.extra_layers.append(SGBlockExtra(1280, 512, 2, 0.2))
         # self.extra_layers.append(SGBlockExtra(512, 256, 2, 0.25))

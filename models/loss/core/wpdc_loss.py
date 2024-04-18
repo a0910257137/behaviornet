@@ -19,7 +19,8 @@ def lnmk_loss(b_gt_lnmks, b_gt_params, b_pred_Z_params, u_base, shp_base,
                                (-1, tf.shape(pred_vertices)[1] // 3, 3))
     b_pred_lnmks = pred_vertices[:, :68, :]
     s = 0.001
-    b_gt_lnmks = s * tf.linalg.matmul(b_gt_lnmks, b_gt_R, transpose_b=(0, 2, 1))
+    b_gt_lnmks = s * tf.linalg.matmul(
+        b_gt_lnmks, b_gt_R, transpose_b=(0, 2, 1))
     b_pred_lnmks = s * tf.linalg.matmul(
         b_pred_lnmks, b_pred_R, transpose_b=(0, 2, 1))
     b_diffs = (b_pred_lnmks[..., :2] - b_gt_lnmks[..., :2])

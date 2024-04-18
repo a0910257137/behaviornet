@@ -45,9 +45,8 @@ def get_callbacks(config, model, optimizer, train_datasets, test_datasets,
     #                              train_datasets=train_datasets,
     #                              test_datasets=test_datasets,
     #                              update_freq=1000)
-    cosine_decay_scheduler = WarmUpCosineDecayScheduler(config.learn_rate,
-                                                        config.epochs,
-                                                        training_length)
+    cosine_decay_scheduler = WarmUpCosineDecayScheduler(
+        config.learn_rate, config.epochs, training_length)
     callbacks.append(
         [saver_callback, cosine_decay_scheduler, loss_callback, clear_memory])
     return callbacks

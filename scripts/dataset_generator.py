@@ -163,7 +163,8 @@ def aug_mask(img,
                         [center[0] + size / 2, center[1] - size / 2]])
     DST_PTS = np.array([[0, 0], [0, aug_img_size[0] - 1],
                         [aug_img_size[1] - 1, 0]])
-    tform = skimage.transform.estimate_transform('similarity', src_pts, DST_PTS)
+    tform = skimage.transform.estimate_transform('similarity', src_pts,
+                                                 DST_PTS)
     # cropped_image will be as texture in uv map
     cropped_image = skimage.transform.warp(img,
                                            tform.inverse,
@@ -336,13 +337,13 @@ def get_coors(img_root,
     })
     obj_counts = Box({'total_2d': 0, 'total_kps': 0})
     obj_cates = {k: i for i, k in enumerate(obj_classes)}
-
     num_frames = len(anno['frame_list'])
     num_train_files = math.ceil(num_frames * train_ratio)
     num_test_files = num_frames - num_train_files
-    save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
-    # save_root = os.path.abspath(
-    #     os.path.join("/aidata/anders/data_collection/okay/total", 'tf_records'))
+    # save_root = os.path.abspath(os.path.join(img_root, os.pardir, 'tf_records'))
+    save_root = os.path.abspath(
+        os.path.join("/aidata/anders/data_collection/okay/total",
+                     'tf_records'))
     frame_count = 0
     root_dir = "/aidata/anders/3D-head/3DDFA"
     bfm_path = os.path.join(root_dir, "BFM/BFM.mat")
@@ -358,29 +359,30 @@ def get_coors(img_root,
     tri = np.loadtxt(os.path.join(
         root_dir, "mask_data/uv-data/triangles.txt")).astype(np.int32)
     bfm_uv_coords = process_uv(bfm_uv_coords, uv_h=256, uv_w=256)
-    tmp_s, tmp_R, tmp_sp, tmp_ep, tmp_t3d, = [], [], [], [], []
+    tmp_R, tmp_sp, tmp_ep, tmp_t3d, = [], [], [], []
     param_counts = 0
     for frame in tqdm(anno['frame_list']):
         num_train_files -= 1
         is_masks, frame_kps = [], []
         dataset = frame['dataset']
         img_name = frame['name']
-        # img_path = os.path.join(img_root, dataset, 'imgs', img_name)
-        img_path = os.path.join(img_root, img_name)
+        img_path = os.path.join(img_root, dataset, 'imgs', img_name)
+        # img_path = os.path.join(img_root, img_name)
         img, img_info = is_img_valid(img_path)
         if not img_info or len(frame['labels']) == 0 or img is None:
             discard_imgs.invalid += 1
             continue
         resized = np.array(img_size[::-1]) / np.array(
             [img_info['height'], img_info['width']])
-        scale_factor = np.array(list(resized) + list(resized), dtype=np.float32)
+        scale_factor = np.array(list(resized) + list(resized),
+                                dtype=np.float32)
         for obj in frame['labels']:
             bbox = build_2d_obj(obj, obj_cates, img_info)
             lnmks = np.zeros(shape=(68, 3))
             if task == 'keypoints' or task == 'obj_det':
                 lnmks = build_keypoints(obj, obj_cates, img_info)
                 fitted_sp, fitted_ep, fitted_s, fitted_angles, fitted_t = bfm.fit(
-                    lnmks[:, :2][:, ::-1], bfm.kpt_ind, max_iter=5)
+                    lnmks[:, :2][:, ::-1], bfm.kpt_ind, max_iter=3)
                 if dataset == 'demo_test':
                     if obj['category'] == 'MASK':
                         is_masks.append(True)
@@ -417,7 +419,8 @@ def get_coors(img_root,
                 discard_imgs.less_than += 1
                 continue
         # fill in keypoints
-        frame_kps = complement(np.asarray(frame_kps, dtype=np.float32), max_obj)
+        frame_kps = complement(np.asarray(frame_kps, dtype=np.float32),
+                               max_obj)
         is_masks = complement_masks(np.asarray(is_masks, dtype=np.float32),
                                     max_obj)
         imgT = img[..., ::-1]
@@ -429,7 +432,8 @@ def get_coors(img_root,
         mask = obj_kps == -1
         obj_kps = np.einsum('n c d, d -> n c d', obj_kps, resized_shape[::-1])
         obj_kps[mask] = -1
-        frame_kps = np.concatenate([obj_kps, cates], axis=-1).astype(np.float32)
+        frame_kps = np.concatenate([obj_kps, cates],
+                                   axis=-1).astype(np.float32)
         imgT = imgT.tobytes()
         frame_kps = frame_kps.tobytes()
         is_masks = is_masks.tobytes()
@@ -496,7 +500,9 @@ def parse_config():
 if __name__ == '__main__':
     args = parse_config()
     if args.anno_file_names is None:
-        anno_file_names = [x for x in os.listdir(args.anno_root) if 'json' in x]
+        anno_file_names = [
+            x for x in os.listdir(args.anno_root) if 'json' in x
+        ]
     else:
         anno_file_names = args.anno_file_names
 
