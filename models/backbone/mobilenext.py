@@ -1,6 +1,7 @@
 import tensorflow as tf
 from .kernel_initializers import KernelInitializers
 from ..utils.conv_module import ConvBlock
+from ..utils.common import SPPF
 from pprint import pprint
 import math
 
@@ -269,6 +270,8 @@ class MobileNextNetModel(tf.keras.Model):
             x = stem_layer(x)
         for i, layer in enumerate(self.stage_layers):
             x = layer(x)
+            # if (i == len(self.stage_layers) - 1):
+            #     x = self.sppf(x)
             if i in self.out_indices:
                 output.append(x)
         # for layer in self.extra_layers:

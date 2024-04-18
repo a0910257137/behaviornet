@@ -74,6 +74,10 @@ class GhostModule(tf.keras.layers.Layer):
                               norm_method="bn",
                               activation=None,
                               use_bias=False)
+<<<<<<< HEAD
+=======
+
+>>>>>>> refs/remotes/origin/main
         self.depthconv = ConvBlock(filters=None,
                                    kernel_size=dwkernel,
                                    strides=1,
@@ -81,6 +85,10 @@ class GhostModule(tf.keras.layers.Layer):
                                    activation=None,
                                    use_bias=False,
                                    conv_mode="dw_conv2d")
+<<<<<<< HEAD
+=======
+
+>>>>>>> refs/remotes/origin/main
         self.slice = tf.keras.layers.Lambda(
             self._return_slices,
             arguments={'channel': int(self.out - self.conv_out_channel)})

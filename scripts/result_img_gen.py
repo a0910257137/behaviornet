@@ -39,6 +39,8 @@ def img_gen(config_path, img_path_root, save_root):
     for i, (img_paths,
             img_names) in enumerate(zip(img_path_batchs, img_name_batchs)):
         imgs, origin_shapes, orig_imgs = [], [], []
+        # if "frame-000867.jpg" != img_names[0]:
+        #     continue
         for img_path in img_paths:
             print(img_path)
             img = cv2.imread(img_path)

@@ -9,6 +9,7 @@ from .core.iou2d_calculator import bbox_overlapping
 from .core.utils import anchor_inside_flags, unmap, multi_apply
 from pprint import pprint
 from utils.io import load_BFM
+from utils.transform import rotate
 import cv2
 from .core import LOSS_FUNCS_FACTORY
 
@@ -420,6 +421,8 @@ class AnchorLoss(LossBase):
         num_valid_anchors = anchors.shape[0]
         bbox_targets = np.zeros_like(anchors)
         bbox_weights = np.zeros_like(anchors)
+        # print('-' * 100)
+        # print(anchors.shape[0])
         kps_targets = np.zeros(shape=(anchors.shape[0], 2))
         params_targets = np.zeros(shape=(anchors.shape[0],
                                          self.params_channels))

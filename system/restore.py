@@ -4,6 +4,9 @@ from pprint import pprint
 from monitor import logger
 import os
 
+is_shrink = False
+is_one_branch = True
+
 
 def bn_fusion(value_lists):
     kernel_weights, kernel_bias = value_lists[0], value_lists[1]
@@ -194,5 +197,4 @@ class Restore:
             tf.keras.models.save_model(model.model, model_dir)
             exit(1)
         logger.info(f'Finish load-wights')
-
         return model
